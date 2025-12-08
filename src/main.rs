@@ -1,5 +1,5 @@
-use bevy::prelude::*;
 use bevy::input::mouse::MouseMotion;
+use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 use std::f32::consts::{FRAC_PI_2, TAU};
 
@@ -44,9 +44,7 @@ fn setup_camera(mut commands: Commands) {
     ));
 }
 
-fn spawn_environment(
-    mut commands: Commands,
-) {
+fn spawn_environment(mut commands: Commands) {
     commands.spawn((
         DirectionalLight {
             shadows_enabled: true,
@@ -73,6 +71,9 @@ struct Flycam {
 
 #[derive(Component)]
 struct CapsuleProbe;
+
+#[derive(Component)]
+struct ProbeTip;
 
 fn camera_controller(
     time: Res<Time>,
@@ -138,7 +139,7 @@ fn camera_controller(
 
 fn spawn_tunnel(mut commands: Commands) {
     // Cylindrical-ish tunnel built from ring segments to avoid the "+" look.
-    let inner_radius = 0.82; // tighter clearance over probe collider radius (~0.8)
+    let inner_radius = 0.9; // slightly wider clearance over probe collider radius (~0.8)
     let wall_thickness = 0.05;
     let length = 12.0;
     let segments = 16;
@@ -149,6 +150,12 @@ fn spawn_tunnel(mut commands: Commands) {
     let angle_step = TAU / segments as f32;
     let tangent_half = inner_radius * (angle_step * 0.5).tan() + wall_half;
 
+    let elbow_angle = 15.0_f32.to_radians();
+    let elbow_rot = Quat::from_rotation_x(elbow_angle);
+    let elbow_dir = elbow_rot * Vec3::Z;
+    let elbow_point = Vec3::new(0.0, 0.0, half_length);
+    let second_center = elbow_point + elbow_dir * half_length;
+
     commands
         .spawn((
             Name::new("Tunnel"),
@@ -157,24 +164,63 @@ fn spawn_tunnel(mut commands: Commands) {
             GlobalTransform::default(),
         ))
         .with_children(|child| {
-            for i in 0..segments {
-                let angle = i as f32 * angle_step;
-                let dir = Vec2::new(angle.cos(), angle.sin());
-                let center = Vec3::new(dir.x * ring_radius, dir.y * ring_radius, 0.0);
-                let rot = Quat::from_rotation_z(angle);
+            child
+                .spawn((
+                    Name::new("Tunnel A"),
+                    Transform::default(),
+                    GlobalTransform::default(),
+                ))
+                .with_children(|section| {
+                    for i in 0..segments {
+                        let angle = i as f32 * angle_step;
+                        let dir = Vec2::new(angle.cos(), angle.sin());
+                        let center = Vec3::new(dir.x * ring_radius, dir.y * ring_radius, 0.0);
+                        let rot = Quat::from_rotation_z(angle);
 
-                child.spawn((
-                    Name::new(format!("Tunnel Segment {i}")),
-                    Collider::cuboid(wall_half, tangent_half, half_length),
-                    Friction {
-                        coefficient: 1.2,
-                        combine_rule: CoefficientCombineRule::Average,
+                        section.spawn((
+                            Name::new(format!("Tunnel A Segment {i}")),
+                            Collider::cuboid(wall_half, tangent_half, half_length),
+                            Friction {
+                                coefficient: 1.2,
+                                combine_rule: CoefficientCombineRule::Average,
+                                ..default()
+                            },
+                            Transform::from_translation(center).with_rotation(rot),
+                            GlobalTransform::default(),
+                        ));
+                    }
+                });
+
+            child
+                .spawn((
+                    Name::new("Tunnel B"),
+                    Transform {
+                        translation: second_center,
+                        rotation: elbow_rot,
                         ..default()
                     },
-                    Transform::from_translation(center).with_rotation(rot),
                     GlobalTransform::default(),
-                ));
-            }
+                ))
+                .with_children(|section| {
+                    for i in 0..segments {
+                        let angle = i as f32 * angle_step;
+                        let dir = Vec2::new(angle.cos(), angle.sin());
+                        let center = Vec3::new(dir.x * ring_radius, dir.y * ring_radius, 0.0);
+                        let rot = Quat::from_rotation_z(angle);
+
+                        section.spawn((
+                            Name::new(format!("Tunnel B Segment {i}")),
+                            Collider::cuboid(wall_half, tangent_half, half_length),
+                            Friction {
+                                coefficient: 1.2,
+                                combine_rule: CoefficientCombineRule::Average,
+                                ..default()
+                            },
+                            Transform::from_translation(center).with_rotation(rot),
+                            GlobalTransform::default(),
+                        ));
+                    }
+                });
         });
 }
 
@@ -185,50 +231,88 @@ fn spawn_probe(
 ) {
     // Capsule dimensions stretched longer than the tunnel (radius ~0.8, length ~16.0).
     let collider_radius = 0.8;
-    let collider_half_height = 16.0 * 0.5 - collider_radius;
+    let total_length = 16.0;
+    let segment_length = total_length / 6.0;
+    let segment_half_height = segment_length * 0.5 - collider_radius;
+    let span = segment_half_height + collider_radius;
 
-    let mesh_handle = meshes.add(Mesh::from(Capsule3d::new(
+    let mesh = meshes.add(Mesh::from(Capsule3d::new(
         collider_radius,
-        collider_half_height * 2.0,
+        segment_half_height * 2.0,
     )));
     let material_handle = materials.add(Color::srgb(0.8, 0.2, 0.2));
 
-    let half_length = 6.0;
-    let tip_offset = collider_half_height + collider_radius;
-    let tip_clearance = 0.05;
-    // Place the forward tip right at the tunnel entrance (slightly inside).
-    let start_z = -half_length + tip_offset - tip_clearance;
+    let tunnel_half_length = 6.0;
+    // Place the joint between the first and second segments near the elbow entrance,
+    // keeping the tip shy of the bend and the tail slightly protruding.
+    let joint_front_second_z = tunnel_half_length - 2.4;
+    let base_rotation = Quat::from_rotation_x(FRAC_PI_2);
 
-    commands.spawn((
-        Mesh3d(mesh_handle),
-        MeshMaterial3d(material_handle),
-        Transform {
-            translation: Vec3::new(0.0, 0.0, start_z),
-            rotation: Quat::from_rotation_x(-FRAC_PI_2),
-            ..default()
-        },
-        RigidBody::Dynamic,
-        Collider::capsule_y(collider_half_height, collider_radius),
-        Friction {
-            coefficient: 1.2,
-            combine_rule: CoefficientCombineRule::Average,
-            ..default()
-        },
-        Velocity::default(),
-        Sleeping::disabled(),
-        ExternalImpulse::default(),
-        ExternalForce::default(),
-        Damping {
-            linear_damping: 0.1,
-            angular_damping: 0.3,
-        },
-        CapsuleProbe,
-    ));
+    let mut segments = Vec::new();
+    for i in 0..6 {
+        let center_z = joint_front_second_z + span - (2.0 * span * i as f32);
+        let mut entity = commands.spawn((
+            Mesh3d(mesh.clone()),
+            MeshMaterial3d(material_handle.clone()),
+            Transform {
+                translation: Vec3::new(0.0, 0.0, center_z),
+                rotation: base_rotation,
+                ..default()
+            },
+            RigidBody::Dynamic,
+            Collider::capsule_y(segment_half_height, collider_radius),
+            Friction {
+                coefficient: 1.2,
+                combine_rule: CoefficientCombineRule::Average,
+                ..default()
+            },
+            Velocity::default(),
+            Sleeping::disabled(),
+            ExternalImpulse::default(),
+            ExternalForce::default(),
+            Damping {
+                linear_damping: 0.1,
+                angular_damping: 0.3,
+            },
+        ));
+
+        if i == 0 {
+            entity.insert(ProbeTip);
+        }
+        if i == 5 {
+            entity.insert(CapsuleProbe);
+        }
+
+        segments.push(entity.id());
+    }
+
+    let anchor_top = Vec3::Y * span;
+    let anchor_bottom = Vec3::NEG_Y * span;
+    for window in segments.windows(2) {
+        let parent = window[1];
+        let child = window[0];
+        let mut joint = SphericalJointBuilder::new()
+            .local_anchor1(anchor_top)
+            .local_anchor2(anchor_bottom)
+            .build();
+        joint.set_contacts_enabled(false);
+        commands
+            .entity(child)
+            .insert(ImpulseJoint::new(parent, joint));
+    }
 }
 
 fn probe_thrust(
     keys: Res<ButtonInput<KeyCode>>,
-    mut query: Query<(&Transform, &mut ExternalForce, &mut ExternalImpulse, &mut Velocity), With<CapsuleProbe>>,
+    mut query: Query<
+        (
+            &Transform,
+            &mut ExternalForce,
+            &mut ExternalImpulse,
+            &mut Velocity,
+        ),
+        With<CapsuleProbe>,
+    >,
 ) {
     let thrust = 25.0;
     let impulse_strength = 1.5;
