@@ -40,12 +40,10 @@ pub fn balloon_control_input(
 ) {
     let forward = Vec3::Z;
 
+    let tip_z = tip_q.single().map(|t| t.translation().z).unwrap_or(0.0);
+
     if !balloon.initialized {
-        if let Ok(tip_tf) = tip_q.single() {
-            balloon.position = Vec3::new(0.0, 0.0, tip_tf.translation().z + 5.0);
-        } else {
-            balloon.position = Vec3::new(0.0, 0.0, 2.0);
-        }
+        balloon.position = Vec3::new(0.0, 0.0, tip_z + 5.0);
         balloon.initialized = true;
     }
 
@@ -61,10 +59,12 @@ pub fn balloon_control_input(
         balloon.position -= forward * step;
     }
 
-    balloon.position.z = balloon
-        .position
-        .z
-        .clamp(-50.0, 200.0);
+    // Clamp balloon within reachable distance from probe tip based on front stop offset.
+    let front_offset = balloon.half_length * 5.0;
+    let dist = balloon.position.z - tip_z;
+    if dist > front_offset {
+        balloon.position.z = tip_z + front_offset;
+    }
 }
 
 #[derive(Component)]

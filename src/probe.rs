@@ -3,6 +3,7 @@ use bevy_rapier3d::prelude::*;
 use std::f32::consts::FRAC_PI_2;
 
 use crate::controls::ControlParams;
+use crate::balloon_control::BalloonControl;
 
 #[derive(Component)]
 pub struct CapsuleProbe;
@@ -137,9 +138,14 @@ pub fn spawn_probe(
 pub fn peristaltic_drive(
     time: Res<Time>,
     control: Res<ControlParams>,
+    balloon: Res<BalloonControl>,
     mut joints: Query<(&mut ImpulseJoint, &SegmentSpring, &SegmentIndex)>,
     mut frictions: Query<(&SegmentIndex, &mut Friction), With<ProbeSegment>>,
 ) {
+    if !balloon.inflated {
+        return;
+    }
+
     let amp = 0.35;
     let freq = 0.6;
     let phase_step = 0.9;
@@ -170,6 +176,7 @@ pub fn peristaltic_drive(
 pub fn distributed_thrust(
     keys: Res<ButtonInput<KeyCode>>,
     control: Res<ControlParams>,
+    balloon: Res<BalloonControl>,
     mut query: Query<
         (
             &SegmentIndex,
@@ -180,6 +187,14 @@ pub fn distributed_thrust(
         With<ProbeSegment>,
     >,
 ) {
+    if !balloon.inflated {
+        for (_, mut force, mut impulse, mut velocity) in &mut query {
+            force.force = Vec3::ZERO;
+            impulse.impulse = Vec3::ZERO;
+            velocity.linvel = Vec3::ZERO;
+        }
+        return;
+    }
     let impulse_strength = 1.5;
     let thrust_links = 4usize;
 
