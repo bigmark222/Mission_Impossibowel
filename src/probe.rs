@@ -45,7 +45,7 @@ pub fn spawn_probe(
     let material_handle = materials.add(Color::srgb(0.8, 0.2, 0.2));
 
     // Place the chain well inside the long straight (length_a ~60); keep tail inside and tip shy of the bend.
-    let joint_front_second_z = 30.0;
+    let joint_front_second_z = 12.0;
     let base_rotation = Quat::from_rotation_x(FRAC_PI_2);
 
     let mut segments = Vec::new();
