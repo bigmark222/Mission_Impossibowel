@@ -1,6 +1,7 @@
 use bevy::math::primitives::Cylinder;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
+use bevy_rapier3d::plugin::ReadRapierContext;
 use std::f32::consts::FRAC_PI_2;
 
 use crate::controls::ControlParams;
@@ -10,12 +11,20 @@ use crate::tunnel::{advance_centerline, tunnel_centerline, tunnel_tangent_rotati
 const MIN_STRETCH: f32 = 1.0;
 // Allow stretching up to +68% of the deflated length.
 const MAX_STRETCH: f32 = 1.68;
-const STRETCH_RATE: f32 = 0.6; // slower extension
-const RETRACT_RATE: f32 = 0.9;
+const STRETCH_RATE: f32 = 0.2; // slowed to ~1/3 speed
+const RETRACT_RATE: f32 = 0.3;
 
 #[derive(Resource, Default)]
 pub struct StretchState {
     pub factor: f32,
+}
+
+#[derive(Resource, Default, Clone, Copy)]
+pub struct TipSense {
+    pub pressure_world: Vec3,
+    pub pressure_local: Vec3,
+    pub steer_dir: Vec3,
+    pub steer_strength: f32,
 }
 
 #[derive(Component)]
@@ -201,8 +210,11 @@ pub fn peristaltic_drive(
     keys: Res<ButtonInput<KeyCode>>,
     control: Res<ControlParams>,
     balloon: Res<BalloonControl>,
+    rapier: ReadRapierContext<'_, '_>,
+    mut sense: ResMut<TipSense>,
     mut stretch: ResMut<StretchState>,
     mut tail_body: Query<(&ProbeBody, Entity, &mut RigidBody, &mut ProbeParam), With<CapsuleProbe>>,
+    front_rings: Query<(Entity, &ProbeRing, &GlobalTransform)>,
     mut transforms: ParamSet<(
         Query<&mut Transform, (With<ProbeHead>, Without<ProbeVisualSegment>)>,
         Query<(&ProbeVisualSegment, &mut Transform)>,
@@ -255,6 +267,7 @@ pub fn peristaltic_drive(
     };
 
     let length = body.base_length * stretch.factor.max(MIN_STRETCH);
+    let (head_center, head_tangent, _) = advance_centerline(params.tail_z, length);
 
     // If the head is anchored, slide the tail forward/back along the curve to keep head world position fixed.
     if let Some(anchor_pos) = head_anchor_pos {
@@ -283,20 +296,83 @@ pub fn peristaltic_drive(
 
     let spacing = length / body.ring_count as f32;
     let ring_half_height = spacing * 0.45;
+    let feel_length = 3.0;
+    let front_start = (length - feel_length).max(0.0);
+
+    // Sense wall pressure on the front few rings and nudge the head away from it.
+    let mut pressure = Vec3::ZERO;
+    let mut steering_blend = 0.0;
+    let mut steered_head = head_tangent;
+
+    if !balloon.head_inflated {
+        let Ok(ctx) = rapier.single() else {
+            return;
+        };
+        let front_start_index = body
+            .ring_count
+            .saturating_sub((feel_length / spacing).ceil() as usize + 1);
+        for (entity, ring, _) in front_rings.iter() {
+            if ring.index < front_start_index {
+                continue;
+            }
+            for pair in ctx.contact_pairs_with(entity) {
+                let Some((manifold, contact)) = pair.find_deepest_contact() else {
+                    continue;
+                };
+                let normal: Vec3 = if pair.collider1() == Some(entity) {
+                    manifold.normal().into()
+                } else {
+                    (-manifold.normal()).into()
+                };
+
+                // Distance is negative when penetrating; treat penetration as pressure magnitude.
+                let penetration = (-contact.dist()).max(0.0);
+                if penetration > 0.0 {
+                    pressure += normal * penetration;
+                }
+            }
+        }
+
+        let steering_dir = if pressure.length_squared() > 1e-6 {
+            (-pressure).normalize_or_zero()
+        } else {
+            Vec3::ZERO
+        };
+
+        steering_blend = (pressure.length() * 2.0).clamp(0.0, 0.6);
+        steered_head = if steering_blend > 0.0 {
+            head_tangent
+                .lerp(steering_dir, steering_blend)
+                .normalize_or_zero()
+        } else {
+            head_tangent
+        };
+    }
+    let head_rot = tunnel_tangent_rotation(head_tangent);
+    sense.pressure_world = pressure;
+    sense.pressure_local = head_rot.inverse() * pressure;
+    sense.steer_dir = steered_head;
+    sense.steer_strength = steering_blend;
 
     // Update head transform to new tip position.
     if let Ok(mut head_tf) = transforms.p0().single_mut() {
-        let (head_center, head_tangent, _) = advance_centerline(params.tail_z, length);
         head_tf.translation = head_center - tail_center;
-        head_tf.rotation = tunnel_tangent_rotation(head_tangent);
+        head_tf.rotation = tunnel_tangent_rotation(steered_head);
     }
 
     // Update visual skin segments along the curved centerline.
     for (seg, mut vis_tf) in transforms.p1().iter_mut() {
         let arc = (seg.index as f32 + 0.5) * spacing;
         let (center, tangent, _) = advance_centerline(params.tail_z, arc);
+        let steer_blend = ((arc - front_start) / feel_length).clamp(0.0, 1.0) * steering_blend;
+        let forward = if steer_blend > 0.0 {
+            tangent.lerp(steered_head, steer_blend).normalize_or_zero()
+        } else {
+            tangent
+        };
         vis_tf.translation = center - tail_center;
-        vis_tf.rotation = tunnel_tangent_rotation(tangent) * Quat::from_rotation_x(FRAC_PI_2);
+        vis_tf.rotation =
+            tunnel_tangent_rotation(forward) * Quat::from_rotation_x(FRAC_PI_2);
         vis_tf.scale = Vec3::new(1.0, spacing / body.base_length, 1.0);
     }
 
@@ -310,8 +386,16 @@ pub fn peristaltic_drive(
     for (ring, mut tf, mut collider, mut fric) in transforms.p2().iter_mut() {
         let arc = ring.index as f32 * spacing;
         let (ring_center, ring_tangent, _) = advance_centerline(params.tail_z, arc);
+        let steer_blend = ((arc - front_start) / feel_length).clamp(0.0, 1.0) * steering_blend;
+        let forward = if steer_blend > 0.0 {
+            ring_tangent
+                .lerp(steered_head, steer_blend)
+                .normalize_or_zero()
+        } else {
+            ring_tangent
+        };
         tf.translation = ring_center - tail_center;
-        tf.rotation = tunnel_tangent_rotation(ring_tangent);
+        tf.rotation = tunnel_tangent_rotation(forward);
         *collider = ring_shell_collider(body.base_radius, ring_half_height);
 
         let t = ring.index as f32 / body.ring_count as f32;

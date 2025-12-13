@@ -207,16 +207,18 @@ pub fn tunnel_expansion_system(
     let _probe_z = probe_tf.translation().z;
 
     let mut contraction_points: SmallVec<[f32; 2]> = smallvec![];
+    // Nudge contraction to sit slightly behind each balloon center so the sensing tip stays clear.
+    let contract_center_offset = 0.5;
     if balloon.head_inflated {
-        contraction_points.push(balloon.position.z);
+        contraction_points.push(balloon.position.z - contract_center_offset);
     }
     if balloon.tail_inflated {
-        contraction_points.push(balloon.rear_position.z);
+        contraction_points.push(balloon.rear_position.z - contract_center_offset);
     }
 
-    // Keep the squeeze highly localized around each capsule end.
-    let strong_contract_radius = 1.2;
-    let soft_contract_radius = 2.4;
+    // Keep the squeeze sharply localized around each capsule end.
+    let strong_contract_radius = 0.35;
+    let soft_contract_radius = 0.75;
     let contract_speed = 6.5;
 
     let base_color = Color::srgba(0.25, 0.22, 0.18, 0.28);

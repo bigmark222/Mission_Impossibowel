@@ -1,6 +1,7 @@
 pub mod camera;
 pub mod balloon_control;
 pub mod controls;
+pub mod hud;
 pub mod probe;
 pub mod tunnel;
 
@@ -12,8 +13,9 @@ use balloon_control::{
     spawn_balloon_marker, BalloonControl,
 };
 use camera::{camera_controller, setup_camera};
-use controls::{control_inputs_and_apply, spawn_controls_ui, update_controls_ui, ControlParams};
-use probe::{distributed_thrust, peristaltic_drive, spawn_probe, StretchState};
+use controls::{control_inputs_and_apply, ControlParams};
+use hud::{spawn_controls_ui, update_controls_ui};
+use probe::{distributed_thrust, peristaltic_drive, spawn_probe, StretchState, TipSense};
 use tunnel::{setup_tunnel, tunnel_expansion_system};
 
 pub fn run_app() {
@@ -25,6 +27,7 @@ pub fn run_app() {
         })
         .insert_resource(BalloonControl::default())
         .insert_resource(StretchState::default())
+        .insert_resource(TipSense::default())
         .insert_resource(ControlParams {
             tension: 0.5,
             stiffness: 500.0,

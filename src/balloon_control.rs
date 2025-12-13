@@ -26,7 +26,7 @@ impl Default for BalloonControl {
             tail_inflated: false,
             deflated_radius: 0.3,
             inflated_radius: 1.6,
-            half_length: 0.8,
+            half_length: 0.25,
             position: Vec3::ZERO,
             rear_position: Vec3::ZERO,
             initialized: false,
@@ -50,7 +50,9 @@ pub fn balloon_control_input(
     };
 
     let tip_pos = tip_tf.translation();
+    let tip_forward = tip_tf.forward();
     let tail_pos = tail_tf.translation();
+    let tail_forward = tail_tf.forward();
 
     if !balloon.initialized {
         balloon.initialized = true;
@@ -63,9 +65,10 @@ pub fn balloon_control_input(
         balloon.tail_inflated = !balloon.tail_inflated;
     }
 
-    // Keep balloons centered on their respective capsules.
-    balloon.position = tip_pos;
-    balloon.rear_position = tail_pos;
+    // Place head balloon slightly ahead of the probe tip along its facing direction.
+    balloon.position = tip_pos + tip_forward * 3.5;
+    // Offset rear balloon toward the distal end (behind the tail) along the probe direction.
+    balloon.rear_position = tail_pos - tail_forward * 1.0;
 }
 
 #[derive(Component)]

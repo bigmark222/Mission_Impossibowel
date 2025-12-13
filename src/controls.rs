@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy::ui::{PositionType, Val};
 use bevy_rapier3d::prelude::*;
 
 use crate::probe::{ProbeSegment, SegmentSpring};
@@ -13,109 +12,6 @@ pub struct ControlParams {
     pub target_speed: f32,
     pub linear_damping: f32,
     pub friction: f32,
-}
-
-#[derive(Component)]
-pub struct ControlText;
-
-pub fn spawn_controls_ui(mut commands: Commands) {
-    commands.spawn((
-        Text::new("Controls"),
-        TextFont {
-            font_size: 18.0,
-            ..default()
-        },
-        TextColor(Color::WHITE),
-        Node {
-            position_type: PositionType::Absolute,
-            top: Val::Px(8.0),
-            left: Val::Px(8.0),
-            ..default()
-        },
-        ControlText,
-        children![
-            (
-                TextSpan::from("Tension:"),
-                TextFont {
-                    font_size: 16.0,
-                    ..default()
-                },
-                TextColor(Color::WHITE),
-            ),
-            (
-                TextSpan::from("0.50 [ [ ] ]"),
-                TextFont {
-                    font_size: 16.0,
-                    ..default()
-                },
-                TextColor(Color::WHITE),
-            ),
-            (
-                TextSpan::from("Stiff: 500 [ ; ' ]"),
-                TextFont {
-                    font_size: 16.0,
-                    ..default()
-                },
-                TextColor(Color::WHITE),
-            ),
-            (
-                TextSpan::from("Damp: 20 [ , . ]"),
-                TextFont {
-                    font_size: 16.0,
-                    ..default()
-                },
-                TextColor(Color::WHITE),
-            ),
-            (
-                TextSpan::from("Thrust: 40 [ 1 2 ]"),
-                TextFont {
-                    font_size: 16.0,
-                    ..default()
-                },
-                TextColor(Color::WHITE),
-            ),
-            (
-                TextSpan::from("Speed: 1.20 [ 3 4 ]"),
-                TextFont {
-                    font_size: 16.0,
-                    ..default()
-                },
-                TextColor(Color::WHITE),
-            ),
-            (
-                TextSpan::from("Lin Damp: 0.20 [ 5 6 ]"),
-                TextFont {
-                    font_size: 16.0,
-                    ..default()
-                },
-                TextColor(Color::WHITE),
-            ),
-            (
-                TextSpan::from("Friction: 1.20 [ 7 8 ]"),
-                TextFont {
-                    font_size: 16.0,
-                    ..default()
-                },
-                TextColor(Color::WHITE),
-            )
-        ],
-    ));
-}
-
-pub fn update_controls_ui(
-    control: Res<ControlParams>,
-    ui: Single<Entity, (With<ControlText>, With<Text>)>,
-    mut writer: TextUiWriter,
-) {
-    if control.is_changed() {
-        *writer.text(*ui, 1) = format!("{:.2} [ [ ] ]", control.tension);
-        *writer.text(*ui, 2) = format!("Stiff: {:.0} [ ; ' ]", control.stiffness);
-        *writer.text(*ui, 3) = format!("Damp: {:.1} [ , . ]", control.damping);
-        *writer.text(*ui, 4) = format!("Thrust: {:.1} [ 1 2 ]", control.thrust);
-        *writer.text(*ui, 5) = format!("Speed: {:.2} [ 3 4 ]", control.target_speed);
-        *writer.text(*ui, 6) = format!("Lin Damp: {:.2} [ 5 6 ]", control.linear_damping);
-        *writer.text(*ui, 7) = format!("Friction: {:.2} [ 7 8 ]", control.friction);
-    }
 }
 
 pub fn control_inputs_and_apply(
