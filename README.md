@@ -1,7 +1,7 @@
 # Deep Poo
 
 This is a simplified, non-commercial demonstration inspired by the locomotion principles described in United States Patent Application
-U[Pub. No.: US 2007/024.9906 A1](https://patentimages.storage.googleapis.com/6b/ce/a2/051225b0d2ff0a/US20070249906A1.pdf)
+[Pub. No.: US 2007/024.9906 A1](https://patentimages.storage.googleapis.com/6b/ce/a2/051225b0d2ff0a/US20070249906A1.pdf)
 
 The implementation shown here does **not** replicate the full patented system.
 Instead, it demonstrates the core inchworm-style anchoring and extension concept in a reduced, abstracted form suitable for simulation and education.
