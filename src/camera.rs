@@ -17,6 +17,9 @@ pub struct PovState {
     pub use_probe: bool,
 }
 
+#[derive(Component)]
+pub struct UiOverlayCamera;
+
 pub fn setup_camera(mut commands: Commands) {
     let transform = Transform::from_xyz(-6.0, 4.0, 10.0).looking_at(Vec3::ZERO, Vec3::Y);
     let (yaw, pitch, _) = transform.rotation.to_euler(EulerRot::YXZ);
@@ -30,6 +33,17 @@ pub fn setup_camera(mut commands: Commands) {
             pitch,
             speed: 5.0,
             mouse_sensitivity: 0.0025,
+        },
+    ));
+
+    // Dedicated UI camera so HUD remains visible regardless of active 3D camera.
+    commands.spawn((
+        UiOverlayCamera,
+        Camera2d,
+        Camera {
+            is_active: true,
+            order: 10,
+            ..default()
         },
     ));
 }

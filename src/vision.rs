@@ -4,13 +4,18 @@ use bevy::render::gpu_readback::{Readback, ReadbackComplete};
 use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages};
 use bevy::tasks::{AsyncComputeTaskPool, Task};
 use futures_lite::future;
-use image::ImageFormat;
-use serde::Serialize;
+use image::{ImageFormat, Rgba, RgbaImage};
+use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::polyp::PolypDetectionVotes;
+use crate::balloon_control::BalloonControl;
+use crate::polyp::PolypTelemetry;
+use crate::autopilot::AutoDrive;
+use crate::camera::PovState;
+use crate::tunnel::CecumState;
 
 #[derive(Component)]
 pub struct FrontCamera;
@@ -74,6 +79,9 @@ pub struct RecorderConfig {
 }
 
 const MAX_LABEL_DEPTH: f32 = 8.0;
+const IMAGES_DIR: &str = "images";
+const LABELS_DIR: &str = "labels";
+const OVERLAYS_DIR: &str = "overlays";
 
 impl Default for RecorderConfig {
     fn default() -> Self {
@@ -92,6 +100,9 @@ pub struct RecorderState {
     pub frame_idx: u64,
     pub last_toggle: f64,
     pub last_image_ok: bool,
+    pub paused: bool,
+    pub overlays_done: bool,
+    pub initialized: bool,
 }
 
 impl Default for RecorderState {
@@ -102,18 +113,41 @@ impl Default for RecorderState {
             frame_idx: 0,
             last_toggle: 0.0,
             last_image_ok: false,
+            paused: false,
+            overlays_done: false,
+            initialized: false,
         }
     }
 }
 
-#[derive(Serialize)]
+#[derive(Resource)]
+pub struct AutoRecordTimer {
+    pub timer: Timer,
+}
+
+impl Default for AutoRecordTimer {
+    fn default() -> Self {
+        Self {
+            timer: Timer::from_seconds(30.0, TimerMode::Once),
+        }
+    }
+}
+
+#[derive(Resource, Default)]
+pub struct RecorderMotion {
+    pub last_head_z: Option<f32>,
+    pub cumulative_forward: f32,
+    pub started: bool,
+}
+
+#[derive(Serialize, Deserialize)]
 struct PolypLabel {
     center_world: [f32; 3],
     bbox_px: Option<[f32; 4]>,
     bbox_norm: Option<[f32; 4]>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 struct CaptureMetadata {
     frame_id: u64,
     sim_time: f64,
@@ -121,6 +155,7 @@ struct CaptureMetadata {
     image: String,
     image_present: bool,
     camera_active: bool,
+    polyp_seed: u64,
     polyp_labels: Vec<PolypLabel>,
 }
 
@@ -283,11 +318,177 @@ pub fn recorder_toggle_hotkey(
     state.enabled = !state.enabled;
     state.last_toggle = time.elapsed_secs_f64();
     if state.enabled {
-        let session = format!("run_{}", now as u64);
+        if !state.initialized {
+            let session = format!("run_{}", now as u64);
+            let dir = config.output_root.join(session);
+            state.session_dir = dir;
+            state.frame_idx = 0;
+            let _ = fs::create_dir_all(&state.session_dir);
+            let _ = fs::create_dir_all(state.session_dir.join(IMAGES_DIR));
+            let _ = fs::create_dir_all(state.session_dir.join(LABELS_DIR));
+            state.initialized = true;
+        }
+        state.paused = false;
+        state.overlays_done = false;
+    } else {
+        state.paused = false;
+        state.overlays_done = false;
+    }
+}
+
+pub fn auto_start_recording(
+    time: Res<Time>,
+    auto: Res<AutoDrive>,
+    pov: Res<PovState>,
+    config: ResMut<RecorderConfig>,
+    mut state: ResMut<RecorderState>,
+    mut motion: ResMut<RecorderMotion>,
+    head_q: Query<&GlobalTransform, With<crate::probe::ProbeHead>>,
+) {
+    if !auto.enabled || !pov.use_probe {
+        motion.last_head_z = None;
+        motion.cumulative_forward = 0.0;
+        motion.started = false;
+        return;
+    }
+    if state.enabled {
+        return;
+    }
+    let Ok(head_tf) = head_q.single() else {
+        return;
+    };
+    let z = head_tf.translation().z;
+    if let Some(last) = motion.last_head_z {
+        let dz = z - last;
+        if dz > 0.0 {
+            motion.cumulative_forward += dz;
+        }
+    }
+    motion.last_head_z = Some(z);
+    motion.started = motion.cumulative_forward >= 0.25;
+    if !motion.started {
+        return;
+    }
+
+    if !state.initialized {
+        let session = format!("run_{}", time.elapsed_secs_f64() as u64);
         let dir = config.output_root.join(session);
         state.session_dir = dir;
         state.frame_idx = 0;
         let _ = fs::create_dir_all(&state.session_dir);
+        let _ = fs::create_dir_all(state.session_dir.join(IMAGES_DIR));
+        let _ = fs::create_dir_all(state.session_dir.join(LABELS_DIR));
+        state.initialized = true;
+    }
+    state.enabled = true;
+    state.last_toggle = time.elapsed_secs_f64();
+    state.paused = false;
+    motion.started = true;
+    state.overlays_done = false;
+}
+
+pub fn auto_stop_recording_on_cecum(
+    cecum: Res<CecumState>,
+    data_run: Option<Res<crate::autopilot::DataRun>>,
+    mut state: ResMut<RecorderState>,
+    mut auto_timer: ResMut<AutoRecordTimer>,
+    mut motion: ResMut<RecorderMotion>,
+) {
+    if !state.enabled {
+        return;
+    }
+    if !data_run.map_or(false, |r| r.active) {
+        return;
+    }
+    if cecum.reached {
+        if !state.overlays_done {
+            generate_overlays(&state.session_dir);
+            state.overlays_done = true;
+        }
+        state.enabled = false;
+        state.frame_idx = 0;
+        auto_timer.timer.reset();
+        state.paused = false;
+        motion.last_head_z = None;
+        motion.cumulative_forward = 0.0;
+        motion.started = false;
+    }
+}
+
+fn generate_overlays(run_dir: &Path) {
+    let labels_dir = run_dir.join(LABELS_DIR);
+    let out_dir = run_dir.join(OVERLAYS_DIR);
+    if fs::create_dir_all(&out_dir).is_err() {
+        return;
+    }
+
+    for entry in fs::read_dir(&labels_dir).into_iter().flatten() {
+        let Ok(path) = entry.map(|e| e.path()) else {
+            continue;
+        };
+        if path.extension().and_then(|s| s.to_str()) != Some("json") {
+            continue;
+        }
+        let Ok(meta) = fs::read(&path).and_then(|bytes| serde_json::from_slice::<CaptureMetadata>(&bytes).map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))) else {
+            continue;
+        };
+        if !meta.image_present {
+            continue;
+        }
+        let img_path = run_dir.join(&meta.image);
+        if !img_path.exists() {
+            continue;
+        }
+        let Ok(mut img) = image::open(&img_path).map(|im| im.into_rgba8()) else {
+            continue;
+        };
+        for label in meta.polyp_labels.iter().filter_map(|l| l.bbox_px) {
+            draw_rect(&mut img, label, Rgba([255, 64, 192, 255]), 2);
+        }
+        let filename = Path::new(&meta.image)
+            .file_name()
+            .map(|s| s.to_string_lossy().into_owned())
+            .unwrap_or(meta.image);
+        let _ = img.save(out_dir.join(filename));
+    }
+}
+
+fn draw_rect(img: &mut RgbaImage, bbox: [f32; 4], color: Rgba<u8>, thickness: u32) {
+    let (w, h) = img.dimensions();
+    let clamp = |v: f32, max: u32| -> u32 {
+        v.max(0.0).min((max as i32 - 1) as f32) as u32
+    };
+    let x0 = clamp(bbox[0], w);
+    let y0 = clamp(bbox[1], h);
+    let x1 = clamp(bbox[2], w);
+    let y1 = clamp(bbox[3], h);
+    if x0 >= w || y0 >= h || x1 >= w || y1 >= h {
+        return;
+    }
+    for t in 0..thickness {
+        let xx0 = x0 + t;
+        let yy0 = y0 + t;
+        let xx1 = x1.saturating_sub(t);
+        let yy1 = y1.saturating_sub(t);
+        if xx0 >= w || yy0 >= h || xx1 >= w || yy1 >= h || xx0 > xx1 || yy0 > yy1 {
+            continue;
+        }
+        for x in xx0..=xx1 {
+            if yy0 < h {
+                img.put_pixel(x, yy0, color);
+            }
+            if yy1 < h {
+                img.put_pixel(x, yy1, color);
+            }
+        }
+        for y in yy0..=yy1 {
+            if xx0 < w {
+                img.put_pixel(xx0, y, color);
+            }
+            if xx1 < w {
+                img.put_pixel(xx1, y, color);
+            }
+        }
     }
 }
 
@@ -297,18 +498,33 @@ pub fn record_front_camera_metadata(
     mut state: ResMut<RecorderState>,
     buffer: Res<FrontCameraFrameBuffer>,
     front_state: Res<FrontCameraState>,
+    balloon: Res<BalloonControl>,
+    removal: Res<PolypTelemetry>,
     cams: Query<(&Camera, &GlobalTransform), With<FrontCamera>>,
     capture_cams: Query<(&Camera, &GlobalTransform), With<FrontCaptureCamera>>,
     capture: Res<FrontCaptureTarget>,
     readback: Res<FrontCaptureReadback>,
+    spawn_meta: Res<crate::polyp::PolypSpawnMeta>,
+    polyp_telemetry: Res<PolypTelemetry>,
     polyps: Query<&GlobalTransform, With<crate::polyp::Polyp>>,
 ) {
     if !state.enabled {
         return;
     }
+    // Pause capture while front balloon/vacuum is engaged or during polyp removal dwell.
+    state.paused = balloon.head_inflated || removal.removing;
+    if state.paused {
+        return;
+    }
     {
         let interval = &mut config.capture_interval;
-        interval.tick(time.delta());
+        let mut delta = time.delta();
+        if let Some(d) = polyp_telemetry.nearest_distance {
+            if d <= 4.0 && d > 2.0 {
+                delta *= 2;
+            }
+        }
+        interval.tick(delta);
         if !interval.just_finished() {
             return;
         }
@@ -382,8 +598,10 @@ pub fn record_front_camera_metadata(
     }
 
     let image_name = format!("frame_{:05}.png", state.frame_idx);
+    let images_dir = state.session_dir.join(IMAGES_DIR);
+    let _ = fs::create_dir_all(&images_dir);
+    let image_path = images_dir.join(&image_name);
     let mut image_present = false;
-    let image_path = state.session_dir.join(&image_name);
     if let Some(data) = readback.latest.as_ref() {
         let expected_len = (capture.size.x * capture.size.y * 4) as usize;
         if data.len() == expected_len
@@ -411,13 +629,14 @@ pub fn record_front_camera_metadata(
             .duration_since(UNIX_EPOCH)
             .map(|d| d.as_secs_f64())
             .unwrap_or(0.0),
-        image: image_name.clone(),
+        image: format!("{}/{}", IMAGES_DIR, image_name),
         image_present,
         camera_active: front_state.active,
+        polyp_seed: spawn_meta.seed,
         polyp_labels: labels,
     };
 
-    let out_dir = state.session_dir.join("labels");
+    let out_dir = state.session_dir.join(LABELS_DIR);
     let _ = fs::create_dir_all(&out_dir);
     let meta_path = out_dir.join(format!("frame_{:05}.json", state.frame_idx));
     if let Ok(serialized) = serde_json::to_string_pretty(&meta) {

@@ -154,7 +154,7 @@ pub fn spawn_controls_ui(mut commands: Commands) {
                     font_size: 15.0,
                     ..default()
                 },
-                TextColor(soft),
+                TextColor(Color::srgba(0.9, 0.2, 0.2, 0.95)),
             ),
             (
                 TextSpan::from("REMOVAL :: idle"),
@@ -232,7 +232,11 @@ pub fn update_controls_ui(
         };
         *writer.text(*ui, 13) = format!("CONSENSUS :: {}", consensus);
         let rec_state = if recorder.enabled {
-            format!("REC :: on (#{})", recorder.frame_idx)
+            if recorder.paused {
+                format!("REC :: paused (#{})", recorder.frame_idx)
+            } else {
+                format!("REC ● on (#{})", recorder.frame_idx)
+            }
         } else {
             "REC :: off".to_string()
         };

@@ -17,24 +17,27 @@ use balloon_control::{
     balloon_body_update, balloon_control_input, balloon_marker_update, spawn_balloon_body,
     spawn_balloon_marker, BalloonControl,
 };
-use autopilot::{auto_inchworm, auto_toggle, AutoDrive};
+use autopilot::{auto_inchworm, auto_toggle, data_run_toggle, AutoDrive, DataRun};
 use camera::{camera_controller, pov_toggle_system, setup_camera, PovState};
 use controls::{control_inputs_and_apply, ControlParams};
 use hud::{spawn_controls_ui, update_controls_ui};
 use polyp::{
     apply_detection_votes, polyp_detection_system, polyp_removal_system, spawn_polyps,
-    PolypDetectionVotes, PolypRemoval, PolypTelemetry,
+    PolypDetectionVotes, PolypRemoval, PolypRandom, PolypSpawnMeta, PolypTelemetry,
 };
 use probe::{distributed_thrust, peristaltic_drive, spawn_probe, StretchState, TipSense};
 use tunnel::{setup_tunnel, tunnel_expansion_system, cecum_detection, start_detection, CecumState};
 use vision::{
-    capture_front_camera_frame, on_front_capture_readback, poll_burn_inference,
-    schedule_burn_inference, setup_front_capture, track_front_camera_state, BurnDetector,
-    BurnInferenceState, FrontCameraFrameBuffer, FrontCaptureReadback, FrontCameraState,
-    RecorderConfig, RecorderState, record_front_camera_metadata, recorder_toggle_hotkey,
+    auto_start_recording, auto_stop_recording_on_cecum, capture_front_camera_frame,
+    on_front_capture_readback, poll_burn_inference, record_front_camera_metadata,
+    recorder_toggle_hotkey, schedule_burn_inference, setup_front_capture,
+    track_front_camera_state, AutoRecordTimer, BurnDetector, BurnInferenceState,
+    FrontCameraFrameBuffer, FrontCaptureReadback, FrontCameraState, RecorderConfig, RecorderState,
+    RecorderMotion,
 };
 
 pub fn run_app() {
+    let polyp_seed = PolypRandom::seed_from_env_or_time();
     App::new()
         .insert_resource(AmbientLight {
             color: Color::srgb(1.0, 1.0, 1.0),
@@ -44,10 +47,13 @@ pub fn run_app() {
         .insert_resource(BalloonControl::default())
         .insert_resource(StretchState::default())
         .insert_resource(TipSense::default())
+        .insert_resource(PolypSpawnMeta { seed: polyp_seed })
+        .insert_resource(PolypRandom::new(polyp_seed))
         .insert_resource(PolypTelemetry::default())
         .insert_resource(PolypDetectionVotes::default())
         .insert_resource(PolypRemoval::default())
         .insert_resource(AutoDrive::default())
+        .insert_resource(DataRun::default())
         .insert_resource(CecumState::default())
         .insert_resource(PovState::default())
         .insert_resource(FrontCameraState::default())
@@ -57,6 +63,8 @@ pub fn run_app() {
         .insert_resource(BurnInferenceState::default())
         .insert_resource(RecorderConfig::default())
         .insert_resource(RecorderState::default())
+        .insert_resource(RecorderMotion::default())
+        .insert_resource(AutoRecordTimer::default())
         .insert_resource(ControlParams {
             tension: 0.5,
             stiffness: 500.0,
@@ -91,6 +99,7 @@ pub fn run_app() {
             (
                 balloon_control_input,
                 balloon_body_update,
+                data_run_toggle,
                 auto_toggle,
                 auto_inchworm,
                 balloon_marker_update,
@@ -109,6 +118,8 @@ pub fn run_app() {
             Update,
             (
                 recorder_toggle_hotkey,
+                auto_start_recording,
+                auto_stop_recording_on_cecum,
                 record_front_camera_metadata.after(capture_front_camera_frame),
                 control_inputs_and_apply,
                 update_controls_ui,

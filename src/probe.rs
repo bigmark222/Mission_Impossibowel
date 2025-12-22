@@ -348,15 +348,16 @@ pub fn peristaltic_drive(
         && (keys.pressed(KeyCode::ArrowDown) || keys.pressed(KeyCode::KeyK));
 
     let dt = time.delta_secs();
-    // Pause manual length changes while removing a polyp.
-    let autopause = removal.in_progress;
+    // Pause manual length changes while removing a polyp or when very close to a target.
+    let autopause = removal.in_progress
+        || (polyp.detected && polyp.nearest_distance.map_or(false, |d| d < 1.2));
 
     // Slow extend as we approach a detected polyp or the cecum to avoid overshooting.
     let slow_factor = if auto.enabled && polyp.detected {
         polyp
             .nearest_distance
-            .map(|d| (d / 3.5).clamp(0.2, 1.0))
-            .unwrap_or(0.5)
+            .map(|d| (d / 5.0).clamp(0.05, 0.35))
+            .unwrap_or(0.2)
     } else {
         1.0
     };

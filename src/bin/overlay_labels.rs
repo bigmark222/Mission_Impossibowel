@@ -1,6 +1,6 @@
 use std::env;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use image::{Rgba, RgbaImage};
 use serde::Deserialize;
@@ -18,6 +18,8 @@ struct PolypLabel {
 struct CaptureMetadata {
     image: String,
     image_present: bool,
+    #[allow(dead_code)]
+    polyp_seed: Option<u64>,
     polyp_labels: Vec<PolypLabel>,
 }
 
@@ -94,7 +96,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         for label in meta.polyp_labels.iter().filter_map(|l| l.bbox_px) {
             draw_rect(&mut img, label, Rgba([255, 64, 192, 255]), 2);
         }
-        let out_path = out_dir.join(meta.image);
+        let filename = Path::new(&meta.image)
+            .file_name()
+            .map(|s| s.to_string_lossy().into_owned())
+            .unwrap_or(meta.image);
+        let out_path = out_dir.join(filename);
         img.save(out_path)?;
     }
 

@@ -2,6 +2,9 @@ use bevy::math::primitives::{Capsule3d, Sphere};
 use bevy::prelude::*;
 use bevy_mesh::primitives::Meshable;
 use bevy_rapier3d::prelude::*;
+use rand::rngs::StdRng;
+use rand::{Rng, SeedableRng};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::probe::{ProbeHead, PROBE_BASE_LENGTH, PROBE_START_TAIL_Z};
 use crate::tunnel::{
@@ -48,23 +51,66 @@ pub struct PolypRemoval {
     pub in_progress: bool,
 }
 
-fn hash01(i: u32) -> f32 {
-    // Simple deterministic hash to pseudo-random [0,1).
-    let x = (i as f32 * 12.9898 + 78.233).sin() * 43758.5453;
-    x.fract()
+#[derive(Resource)]
+pub struct PolypRandom {
+    seed: u64,
+    rng: StdRng,
+}
+
+impl PolypRandom {
+    pub fn new(seed: u64) -> Self {
+        Self {
+            seed,
+            rng: StdRng::seed_from_u64(seed),
+        }
+    }
+    pub fn seed_from_env_or_time() -> u64 {
+        std::env::var("POLYP_SEED")
+            .ok()
+            .and_then(|s| s.parse::<u64>().ok())
+            .unwrap_or_else(|| {
+                SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .map(|d| d.as_nanos() as u64)
+                    .unwrap_or(1)
+            })
+    }
+    pub fn from_env_or_time() -> Self {
+        let seed = Self::seed_from_env_or_time();
+        Self::new(seed)
+    }
+    pub fn seed(&self) -> u64 {
+        self.seed
+    }
+    pub fn rng(&mut self) -> &mut StdRng {
+        &mut self.rng
+    }
+}
+
+#[derive(Resource, Clone, Copy)]
+pub struct PolypSpawnMeta {
+    pub seed: u64,
+}
+
+fn finite_vec3(v: Vec3) -> bool {
+    v.x.is_finite() && v.y.is_finite() && v.z.is_finite()
 }
 
 pub fn spawn_polyps(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    mut polyp_rng: ResMut<PolypRandom>,
+    mut spawn_meta: ResMut<PolypSpawnMeta>,
 ) {
+    spawn_meta.seed = polyp_rng.seed();
     // Keep all polyps ahead of the initial probe head.
     let (_, _, head_start_z) = advance_centerline(PROBE_START_TAIL_Z, PROBE_BASE_LENGTH);
-    let count = 14;
-    let margin = 6.0;
+    let rng = polyp_rng.rng();
+    let count = rng.gen_range(12..=20);
+    let margin = rng.gen_range(4.5..7.5);
     let usable_length = TUNNEL_LENGTH - margin * 2.0;
-    let spacing = usable_length / (count as f32);
+    let spacing = usable_length / (count as f32 + rng.gen_range(-2.0..2.0));
     #[derive(Clone)]
     enum Variant {
         UvSphere {
@@ -127,7 +173,7 @@ pub fn spawn_polyps(
     let mut total = 0;
 
     for i in 0..count {
-        let z_offset = margin + spacing * i as f32;
+        let z_offset = margin + spacing * i as f32 + rng.gen_range(-0.4..0.4);
         let (center, tangent, _) = advance_centerline(TUNNEL_START_Z, z_offset);
 
         // Skip any position that would spawn behind the initial head.
@@ -139,7 +185,7 @@ pub fn spawn_polyps(
         let up = basis * Vec3::Y;
 
         // Radial placement around the tunnel wall.
-        let angle = hash01(i as u32) * std::f32::consts::TAU;
+        let angle = rng.gen_range(0.0..std::f32::consts::TAU);
         let radial_dir = {
             let dir = (right * angle.cos() + up * angle.sin()).normalize_or_zero();
             if dir.length_squared() < 1e-6 {
@@ -149,19 +195,23 @@ pub fn spawn_polyps(
             }
         };
 
-        let size_roll = hash01((i * 97 + 11) as u32);
-        let size_r = hash01((i * 109 + 23) as u32);
-        let (scale_min, scale_max) = if size_roll < 0.65 {
-            (0.6, 1.0)
-        } else if size_roll < 0.9 {
-            (1.0, 1.6)
+        let size_roll: f32 = rng.r#gen::<f32>();
+        let size_r: f32 = rng.r#gen::<f32>();
+        let (scale_min, scale_max) = if size_roll < 0.55 {
+            (0.6, 1.05)
+        } else if size_roll < 0.85 {
+            (0.95, 1.8)
         } else {
-            (1.6, 2.4)
+            (1.6, 2.8)
         };
         let t = size_r * size_r;
-        let scale = scale_min + (scale_max - scale_min) * t;
+        let mut scale = scale_min + (scale_max - scale_min) * t;
+        if !scale.is_finite() {
+            continue;
+        }
+        scale = scale.clamp(0.5, 3.0);
 
-        let shape_roll = hash01((i * 53 + 7) as u32);
+        let shape_roll: f32 = rng.r#gen::<f32>();
         let shape_idx = (shape_roll * mesh_variants.len() as f32)
             .floor()
             .clamp(0.0, (mesh_variants.len() - 1) as f32) as usize;
@@ -173,10 +223,12 @@ pub fn spawn_polyps(
         let pos = center + radial_dir * radial_offset;
 
         let wall_color = wall_base_color().to_srgba();
-        let jitter = |seed: u32| -> f32 { (hash01(seed) - 0.5) * 0.1 };
-        let r = (wall_color.red + jitter((i * 29 + 3) as u32)).clamp(0.0, 1.0);
-        let g = (wall_color.green + jitter((i * 31 + 5) as u32)).clamp(0.0, 1.0);
-        let b = (wall_color.blue + jitter((i * 37 + 7) as u32)).clamp(0.0, 1.0);
+        let jitter = |base: f32, rng: &mut StdRng| -> f32 {
+            (base + rng.gen_range(-0.08..0.08)).clamp(0.0, 1.0)
+        };
+        let r = jitter(wall_color.red, rng);
+        let g = jitter(wall_color.green, rng);
+        let b = jitter(wall_color.blue, rng);
         let base_color = Color::srgba(r, g, b, 1.0);
         let bc = base_color.to_srgba();
         let emissive_base = Color::srgba(bc.red * 0.6, bc.green * 0.35, bc.blue * 0.6, 1.0);
@@ -190,7 +242,7 @@ pub fn spawn_polyps(
 
         let twist = Quat::from_axis_angle(
             radial_dir,
-            (hash01((i * 71 + 13) as u32) - 0.5) * std::f32::consts::TAU,
+            rng.gen_range(-std::f32::consts::PI..std::f32::consts::PI),
         );
         let align = Quat::from_rotation_arc(Vec3::Y, radial_dir);
         let mut root_transform = Transform {
@@ -240,7 +292,11 @@ pub fn spawn_polyps(
             }
         };
 
-        let collider_radius = (base_radius_scaled * 0.9).max(0.01);
+        if !finite_vec3(pos) {
+            continue;
+        }
+
+        let collider_radius = (base_radius_scaled * 0.9).max(0.05);
         let mut entity = commands.spawn((
             Polyp {
                 removed: false,
