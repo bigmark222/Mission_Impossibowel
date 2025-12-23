@@ -95,97 +95,81 @@ impl<B: Backend> TinyDet<B> {
         let denom = box_mask.clone().sum() + Tensor::from_floats([1e-6], device);
         let box_loss = masked.sum() / denom;
 
-        // CIoU term computed on host data (placeholder until a fully tensorized version; TODO: replace with tensor ops).
-        let ciou_loss = self.ciou_loss_host(box_preds, target_boxes, box_mask, device);
+        let ciou_loss = self.ciou_loss(box_preds, target_boxes, box_mask, device);
 
         obj_loss + box_loss + ciou_loss
     }
 
-    fn ciou_loss_host(
+    fn ciou_loss(
         &self,
         pred: Tensor<B, 4>,
         target: Tensor<B, 4>,
         mask: Tensor<B, 4>,
         device: &B::Device,
     ) -> Tensor<B, 1> {
-        // Fallback host-side CIoU approximation to avoid tensor API friction.
-        let p = match pred.to_data().to_vec::<f32>() {
-            Ok(v) => v,
-            Err(_) => return Tensor::from_floats([0.0], device),
-        };
-        let t = match target.to_data().to_vec::<f32>() {
-            Ok(v) => v,
-            Err(_) => return Tensor::from_floats([0.0], device),
-        };
-        let m = match mask.to_data().to_vec::<f32>() {
-            Ok(v) => v,
-            Err(_) => return Tensor::from_floats([0.0], device),
-        };
-        let shape = pred.dims();
-        if shape.len() != 4 {
-            return Tensor::from_floats([0.0], device);
-        }
-        let (b, _c, h, w) = (shape[0], shape[1], shape[2], shape[3]);
-        let mut sum = 0.0f32;
-        let mut count = 0.0f32;
-        let hw = h * w;
-        for bi in 0..b {
-            for yi in 0..h {
-                for xi in 0..w {
-                    let idx = bi * 4 * hw + yi * w + xi;
-                    let obj_mask = m[idx]; // assumes mask channel 0 holds objectness
-                    if obj_mask <= 0.0 {
-                        continue;
-                    }
-                    let base = bi * 4 * hw + yi * w + xi;
-                    let px0 = p[base];
-                    let py0 = p[base + hw];
-                    let px1 = p[base + 2 * hw];
-                    let py1 = p[base + 3 * hw];
+        let eps = Tensor::from_floats([1e-6], device);
+        let p = sigmoid(pred).clamp(0.0, 1.0);
+        let t = target.clamp(0.0, 1.0);
+        let obj_mask = mask.narrow(1, 0, 1);
 
-                    let tx0 = t[base];
-                    let ty0 = t[base + hw];
-                    let tx1 = t[base + 2 * hw];
-                    let ty1 = t[base + 3 * hw];
+        let p = p.clone().reshape([p.dims()[0], 4, p.dims()[2] * p.dims()[3]]);
+        let t = t.clone().reshape([t.dims()[0], 4, t.dims()[2] * t.dims()[3]]);
+        let m = obj_mask.clone().reshape([
+            obj_mask.dims()[0],
+            1,
+            obj_mask.dims()[2] * obj_mask.dims()[3],
+        ]);
 
-                    let inter_x0 = px0.max(tx0);
-                    let inter_y0 = py0.max(ty0);
-                    let inter_x1 = px1.min(tx1);
-                    let inter_y1 = py1.min(ty1);
-                    let inter_w = (inter_x1 - inter_x0).max(0.0);
-                    let inter_h = (inter_y1 - inter_y0).max(0.0);
-                    let inter = inter_w * inter_h;
+        let px0 = p.clone().narrow(1, 0, 1);
+        let py0 = p.clone().narrow(1, 1, 1);
+        let px1 = p.clone().narrow(1, 2, 1);
+        let py1 = p.clone().narrow(1, 3, 1);
 
-                    let area_p = ((px1 - px0).max(0.0)) * ((py1 - py0).max(0.0));
-                    let area_t = ((tx1 - tx0).max(0.0)) * ((ty1 - ty0).max(0.0));
-                    let union = (area_p + area_t - inter).max(1e-6);
-                    let iou = inter / union;
+        let tx0 = t.clone().narrow(1, 0, 1);
+        let ty0 = t.clone().narrow(1, 1, 1);
+        let tx1 = t.clone().narrow(1, 2, 1);
+        let ty1 = t.clone().narrow(1, 3, 1);
 
-                    let pcx = (px0 + px1) * 0.5;
-                    let pcy = (py0 + py1) * 0.5;
-                    let tcx = (tx0 + tx1) * 0.5;
-                    let tcy = (ty0 + ty1) * 0.5;
-                    let rho2 = (pcx - tcx).powi(2) + (pcy - tcy).powi(2);
+        let inter_x0 = px0.clone().max_pair(tx0.clone());
+        let inter_y0 = py0.clone().max_pair(ty0.clone());
+        let inter_x1 = px1.clone().min_pair(tx1.clone());
+        let inter_y1 = py1.clone().min_pair(ty1.clone());
 
-                    let cx_min = px0.min(tx0);
-                    let cy_min = py0.min(ty0);
-                    let cx_max = px1.max(tx1);
-                    let cy_max = py1.max(ty1);
-                    let c2 = ((cx_max - cx_min).max(0.0)).powi(2)
-                        + ((cy_max - cy_min).max(0.0)).powi(2)
-                        + 1e-6;
+        let inter_w = (inter_x1 - inter_x0).clamp_min(0.0);
+        let inter_h = (inter_y1 - inter_y0).clamp_min(0.0);
+        let inter = inter_w.clone() * inter_h.clone();
 
-                    let diou = 1.0 - iou + rho2 / c2;
-                    sum += diou;
-                    count += 1.0;
-                }
-            }
-        }
-        if count == 0.0 {
-            Tensor::from_floats([0.0], device)
-        } else {
-            Tensor::from_floats([sum / count], device)
-        }
+        let area_p = (px1.clone() - px0.clone()).clamp_min(0.0)
+            * (py1.clone() - py0.clone()).clamp_min(0.0);
+        let area_t = (tx1.clone() - tx0.clone()).clamp_min(0.0)
+            * (ty1.clone() - ty0.clone()).clamp_min(0.0);
+        let union = area_p + area_t - inter.clone() + eps.clone();
+        let iou = inter / union;
+
+        let half = Tensor::from_floats([0.5], device);
+        let two = Tensor::from_floats([2.0], device);
+
+        let cx_p = (px0.clone() + px1.clone()) * half.clone();
+        let cy_p = (py0.clone() + py1.clone()) * half.clone();
+        let cx_t = (tx0.clone() + tx1.clone()) * half.clone();
+        let cy_t = (ty0.clone() + ty1.clone()) * half;
+
+        let rho2 = (cx_p - cx_t).powf(two.clone()) + (cy_p - cy_t).powf(two.clone());
+
+        let enc_x0 = px0.min_pair(tx0);
+        let enc_y0 = py0.min_pair(ty0);
+        let enc_x1 = px1.max_pair(tx1);
+        let enc_y1 = py1.max_pair(ty1);
+        let c2 = (enc_x1 - enc_x0)
+            .clamp_min(1e-6)
+            .powf(two.clone())
+            + (enc_y1 - enc_y0).clamp_min(1e-6).powf(two);
+
+        let diou = iou - rho2 / c2;
+        let ciou_loss = (Tensor::from_floats([1.0], device) - diou) * m.clone();
+
+        let denom = m.sum().clamp_min(1e-6);
+        ciou_loss.sum() / denom
     }
 }
 

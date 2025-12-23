@@ -38,8 +38,8 @@ use seed::{SeedState, resolve_seed};
 use tunnel::{CecumState, cecum_detection, setup_tunnel, start_detection, tunnel_expansion_system};
 use vision::{
     AutoRecordTimer, BurnDetector, BurnInferenceState, DetectorHandle, FrontCameraFrameBuffer,
-    FrontCameraState, FrontCaptureReadback, RecorderConfig, RecorderMotion, RecorderState,
-    auto_start_recording, auto_stop_recording_on_cecum, capture_front_camera_frame,
+    FrontCameraState, FrontCaptureReadback, InferenceThresholds, RecorderConfig, RecorderMotion,
+    RecorderState, auto_start_recording, auto_stop_recording_on_cecum, capture_front_camera_frame,
     datagen_failsafe_recording, finalize_datagen_run, on_front_capture_readback,
     poll_burn_inference, record_front_camera_metadata, recorder_toggle_hotkey,
     schedule_burn_inference, setup_front_capture, track_front_camera_state, DetectionOverlayState,
@@ -48,10 +48,14 @@ use vision::{
 pub fn run_app(args: crate::cli::AppArgs) {
     let polyp_seed = resolve_seed(args.seed);
     let headless = args.headless;
+    let infer_thresh = InferenceThresholds {
+        obj_thresh: args.infer_obj_thresh,
+        iou_thresh: args.infer_iou_thresh,
+    };
     App::new()
         .insert_resource(SeedState { value: polyp_seed })
         .insert_resource(args.mode)
-        .insert_resource(DetectorHandle::default())
+        .insert_resource(DetectorHandle::with_thresholds(infer_thresh))
         .insert_resource(AmbientLight {
             color: Color::srgb(1.0, 1.0, 1.0),
             brightness: 0.4,

@@ -27,6 +27,12 @@ pub struct AppArgs {
     /// Hide the main window (offscreen/headless).
     #[arg(long, default_value_t = false)]
     pub headless: bool,
+    /// Burn inference objectness threshold (runtime).
+    #[arg(long, default_value_t = 0.3)]
+    pub infer_obj_thresh: f32,
+    /// Burn inference IoU threshold for NMS (runtime).
+    #[arg(long, default_value_t = 0.5)]
+    pub infer_iou_thresh: f32,
 }
 
 #[derive(Resource, ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
