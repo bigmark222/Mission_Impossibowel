@@ -1,4 +1,5 @@
 use image::imageops::FilterType;
+use rand::Rng;
 use serde::Deserialize;
 use std::error::Error;
 use std::fs;
@@ -52,6 +53,8 @@ pub struct DatasetConfig {
     pub target_size: Option<(u32, u32)>,
     /// How to resize images when target_size is set.
     pub resize_mode: ResizeMode,
+    /// Probability of applying a horizontal flip augmentation.
+    pub flip_horizontal_prob: f32,
     /// Cap on boxes per image; extras are dropped, padding uses zeros with mask.
     pub max_boxes: usize,
     /// Shuffle samples before iteration.
@@ -63,6 +66,7 @@ impl Default for DatasetConfig {
         Self {
             target_size: Some((512, 512)),
             resize_mode: ResizeMode::Letterbox,
+            flip_horizontal_prob: 0.0,
             max_boxes: 16,
             shuffle: true,
         }
@@ -152,6 +156,7 @@ pub fn load_run_dataset(
             &DatasetConfig {
                 target_size: None,
                 resize_mode: ResizeMode::Force,
+                flip_horizontal_prob: 0.0,
                 max_boxes: usize::MAX,
                 shuffle: false,
             },
@@ -184,8 +189,9 @@ fn load_sample(
             ResizeMode::Force => {
                 width = w;
                 height = h;
-                let resized = image::imageops::resize(&img, w, h, FilterType::Triangle);
-                let boxes = normalize_boxes(&meta.polyp_labels, w, h);
+                let mut resized = image::imageops::resize(&img, w, h, FilterType::Triangle);
+                let mut boxes = normalize_boxes(&meta.polyp_labels, w, h);
+                maybe_hflip(&mut resized, &mut boxes, cfg.flip_horizontal_prob);
                 return build_sample_from_image(
                     resized,
                     width,
@@ -196,7 +202,7 @@ fn load_sample(
                 );
             }
             ResizeMode::Letterbox => {
-                let (resized_img, pad_w, pad_h) = letterbox_resize(&img, w, h)?;
+                let (mut resized_img, pad_w, pad_h) = letterbox_resize(&img, w, h)?;
                 let scale_x = resized_img.width() as f32 / img.width() as f32;
                 let scale_y = resized_img.height() as f32 / img.height() as f32;
 
@@ -228,6 +234,8 @@ fn load_sample(
                     })
                     .collect::<Vec<_>>();
 
+                maybe_hflip(&mut resized_img, &mut boxes, cfg.flip_horizontal_prob);
+
                 if boxes.len() > cfg.max_boxes {
                     boxes.truncate(cfg.max_boxes);
                 }
@@ -244,14 +252,10 @@ fn load_sample(
         }
     }
 
-    build_sample_from_image(
-        img,
-        width,
-        height,
-        normalize_boxes(&meta.polyp_labels, width, height),
-        meta.frame_id,
-        cfg.max_boxes,
-    )
+    let mut boxes = normalize_boxes(&meta.polyp_labels, width, height);
+    let mut img = img;
+    maybe_hflip(&mut img, &mut boxes, cfg.flip_horizontal_prob);
+    build_sample_from_image(img, width, height, boxes, meta.frame_id, cfg.max_boxes)
 }
 
 fn build_sample_from_image(
@@ -361,6 +365,38 @@ fn normalize_boxes_with_px(
         }
     }
     (norm, pxs)
+}
+
+pub(crate) fn maybe_hflip(img: &mut image::RgbImage, boxes: &mut Vec<[f32; 4]>, prob: f32) {
+    if prob <= 0.0 {
+        return;
+    }
+    let mut rng = rand::thread_rng();
+    if rng.gen_range(0.0..1.0) < prob {
+        image::imageops::flip_horizontal_in_place(img);
+        for b in boxes.iter_mut() {
+            let x0 = b[0];
+            let x1 = b[2];
+            b[0] = (1.0 - x1).clamp(0.0, 1.0);
+            b[2] = (1.0 - x0).clamp(0.0, 1.0);
+        }
+    }
+}
+
+#[cfg(test)]
+mod aug_tests {
+    use super::maybe_hflip;
+
+    #[test]
+    fn hflip_boxes_are_inverted() {
+        let mut img = image::RgbImage::new(2, 2);
+        let mut boxes = vec![[0.25, 0.0, 0.75, 1.0]];
+        maybe_hflip(&mut img, &mut boxes, 1.0);
+        let flipped = boxes[0];
+        assert!((flipped[0] - 0.25).abs() < 1e-6);
+        assert!((flipped[2] - 0.75).abs() < 1e-6);
+        assert!(flipped[0] < flipped[2]);
+    }
 }
 
 #[cfg(feature = "burn_runtime")]
