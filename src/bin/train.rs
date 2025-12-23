@@ -200,19 +200,49 @@ mod real {
                 .map_err(|e| anyhow::anyhow!("{:?}", e))?;
             let mut val_sum = 0.0f32;
             let mut val_batches = 0usize;
+            let mut tp = 0usize;
+            let mut fp = 0usize;
+            let mut fn_ = 0usize;
+            let mut matched = 0usize;
             while let Some(val_batch) = val
                 .next_batch::<ADBackend>(args.batch_size, &device)
                 .map_err(|e| anyhow::anyhow!("{:?}", e))?
             {
                 let (v_obj, v_boxes) = model.forward(val_batch.images.clone());
-                let val_iou =
-                    mean_iou_nms(&v_obj, &v_boxes, &val_batch, args.val_obj_thresh, args.val_iou_thresh);
-                val_sum += val_iou;
+                let (iou_sum, matched_count, batch_tp, batch_fp, batch_fn) = val_metrics_nms(
+                    &v_obj,
+                    &v_boxes,
+                    &val_batch,
+                    args.val_obj_thresh,
+                    args.val_iou_thresh,
+                );
+                val_sum += iou_sum;
+                matched += matched_count;
+                tp += batch_tp;
+                fp += batch_fp;
+                fn_ += batch_fn;
                 val_batches += 1;
             }
             if val_batches > 0 {
-                let val_mean = val_sum / val_batches as f32;
-                println!("val mean IoU = {:.4}", val_mean);
+                let val_mean = if matched > 0 {
+                    val_sum / matched as f32
+                } else {
+                    0.0
+                };
+                let precision = if tp + fp > 0 {
+                    tp as f32 / (tp + fp) as f32
+                } else {
+                    0.0
+                };
+                let recall = if tp + fn_ > 0 {
+                    tp as f32 / (tp + fn_) as f32
+                } else {
+                    0.0
+                };
+                println!(
+                    "val mean IoU = {:.4}, precision = {:.3}, recall = {:.3} (tp/fp/fn = {}/{}/{})",
+                    val_mean, precision, recall, tp, fp, fn_
+                );
                 if val_mean > best_val + args.patience_min_delta {
                     best_val = val_mean;
                     no_improve = 0;
@@ -477,24 +507,24 @@ mod real {
         if count == 0.0 { 0.0 } else { sum / count }
     }
 
-    fn mean_iou_nms(
+    fn val_metrics_nms(
         obj_logits: &burn::tensor::Tensor<ADBackend, 4>,
         box_logits: &burn::tensor::Tensor<ADBackend, 4>,
         batch: &BurnBatch<ADBackend>,
         obj_thresh: f32,
         iou_thresh: f32,
-    ) -> f32 {
+    ) -> (f32, usize, usize, usize, usize) {
         let obj = match obj_logits.to_data().to_vec::<f32>() {
             Ok(v) => v,
-            Err(_) => return 0.0,
+            Err(_) => return (0.0, 0, 0, 0, 0),
         };
         let boxes = match box_logits.to_data().to_vec::<f32>() {
             Ok(v) => v,
-            Err(_) => return 0.0,
+            Err(_) => return (0.0, 0, 0, 0, 0),
         };
         let dims = obj_logits.dims();
         if dims.len() != 4 {
-            return 0.0;
+            return (0.0, 0, 0, 0, 0);
         }
         let (b, _c, h, w) = (dims[0], dims[1], dims[2], dims[3]);
         let hw = h * w;
@@ -502,16 +532,19 @@ mod real {
         // Collect GT boxes per image.
         let gt_boxes = match batch.boxes.to_data().to_vec::<f32>() {
             Ok(v) => v,
-            Err(_) => return 0.0,
+            Err(_) => return (0.0, 0, 0, 0, 0),
         };
         let gt_mask = match batch.box_mask.to_data().to_vec::<f32>() {
             Ok(v) => v,
-            Err(_) => return 0.0,
+            Err(_) => return (0.0, 0, 0, 0, 0),
         };
         let max_boxes = batch.boxes.dims()[1];
 
         let mut all_iou = 0.0f32;
         let mut all_matched = 0usize;
+        let mut tp = 0usize;
+        let mut fp = 0usize;
+        let mut fn_total = 0usize;
 
         for bi in 0..b {
             // Decode predictions for image bi.
@@ -537,15 +570,6 @@ mod real {
                     preds.push((score, pb));
                 }
             }
-            if preds.is_empty() {
-                continue;
-            }
-            preds.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
-            let mut boxes_only: Vec<[f32; 4]> = preds.iter().map(|p| p.1).collect();
-            let scores_only: Vec<f32> = preds.iter().map(|p| p.0).collect();
-            let keep = nms(boxes_only.clone(), scores_only, iou_thresh);
-            boxes_only = keep.iter().map(|&i| boxes_only[i]).collect();
-
             let mut gt = Vec::new();
             for gi in 0..max_boxes {
                 let m = gt_mask[bi * max_boxes + gi];
@@ -560,7 +584,25 @@ mod real {
                     gt_boxes[base + 3].clamp(0.0, 1.0),
                 ]);
             }
+
+            if preds.is_empty() {
+                if !gt.is_empty() {
+                    fn_total += gt.len();
+                }
+                continue;
+            }
+            preds.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
+            let mut boxes_only: Vec<[f32; 4]> = preds.iter().map(|p| p.1).collect();
+            let scores_only: Vec<f32> = preds.iter().map(|p| p.0).collect();
+            let keep = nms(boxes_only.clone(), scores_only, iou_thresh);
+            boxes_only = keep.iter().map(|&i| boxes_only[i]).collect();
+
             if gt.is_empty() || boxes_only.is_empty() {
+                if gt.is_empty() {
+                    fp += boxes_only.len();
+                } else {
+                    fn_total += gt.len();
+                }
                 continue;
             }
 
@@ -596,12 +638,17 @@ mod real {
                     all_matched += 1;
                 }
             }
+
+            let matched_count = matched_gt.iter().filter(|m| **m).count();
+            tp += matched_count;
+            fp += preds.len().saturating_sub(matched_count);
+            fn_total += gt.len().saturating_sub(matched_count);
         }
 
         if all_matched == 0 {
-            0.0
+            (0.0, all_matched, tp, fp, fn_total)
         } else {
-            all_iou / all_matched as f32
+            (all_iou / all_matched as f32, all_matched, tp, fp, fn_total)
         }
     }
 

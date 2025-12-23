@@ -23,7 +23,7 @@ Common flags:
 What it does today:
 - Loads capture runs via `BatchIter` (train with aug; val without), builds TinyDet, AdamW, and a linear LR scheduler.
 - Runs epoch/batch loop with per-step optimizer updates; logs loss and mean IoU each log interval.
-- Validation: decodes per-cell predictions, applies sigmoid + NMS, matches to GT boxes with IoU threshold, and averages IoU across val batches.
+- Validation: decodes per-cell predictions, applies sigmoid + NMS, matches to GT boxes with IoU threshold, and reports mean IoU plus precision/recall (tp/fp/fn).
 - Checkpoints: on start, loads model/optim/scheduler from `ckpt_dir` if present; saves them per configured cadence (steps/epochs). Optional early stop tracks best val IoU.
 
 Notes:
@@ -32,7 +32,7 @@ Notes:
 - Runtime inference will attempt to load `checkpoints/tinydet.bin`; if missing or failed, it logs a warning and falls back to the heuristic detector.
 
 Next steps (nice-to-haves):
-- Expose predicted boxes/confidence to HUD/`DetectionResult` so runtime shows actual detections, not just a bool.
-- Bundle a small demo checkpoint or fall back to the heuristic detector with a clear log when no Burn model is available.
-- Tighten validation metrics with per-image precision/recall or mAP in addition to mean IoU.
+- Expose predicted boxes/confidence to HUD/`DetectionResult` so runtime shows actual detections, not just a bool. ✅
+- Bundle a small demo checkpoint or fall back to the heuristic detector with a clear log when no Burn model is available. ✅ (warns + heuristic fallback when checkpoint missing)
+- Tighten validation metrics with per-image precision/recall or mAP in addition to mean IoU (precision/recall now logged; mAP still TODO).
 - Add a sample `train` command here with typical flags, and expose inference thresholds via CLI/env.
