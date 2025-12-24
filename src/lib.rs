@@ -37,12 +37,13 @@ use probe::{StretchState, TipSense, distributed_thrust, peristaltic_drive, spawn
 use seed::{SeedState, resolve_seed};
 use tunnel::{CecumState, cecum_detection, setup_tunnel, start_detection, tunnel_expansion_system};
 use vision::{
-    AutoRecordTimer, BurnDetector, BurnInferenceState, DetectorHandle, FrontCameraFrameBuffer,
-    FrontCameraState, FrontCaptureReadback, InferenceThresholds, RecorderConfig, RecorderMotion,
-    RecorderState, auto_start_recording, auto_stop_recording_on_cecum, capture_front_camera_frame,
-    datagen_failsafe_recording, finalize_datagen_run, on_front_capture_readback,
-    poll_burn_inference, record_front_camera_metadata, recorder_toggle_hotkey, schedule_burn_inference,
-    setup_front_capture, threshold_hotkeys, track_front_camera_state, DetectionOverlayState,
+    AutoRecordTimer, BurnDetector, BurnInferenceState, DetectionOverlayState, DetectorHandle,
+    FrontCameraFrameBuffer, FrontCameraState, FrontCaptureReadback, InferenceThresholds,
+    RecorderConfig, RecorderMotion, RecorderState, auto_start_recording,
+    auto_stop_recording_on_cecum, capture_front_camera_frame, datagen_failsafe_recording,
+    finalize_datagen_run, on_front_capture_readback, poll_burn_inference,
+    record_front_camera_metadata, recorder_toggle_hotkey, schedule_burn_inference,
+    setup_front_capture, threshold_hotkeys, track_front_camera_state,
 };
 
 pub fn run_app(args: crate::cli::AppArgs) {
@@ -82,6 +83,8 @@ pub fn run_app(args: crate::cli::AppArgs) {
         .insert_resource(DetectionOverlayState::default())
         .insert_resource(RecorderConfig {
             output_root: args.output_root.clone(),
+            prune_empty: args.prune_empty,
+            prune_output_root: args.prune_output_root.clone(),
             ..default()
         })
         .insert_resource(RecorderState::default())

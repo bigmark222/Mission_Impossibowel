@@ -1,6 +1,8 @@
 use bevy::ecs::system::RunSystemOnce;
 use bevy::prelude::*;
-use colon_sim::hud::{spawn_detection_overlay, update_detection_overlay_ui, DetectionBoxUI, FallbackBanner};
+use colon_sim::hud::{
+    DetectionBoxUI, FallbackBanner, spawn_detection_overlay, update_detection_overlay_ui,
+};
 use colon_sim::vision::DetectionOverlayState;
 
 #[test]
@@ -32,9 +34,7 @@ fn overlay_spawns_boxes_and_toggles_fallback_banner() {
         .count();
     assert_eq!(box_count, 2);
 
-    let mut banner_q = app
-        .world_mut()
-        .query::<(&Node, &FallbackBanner)>();
+    let mut banner_q = app.world_mut().query::<(&Node, &FallbackBanner)>();
     let Ok((node, _)) = banner_q.single(app.world_mut()) else {
         panic!("fallback banner not found");
     };

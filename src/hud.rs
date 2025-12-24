@@ -196,27 +196,33 @@ pub fn update_detection_overlay_ui(
         let Some(root) = root_q.iter().next() else {
             return;
         };
-        let mut boxes = overlay.boxes.iter().zip(overlay.scores.iter().cloned()).collect::<Vec<_>>();
+        let mut boxes = overlay
+            .boxes
+            .iter()
+            .zip(overlay.scores.iter().cloned())
+            .collect::<Vec<_>>();
         boxes.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
         for (b, score) in boxes {
             let w = (b[2] - b[0]).clamp(0.0, 1.0) * 100.0;
             let h = (b[3] - b[1]).clamp(0.0, 1.0) * 100.0;
             let color = Color::srgba(0.1, 0.8, 1.0, 0.9 * score.clamp(0.25, 1.0));
             commands.entity(root).with_children(|parent| {
-                let _ = parent.spawn((
-                    Node {
-                        position_type: PositionType::Absolute,
-                        left: Val::Percent((b[0] * 100.0).clamp(0.0, 100.0)),
-                        top: Val::Percent((b[1] * 100.0).clamp(0.0, 100.0)),
-                        width: Val::Percent(w),
-                        height: Val::Percent(h),
-                        border: UiRect::all(Val::Px(1.0)),
-                        ..default()
-                    },
-                    BorderColor::all(color),
-                    BackgroundColor(Color::srgba(0.1, 0.7, 1.0, 0.08)),
-                    DetectionBoxUI,
-                )).id();
+                let _ = parent
+                    .spawn((
+                        Node {
+                            position_type: PositionType::Absolute,
+                            left: Val::Percent((b[0] * 100.0).clamp(0.0, 100.0)),
+                            top: Val::Percent((b[1] * 100.0).clamp(0.0, 100.0)),
+                            width: Val::Percent(w),
+                            height: Val::Percent(h),
+                            border: UiRect::all(Val::Px(1.0)),
+                            ..default()
+                        },
+                        BorderColor::all(color),
+                        BackgroundColor(Color::srgba(0.1, 0.7, 1.0, 0.08)),
+                        DetectionBoxUI,
+                    ))
+                    .id();
                 // label
                 parent.spawn((
                     Node {
@@ -333,11 +339,7 @@ pub fn update_controls_ui(
             .as_ref()
             .map(|r| {
                 let boxes = overlay.boxes.len();
-                let max_score = overlay
-                    .scores
-                    .iter()
-                    .cloned()
-                    .fold(0.0_f32, f32::max);
+                let max_score = overlay.scores.iter().cloned().fold(0.0_f32, f32::max);
                 let latency = overlay
                     .inference_ms
                     .map(|ms| format!(" ; {:.1} ms", ms))
@@ -358,10 +360,21 @@ pub fn update_controls_ui(
                             latency
                         )
                     } else {
-                        format!("{} ON ({:.0}% ; 0 boxes{})", kind, r.confidence * 100.0, latency)
+                        format!(
+                            "{} ON ({:.0}% ; 0 boxes{})",
+                            kind,
+                            r.confidence * 100.0,
+                            latency
+                        )
                     }
                 } else {
-                    format!("{} off ({:.0}% ; {} boxes{})", kind, r.confidence * 100.0, boxes, latency)
+                    format!(
+                        "{} off ({:.0}% ; {} boxes{})",
+                        kind,
+                        r.confidence * 100.0,
+                        boxes,
+                        latency
+                    )
                 }
             })
             .unwrap_or_else(|| "--".to_string());

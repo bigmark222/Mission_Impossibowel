@@ -1,13 +1,13 @@
-use bevy::prelude::*;
 use bevy::ecs::system::RunSystemOnce;
+use bevy::prelude::*;
+use bevy::time::Virtual;
 use colon_sim::vision::{
-    schedule_burn_inference, BurnDetector, BurnInferenceState, DetectionOverlayState, DetectorHandle,
-    DetectorKind, FrontCameraFrame, FrontCameraFrameBuffer, FrontCaptureReadback,
-    FrontCaptureTarget, InferenceThresholds,
+    BurnDetector, BurnInferenceState, DetectionOverlayState, DetectorHandle, DetectorKind,
+    FrontCameraFrame, FrontCameraFrameBuffer, FrontCaptureReadback, FrontCaptureTarget,
+    InferenceThresholds, schedule_burn_inference,
 };
 use colon_sim::vision_interfaces::{DetectionResult, Detector, Frame};
 use std::time::Duration;
-use bevy::time::Virtual;
 
 #[derive(Clone)]
 struct FakeDetector;

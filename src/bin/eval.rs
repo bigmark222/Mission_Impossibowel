@@ -2,14 +2,14 @@
 mod real {
     use anyhow::Result;
     use burn::backend::Autodiff;
-    #[cfg(feature = "burn_wgpu")]
-    use burn_wgpu::Wgpu;
     #[cfg(not(feature = "burn_wgpu"))]
     use burn::backend::ndarray::NdArray;
     use burn::module::Module;
     use burn::record::{BinFileRecorder, FullPrecisionSettings};
+    #[cfg(feature = "burn_wgpu")]
+    use burn_wgpu::Wgpu;
     use clap::Parser;
-    use colon_sim::burn_model::{nms, TinyDet, TinyDetConfig};
+    use colon_sim::burn_model::{TinyDet, TinyDetConfig, nms};
     use colon_sim::tools::burn_dataset::{BatchIter, BurnBatch, DatasetConfig, index_runs};
     use serde::Serialize;
     use std::fs;
@@ -54,9 +54,9 @@ mod real {
         let mut model = TinyDet::<ADBackend>::new(TinyDetConfig::default(), &device);
         let recorder = BinFileRecorder::<FullPrecisionSettings>::new();
         let path = Path::new(&args.checkpoint);
-        model = model
-            .load_file(path, &recorder, &device)
-            .map_err(|e| anyhow::anyhow!("Failed to load checkpoint {}: {:?}", path.display(), e))?;
+        model = model.load_file(path, &recorder, &device).map_err(|e| {
+            anyhow::anyhow!("Failed to load checkpoint {}: {:?}", path.display(), e)
+        })?;
         println!("Loaded checkpoint {}", path.display());
 
         let cfg = DatasetConfig {
@@ -67,7 +67,8 @@ mod real {
         };
         let root = Path::new(&args.input_root);
         let indices = index_runs(root).map_err(|e| anyhow::anyhow!("{:?}", e))?;
-        let mut val = BatchIter::from_indices(indices, cfg).map_err(|e| anyhow::anyhow!("{:?}", e))?;
+        let mut val =
+            BatchIter::from_indices(indices, cfg).map_err(|e| anyhow::anyhow!("{:?}", e))?;
         let mut iou_thresholds: Vec<f32> = vec![args.val_iou_thresh];
         if let Some(extra) = &args.val_iou_sweep {
             for part in extra.split(',') {

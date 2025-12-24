@@ -33,6 +33,12 @@ pub struct AppArgs {
     /// Burn inference IoU threshold for NMS (runtime).
     #[arg(long, default_value_t = 0.5)]
     pub infer_iou_thresh: f32,
+    /// Optionally prune empty-label frames after datagen (writes filtered copy).
+    #[arg(long, default_value_t = false)]
+    pub prune_empty: bool,
+    /// Optional output root for pruned runs (defaults to "<output_root>_filtered").
+    #[arg(long)]
+    pub prune_output_root: Option<PathBuf>,
 }
 
 #[derive(Resource, ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]

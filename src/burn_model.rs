@@ -92,8 +92,7 @@ impl<B: Backend> TinyDet<B> {
         let small = diff_sq.mul_scalar(0.5);
         let large = diff.sub_scalar(0.5);
         let mask_float = mask_small.clone().float();
-        let per_elem =
-            small * mask_float.clone() + large * (ones_boxes.clone() - mask_float);
+        let per_elem = small * mask_float.clone() + large * (ones_boxes.clone() - mask_float);
 
         let masked = per_elem * box_mask.clone();
         let eps_scalar = Tensor::<B, 1>::from_floats([1e-6], device);
@@ -116,8 +115,12 @@ impl<B: Backend> TinyDet<B> {
         let t = target.clamp(0.0, 1.0);
         let obj_mask = mask.narrow(1, 0, 1);
 
-        let p = p.clone().reshape([p.dims()[0], 4, p.dims()[2] * p.dims()[3]]);
-        let t = t.clone().reshape([t.dims()[0], 4, t.dims()[2] * t.dims()[3]]);
+        let p = p
+            .clone()
+            .reshape([p.dims()[0], 4, p.dims()[2] * p.dims()[3]]);
+        let t = t
+            .clone()
+            .reshape([t.dims()[0], 4, t.dims()[2] * t.dims()[3]]);
         let m = obj_mask.clone().reshape([
             obj_mask.dims()[0],
             1,
@@ -143,10 +146,10 @@ impl<B: Backend> TinyDet<B> {
         let inter_h = (inter_y1 - inter_y0).clamp_min(0.0);
         let inter = inter_w.clone() * inter_h.clone();
 
-        let area_p = (px1.clone() - px0.clone()).clamp_min(0.0)
-            * (py1.clone() - py0.clone()).clamp_min(0.0);
-        let area_t = (tx1.clone() - tx0.clone()).clamp_min(0.0)
-            * (ty1.clone() - ty0.clone()).clamp_min(0.0);
+        let area_p =
+            (px1.clone() - px0.clone()).clamp_min(0.0) * (py1.clone() - py0.clone()).clamp_min(0.0);
+        let area_t =
+            (tx1.clone() - tx0.clone()).clamp_min(0.0) * (ty1.clone() - ty0.clone()).clamp_min(0.0);
         let union = (area_p + area_t - inter.clone()).clamp_min(1e-6);
         let iou = inter / union;
 
@@ -161,9 +164,7 @@ impl<B: Backend> TinyDet<B> {
         let enc_y0 = py0.min_pair(ty0);
         let enc_x1 = px1.max_pair(tx1);
         let enc_y1 = py1.max_pair(ty1);
-        let c2 = (enc_x1 - enc_x0)
-            .clamp_min(1e-6)
-            .powf_scalar(2.0)
+        let c2 = (enc_x1 - enc_x0).clamp_min(1e-6).powf_scalar(2.0)
             + (enc_y1 - enc_y0).clamp_min(1e-6).powf_scalar(2.0);
 
         let diou = iou - rho2 / c2;

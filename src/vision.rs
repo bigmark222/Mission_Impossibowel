@@ -20,19 +20,19 @@ use crate::tunnel::CecumState;
 use crate::vision_interfaces::{self, DetectionResult, Frame, FrameRecord, Label, Recorder};
 
 #[cfg(feature = "burn_runtime")]
-use burn::tensor::backend::Backend;
+use crate::burn_model::{TinyDet, TinyDetConfig, nms};
+#[cfg(all(feature = "burn_runtime", not(feature = "burn_wgpu")))]
+use burn::backend::ndarray::NdArray;
 #[cfg(feature = "burn_runtime")]
-use burn::tensor::Tensor;
-#[cfg(feature = "burn_runtime")]
-use crate::burn_model::{nms, TinyDet, TinyDetConfig};
+use burn::module::Module;
 #[cfg(feature = "burn_runtime")]
 use burn::record::{BinFileRecorder, FullPrecisionSettings};
 #[cfg(feature = "burn_runtime")]
-use burn::module::Module;
+use burn::tensor::Tensor;
+#[cfg(feature = "burn_runtime")]
+use burn::tensor::backend::Backend;
 #[cfg(all(feature = "burn_runtime", feature = "burn_wgpu"))]
 use burn_wgpu::Wgpu;
-#[cfg(all(feature = "burn_runtime", not(feature = "burn_wgpu")))]
-use burn::backend::ndarray::NdArray;
 #[cfg(feature = "burn_runtime")]
 use std::sync::{Arc, Mutex};
 
@@ -230,7 +230,7 @@ impl vision_interfaces::Detector for BurnTinyDetDetector {
                     confidence: 0.0,
                     boxes: Vec::new(),
                     scores: Vec::new(),
-                }
+                };
             }
         };
         let input = self.rgba_to_tensor(rgba, frame.size);
@@ -256,7 +256,7 @@ impl vision_interfaces::Detector for BurnTinyDetDetector {
                     confidence: 0.0,
                     boxes: Vec::new(),
                     scores: Vec::new(),
-                }
+                };
             }
         };
         let boxes = match box_logits.to_data().to_vec::<f32>() {
@@ -268,7 +268,7 @@ impl vision_interfaces::Detector for BurnTinyDetDetector {
                     confidence: 0.0,
                     boxes: Vec::new(),
                     scores: Vec::new(),
-                }
+                };
             }
         };
         let dims = obj_logits.dims();
@@ -335,6 +335,8 @@ pub struct RecorderConfig {
     pub output_root: PathBuf,
     pub capture_interval: Timer,
     pub resolution: UVec2,
+    pub prune_empty: bool,
+    pub prune_output_root: Option<PathBuf>,
 }
 
 const MAX_LABEL_DEPTH: f32 = 8.0;
@@ -348,6 +350,8 @@ impl Default for RecorderConfig {
             output_root: PathBuf::from("assets/datasets/captures"),
             capture_interval: Timer::from_seconds(0.33, TimerMode::Repeating),
             resolution: UVec2::new(640, 360),
+            prune_empty: false,
+            prune_output_root: None,
         }
     }
 }
@@ -361,6 +365,7 @@ pub struct RecorderState {
     pub last_image_ok: bool,
     pub paused: bool,
     pub overlays_done: bool,
+    pub prune_done: bool,
     pub initialized: bool,
     pub manifest_written: bool,
 }
@@ -375,6 +380,7 @@ impl Default for RecorderState {
             last_image_ok: false,
             paused: false,
             overlays_done: false,
+            prune_done: false,
             initialized: false,
             manifest_written: false,
         }
@@ -617,8 +623,13 @@ pub fn threshold_hotkeys(
         changed = true;
     }
     if changed {
-        handle.detector.set_thresholds(thresh.obj_thresh, thresh.iou_thresh);
-        info!("Thresholds updated: obj={:.2}, iou={:.2}", thresh.obj_thresh, thresh.iou_thresh);
+        handle
+            .detector
+            .set_thresholds(thresh.obj_thresh, thresh.iou_thresh);
+        info!(
+            "Thresholds updated: obj={:.2}, iou={:.2}",
+            thresh.obj_thresh, thresh.iou_thresh
+        );
     }
 
     if keys.just_pressed(KeyCode::KeyB) {
@@ -628,9 +639,7 @@ pub fn threshold_hotkeys(
                 handle.detector = Box::new(HeuristicDetector);
                 handle.kind = DetectorKind::Heuristic;
                 info!("Switched to heuristic detector");
-            } else if let Some(det) =
-                BurnTinyDetDetector::from_default_or_fallback(*thresh)
-            {
+            } else if let Some(det) = BurnTinyDetDetector::from_default_or_fallback(*thresh) {
                 handle.detector = Box::new(det);
                 handle.kind = DetectorKind::Burn;
                 burn_loaded.model_loaded = true;
@@ -801,6 +810,66 @@ fn generate_overlays(run_dir: &Path) {
             .unwrap_or(meta.image);
         let _ = img.save(out_dir.join(filename));
     }
+}
+
+fn prune_run(input_run: &Path, output_root: &Path) -> std::io::Result<(usize, usize)> {
+    let run_name = input_run
+        .file_name()
+        .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::Other, "invalid run dir"))?;
+    let out_run = output_root.join(run_name);
+    fs::create_dir_all(out_run.join(LABELS_DIR))?;
+    fs::create_dir_all(out_run.join(IMAGES_DIR))?;
+    fs::create_dir_all(out_run.join(OVERLAYS_DIR))?;
+
+    // Copy manifest if present.
+    let manifest_in = input_run.join("run_manifest.json");
+    if manifest_in.exists() {
+        let manifest_out = out_run.join("run_manifest.json");
+        let _ = fs::copy(&manifest_in, &manifest_out);
+    }
+
+    let labels_dir = input_run.join(LABELS_DIR);
+    let mut kept = 0usize;
+    let mut skipped = 0usize;
+    for lbl in fs::read_dir(&labels_dir)? {
+        let lbl = lbl?;
+        if lbl.path().extension().and_then(|s| s.to_str()) != Some("json") {
+            continue;
+        }
+        let raw = fs::read(lbl.path())?;
+        let meta: CaptureMetadata = match serde_json::from_slice(&raw) {
+            Ok(m) => m,
+            Err(_) => {
+                skipped += 1;
+                continue;
+            }
+        };
+        if !meta.image_present || meta.polyp_labels.is_empty() {
+            skipped += 1;
+            continue;
+        }
+        kept += 1;
+        // Copy label
+        let out_label = out_run.join(LABELS_DIR).join(lbl.file_name());
+        fs::write(&out_label, &raw)?;
+        // Copy image
+        let in_img = input_run.join(&meta.image);
+        let out_img = out_run.join(&meta.image);
+        if let Some(parent) = out_img.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        let _ = fs::copy(&in_img, &out_img);
+        // Copy overlay if present
+        if let Some(fname) = Path::new(&meta.image).file_name() {
+            let overlay_in = input_run.join(OVERLAYS_DIR).join(fname);
+            if overlay_in.exists() {
+                let overlay_out = out_run.join(OVERLAYS_DIR).join(fname);
+                let _ = fs::copy(&overlay_in, &overlay_out);
+            }
+        }
+    }
+
+    Ok((kept, skipped))
 }
 
 pub(crate) fn init_run_dirs(
@@ -1118,6 +1187,7 @@ impl<'a> Recorder for DiskRecorder<'a> {
 
 pub fn finalize_datagen_run(
     mode: Res<RunMode>,
+    config: Res<RecorderConfig>,
     mut state: ResMut<RecorderState>,
     mut data_run: ResMut<crate::autopilot::DataRun>,
     mut exit: MessageWriter<AppExit>,
@@ -1134,6 +1204,42 @@ pub fn finalize_datagen_run(
     if !state.overlays_done && state.initialized {
         generate_overlays(&state.session_dir);
         state.overlays_done = true;
+    }
+    if config.prune_empty && !state.prune_done && state.initialized {
+        let out_root = config
+            .prune_output_root
+            .as_ref()
+            .cloned()
+            .unwrap_or_else(|| {
+                let mut base = config.output_root.clone();
+                let suffix = base
+                    .file_name()
+                    .and_then(|s| s.to_str())
+                    .map(|s| format!("{s}_filtered"))
+                    .unwrap_or_else(|| "captures_filtered".to_string());
+                base.set_file_name(suffix);
+                base
+            });
+        match prune_run(&state.session_dir, &out_root) {
+            Ok((kept, skipped)) => {
+                state.prune_done = true;
+                println!(
+                    "Pruned run {} -> {} (kept {}, skipped {})",
+                    state.session_dir.display(),
+                    out_root.display(),
+                    kept,
+                    skipped
+                );
+            }
+            Err(err) => {
+                eprintln!(
+                    "Prune failed for {} -> {}: {:?}",
+                    state.session_dir.display(),
+                    out_root.display(),
+                    err
+                );
+            }
+        }
     }
     data_run.active = false;
     exit.write(AppExit::Success);

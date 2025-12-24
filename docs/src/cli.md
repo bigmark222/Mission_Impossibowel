@@ -8,6 +8,8 @@ The simulator ships multiple binaries (interactive, headless data-gen, overlay t
 - `--output-root <path>`: root for run folders. Default: `assets/datasets/captures`.
 - `--max-frames <N>`: optional frame cap for data runs (stop after N frames).
 - `--headless`: hide the main window / offscreen rendering (for datagen).
+- `--prune-empty`: after datagen, copy the run with empty-label frames removed (non-destructive; raw run kept).
+  - `--prune-output-root <path>`: destination for pruned runs (default: `<output_root>_filtered`).
 
 ## Binaries
 - `sim_view`: interactive/visible sim (also usable for visible datagen with `--mode datagen`).
@@ -116,8 +118,13 @@ The simulator ships multiple binaries (interactive, headless data-gen, overlay t
      - Flags: `--output-root`, `--headless`
        - Recording: automatic to `/data/runs` with time-based seed unless `--seed` is provided.
 
-
-
+12) **Headless datagen with pruning to filtered root**
+    
+    Headless run that writes the raw run and a pruned copy with empty-label frames removed.
+    
+    - Command: `cargo run --release --bin datagen_headless -- --prune-empty`
+    - Flags: `--prune-empty` (optional `--prune-output-root /custom/filtered`); default pruned output is `<output_root>_filtered`.
+      - Recording: automatic; raw run under `assets/datasets/captures`, pruned copy under `assets/datasets/captures_filtered` unless overridden.
 
 ### Overlay previously captured run
    

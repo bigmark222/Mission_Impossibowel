@@ -1,5 +1,5 @@
 use image::imageops::FilterType;
-use rand::{seq::SliceRandom, Rng, SeedableRng};
+use rand::{Rng, SeedableRng, seq::SliceRandom};
 use serde::Deserialize;
 use std::cmp::max;
 use std::error::Error;
@@ -250,6 +250,7 @@ pub fn load_run_dataset(
                 shuffle: false,
                 seed: None,
                 skip_empty_labels: true,
+                drop_last: false,
             },
         )?;
         samples.push(sample);
@@ -339,11 +340,7 @@ fn load_sample(
                     cfg.scale_jitter_min,
                     cfg.scale_jitter_max,
                 );
-                maybe_noise(
-                    &mut resized_img,
-                    cfg.noise_prob,
-                    cfg.noise_strength,
-                );
+                maybe_noise(&mut resized_img, cfg.noise_prob, cfg.noise_strength);
                 maybe_blur(&mut resized_img, cfg.blur_prob, cfg.blur_sigma);
 
                 if boxes.len() > cfg.max_boxes {
@@ -365,11 +362,7 @@ fn load_sample(
     let mut boxes = normalize_boxes(&meta.polyp_labels, width, height);
     let mut img = img;
     maybe_hflip(&mut img, &mut boxes, cfg.flip_horizontal_prob);
-    maybe_jitter(
-        &mut img,
-        cfg.color_jitter_prob,
-        cfg.color_jitter_strength,
-    );
+    maybe_jitter(&mut img, cfg.color_jitter_prob, cfg.color_jitter_strength);
     maybe_scale_jitter(
         &mut img,
         &mut boxes,
@@ -377,11 +370,7 @@ fn load_sample(
         cfg.scale_jitter_min,
         cfg.scale_jitter_max,
     );
-    maybe_noise(
-        &mut img,
-        cfg.noise_prob,
-        cfg.noise_strength,
-    );
+    maybe_noise(&mut img, cfg.noise_prob, cfg.noise_strength);
     maybe_blur(&mut img, cfg.blur_prob, cfg.blur_sigma);
     let sample = build_sample_from_image(img, width, height, boxes, meta.frame_id, cfg.max_boxes)?;
     ONCE.call_once(|| {
@@ -431,10 +420,7 @@ fn build_sample_from_image(
                 width, height
             );
         } else {
-            eprintln!(
-                "Debug: first sample boxes {:?}",
-                boxes
-            );
+            eprintln!("Debug: first sample boxes {:?}", boxes);
         }
     });
 
@@ -543,11 +529,7 @@ pub(crate) fn maybe_hflip(img: &mut image::RgbImage, boxes: &mut Vec<[f32; 4]>, 
     }
 }
 
-pub(crate) fn maybe_jitter(
-    img: &mut image::RgbImage,
-    prob: f32,
-    strength: f32,
-) {
+pub(crate) fn maybe_jitter(img: &mut image::RgbImage, prob: f32, strength: f32) {
     if prob <= 0.0 || strength <= 0.0 {
         return;
     }

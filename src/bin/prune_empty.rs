@@ -6,7 +6,10 @@ use clap::Parser;
 use serde::Deserialize;
 
 #[derive(Parser, Debug)]
-#[command(name = "prune_empty", about = "Copy runs while dropping frames with empty polyp_labels")]
+#[command(
+    name = "prune_empty",
+    about = "Copy runs while dropping frames with empty polyp_labels"
+)]
 struct Args {
     /// Input root containing run_* directories.
     #[arg(long, default_value = "assets/datasets/captures")]
@@ -25,7 +28,9 @@ struct LabelEntry {
 
 #[derive(Deserialize)]
 struct PolypLabel {
+    #[allow(dead_code)]
     bbox_px: Option<[f32; 4]>,
+    #[allow(dead_code)]
     bbox_norm: Option<[f32; 4]>,
 }
 
@@ -43,7 +48,12 @@ fn main() -> Result<()> {
         if !run_path.is_dir() {
             continue;
         }
-        if run_path.file_name().and_then(|s| s.to_str()).map(|s| s.starts_with("run_")) != Some(true) {
+        if run_path
+            .file_name()
+            .and_then(|s| s.to_str())
+            .map(|s| s.starts_with("run_"))
+            != Some(true)
+        {
             continue;
         }
         runs_processed += 1;
@@ -69,9 +79,10 @@ fn main() -> Result<()> {
             if lbl.path().extension().and_then(|s| s.to_str()) != Some("json") {
                 continue;
             }
-            let raw = fs::read(lbl.path()).with_context(|| format!("read {}", lbl.path().display()))?;
-            let meta: LabelEntry =
-                serde_json::from_slice(&raw).with_context(|| format!("parse {}", lbl.path().display()))?;
+            let raw =
+                fs::read(lbl.path()).with_context(|| format!("read {}", lbl.path().display()))?;
+            let meta: LabelEntry = serde_json::from_slice(&raw)
+                .with_context(|| format!("parse {}", lbl.path().display()))?;
             if !meta.image_present || meta.polyp_labels.is_empty() {
                 frames_skipped += 1;
                 continue;
@@ -86,8 +97,9 @@ fn main() -> Result<()> {
             if let Some(parent) = out_img.parent() {
                 fs::create_dir_all(parent)?;
             }
-            fs::copy(&in_img, &out_img)
-                .with_context(|| format!("copy image {} to {}", in_img.display(), out_img.display()))?;
+            fs::copy(&in_img, &out_img).with_context(|| {
+                format!("copy image {} to {}", in_img.display(), out_img.display())
+            })?;
             // copy overlay if present
             if let Some(fname) = Path::new(&meta.image).file_name() {
                 let overlay_in = run_path.join("overlays").join(fname);

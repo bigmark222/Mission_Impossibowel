@@ -6,22 +6,22 @@ mod real {
 
     use anyhow::Result;
     use burn::backend::autodiff::Autodiff;
-    #[cfg(feature = "burn_wgpu")]
-    use burn_wgpu::Wgpu;
     #[cfg(not(feature = "burn_wgpu"))]
     use burn::backend::ndarray::NdArray;
     use burn::lr_scheduler::{
+        LrScheduler,
         cosine::{CosineAnnealingLrScheduler, CosineAnnealingLrSchedulerConfig},
         linear::{LinearLrScheduler, LinearLrSchedulerConfig},
-        LrScheduler,
     };
     use burn::module::Module;
-    use burn::optim::{AdamWConfig, GradientsParams, Optimizer};
     use burn::optim::adaptor::OptimizerAdaptor;
+    use burn::optim::{AdamWConfig, GradientsParams, Optimizer};
     use burn::record::{BinFileRecorder, FullPrecisionSettings, Recorder};
     use burn::tensor::backend::AutodiffBackend;
+    #[cfg(feature = "burn_wgpu")]
+    use burn_wgpu::Wgpu;
     use clap::Parser;
-    use colon_sim::burn_model::{nms, assign_targets_to_grid, TinyDet, TinyDetConfig};
+    use colon_sim::burn_model::{TinyDet, TinyDetConfig, assign_targets_to_grid, nms};
     use colon_sim::tools::burn_dataset::{
         BatchIter, BurnBatch, DatasetConfig, split_runs, split_runs_stratified,
     };
@@ -188,8 +188,7 @@ mod real {
                     .init(),
             ),
             _ => Scheduler::Linear(
-                LinearLrSchedulerConfig::new(args.lr_start, args.lr_end, total_steps.max(1))
-                    .init(),
+                LinearLrSchedulerConfig::new(args.lr_start, args.lr_end, total_steps.max(1)).init(),
             ),
         };
         if let Some(demo) = &args.demo_checkpoint {
@@ -201,7 +200,11 @@ mod real {
                     println!("Loaded demo checkpoint from {}", path.display());
                 }
                 Err(err) => {
-                    eprintln!("Failed to load demo checkpoint {}: {:?}", path.display(), err);
+                    eprintln!(
+                        "Failed to load demo checkpoint {}: {:?}",
+                        path.display(),
+                        err
+                    );
                 }
             }
         } else {
@@ -265,8 +268,7 @@ mod real {
                 if step % args.log_every == 0 {
                     println!(
                         "step {step}: loss={:.4}, mean_iou={:.4}",
-                        loss_scalar,
-                        mean_iou_batch
+                        loss_scalar, mean_iou_batch
                     );
                 }
 
@@ -284,167 +286,171 @@ mod real {
                 }
             }
 
-        let mut val = BatchIter::from_indices(val_idx.clone(), val_cfg.clone())
-            .map_err(|e| anyhow::anyhow!("{:?}", e))?;
-        let mut iou_thresholds: Vec<f32> = vec![args.val_iou_thresh];
-        if let Some(extra) = &args.val_iou_sweep {
-            for part in extra.split(',') {
-                if let Ok(v) = part.trim().parse::<f32>() {
-                    iou_thresholds.push(v);
-                }
-            }
-        }
-        iou_thresholds.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-        iou_thresholds.dedup();
-        struct ValAccum {
-            iou: f32,
-            val_sum: f32,
-            batches: usize,
-            tp: usize,
-            fp: usize,
-            fn_: usize,
-            matched: usize,
-            pr_curve: Vec<(f32, usize, usize, usize)>,
-        }
-        let mut val_accum: Vec<ValAccum> = iou_thresholds
-            .iter()
-            .map(|iou| ValAccum {
-                iou: *iou,
-                val_sum: 0.0,
-                batches: 0,
-                tp: 0,
-                fp: 0,
-                fn_: 0,
-                matched: 0,
-                pr_curve: (1..=19)
-                    .map(|i| (i as f32 * 0.05, 0usize, 0usize, 0usize))
-                    .collect(),
-            })
-            .collect();
-        while let Some(val_batch) = val
-            .next_batch::<ADBackend>(batch_size, &device)
-            .map_err(|e| anyhow::anyhow!("{:?}", e))?
-        {
-            let (v_obj, v_boxes) = model.forward(val_batch.images.clone());
-            for accum in val_accum.iter_mut() {
-                let (iou_sum, matched_count, batch_tp, batch_fp, batch_fn) = val_metrics_nms(
-                    &v_obj,
-                    &v_boxes,
-                    &val_batch,
-                    args.val_obj_thresh,
-                    accum.iou,
-                );
-                accum.val_sum += iou_sum;
-                accum.matched += matched_count;
-                accum.tp += batch_tp;
-                accum.fp += batch_fp;
-                accum.fn_ += batch_fn;
-                for entry in accum.pr_curve.iter_mut() {
-                    let th = entry.0;
-                    let (btp, bfp, bfn) =
-                        val_pr_threshold(&v_obj, &v_boxes, &val_batch, th, accum.iou);
-                    entry.1 += btp;
-                    entry.2 += bfp;
-                    entry.3 += bfn;
-                }
-                accum.batches += 1;
-            }
-        }
-        if val_accum.iter().any(|a| a.batches > 0) {
-            if let Some(path) = &args.metrics_out {
-                if let Some(parent) = Path::new(path).parent() {
-                    let _ = fs::create_dir_all(parent);
-                }
-                let mut line = serde_json::json!({
-                    "epoch": epoch + 1,
-                    "seed": effective_seed,
-                    "val_metrics": []
-                });
-                if let Some(arr) = line.get_mut("val_metrics").and_then(|v| v.as_array_mut()) {
-                    for accum in val_accum.iter() {
-                        if accum.batches == 0 {
-                            continue;
-                        }
-                        let val_mean = if accum.matched > 0 {
-                            accum.val_sum / accum.matched as f32
-                        } else {
-                            0.0
-                        };
-                        let precision = if accum.tp + accum.fp > 0 {
-                            accum.tp as f32 / (accum.tp + accum.fp) as f32
-                        } else {
-                            0.0
-                        };
-                        let recall = if accum.tp + accum.fn_ > 0 {
-                            accum.tp as f32 / (accum.tp + accum.fn_) as f32
-                        } else {
-                            0.0
-                        };
-                        let mut pr_points: Vec<(f32, usize, usize, usize)> = accum.pr_curve.clone();
-                        pr_points.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
-                        let map = compute_map(&pr_points);
-                        arr.push(serde_json::json!({
-                            "iou": accum.iou,
-                            "mean_iou": val_mean,
-                            "precision": precision,
-                            "recall": recall,
-                            "map": map,
-                            "tp": accum.tp,
-                            "fp": accum.fp,
-                            "fn": accum.fn_,
-                            "batches": accum.batches
-                        }));
+            let mut val = BatchIter::from_indices(val_idx.clone(), val_cfg.clone())
+                .map_err(|e| anyhow::anyhow!("{:?}", e))?;
+            let mut iou_thresholds: Vec<f32> = vec![args.val_iou_thresh];
+            if let Some(extra) = &args.val_iou_sweep {
+                for part in extra.split(',') {
+                    if let Ok(v) = part.trim().parse::<f32>() {
+                        iou_thresholds.push(v);
                     }
                 }
-                if let Ok(mut f) = fs::OpenOptions::new().create(true).append(true).open(path) {
-                    let _ = writeln!(f, "{}", line);
+            }
+            iou_thresholds.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+            iou_thresholds.dedup();
+            struct ValAccum {
+                iou: f32,
+                val_sum: f32,
+                batches: usize,
+                tp: usize,
+                fp: usize,
+                fn_: usize,
+                matched: usize,
+                pr_curve: Vec<(f32, usize, usize, usize)>,
+            }
+            let mut val_accum: Vec<ValAccum> = iou_thresholds
+                .iter()
+                .map(|iou| ValAccum {
+                    iou: *iou,
+                    val_sum: 0.0,
+                    batches: 0,
+                    tp: 0,
+                    fp: 0,
+                    fn_: 0,
+                    matched: 0,
+                    pr_curve: (1..=19)
+                        .map(|i| (i as f32 * 0.05, 0usize, 0usize, 0usize))
+                        .collect(),
+                })
+                .collect();
+            while let Some(val_batch) = val
+                .next_batch::<ADBackend>(batch_size, &device)
+                .map_err(|e| anyhow::anyhow!("{:?}", e))?
+            {
+                let (v_obj, v_boxes) = model.forward(val_batch.images.clone());
+                for accum in val_accum.iter_mut() {
+                    let (iou_sum, matched_count, batch_tp, batch_fp, batch_fn) = val_metrics_nms(
+                        &v_obj,
+                        &v_boxes,
+                        &val_batch,
+                        args.val_obj_thresh,
+                        accum.iou,
+                    );
+                    accum.val_sum += iou_sum;
+                    accum.matched += matched_count;
+                    accum.tp += batch_tp;
+                    accum.fp += batch_fp;
+                    accum.fn_ += batch_fn;
+                    for entry in accum.pr_curve.iter_mut() {
+                        let th = entry.0;
+                        let (btp, bfp, bfn) =
+                            val_pr_threshold(&v_obj, &v_boxes, &val_batch, th, accum.iou);
+                        entry.1 += btp;
+                        entry.2 += bfp;
+                        entry.3 += bfn;
+                    }
+                    accum.batches += 1;
                 }
             }
-            for accum in val_accum.iter() {
-                if accum.batches == 0 {
-                    continue;
+            if val_accum.iter().any(|a| a.batches > 0) {
+                if let Some(path) = &args.metrics_out {
+                    if let Some(parent) = Path::new(path).parent() {
+                        let _ = fs::create_dir_all(parent);
+                    }
+                    let mut line = serde_json::json!({
+                        "epoch": epoch + 1,
+                        "seed": effective_seed,
+                        "val_metrics": []
+                    });
+                    if let Some(arr) = line.get_mut("val_metrics").and_then(|v| v.as_array_mut()) {
+                        for accum in val_accum.iter() {
+                            if accum.batches == 0 {
+                                continue;
+                            }
+                            let val_mean = if accum.matched > 0 {
+                                accum.val_sum / accum.matched as f32
+                            } else {
+                                0.0
+                            };
+                            let precision = if accum.tp + accum.fp > 0 {
+                                accum.tp as f32 / (accum.tp + accum.fp) as f32
+                            } else {
+                                0.0
+                            };
+                            let recall = if accum.tp + accum.fn_ > 0 {
+                                accum.tp as f32 / (accum.tp + accum.fn_) as f32
+                            } else {
+                                0.0
+                            };
+                            let mut pr_points: Vec<(f32, usize, usize, usize)> =
+                                accum.pr_curve.clone();
+                            pr_points.sort_by(|a, b| {
+                                a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal)
+                            });
+                            let map = compute_map(&pr_points);
+                            arr.push(serde_json::json!({
+                                "iou": accum.iou,
+                                "mean_iou": val_mean,
+                                "precision": precision,
+                                "recall": recall,
+                                "map": map,
+                                "tp": accum.tp,
+                                "fp": accum.fp,
+                                "fn": accum.fn_,
+                                "batches": accum.batches
+                            }));
+                        }
+                    }
+                    if let Ok(mut f) = fs::OpenOptions::new().create(true).append(true).open(path) {
+                        let _ = writeln!(f, "{}", line);
+                    }
                 }
-                let val_mean = if accum.matched > 0 {
-                    accum.val_sum / accum.matched as f32
-                } else {
-                    0.0
-                };
-                let precision = if accum.tp + accum.fp > 0 {
-                    accum.tp as f32 / (accum.tp + accum.fp) as f32
-                } else {
-                    0.0
-                };
-                let recall = if accum.tp + accum.fn_ > 0 {
-                    accum.tp as f32 / (accum.tp + accum.fn_) as f32
-                } else {
-                    0.0
-                };
-                let mut pr_points: Vec<(f32, usize, usize, usize)> = accum.pr_curve.clone();
-                pr_points.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
-                let map = compute_map(&pr_points);
-                println!(
-                    "val@IoU{:.2} mean IoU = {:.4}, precision = {:.3}, recall = {:.3}, mAP ~= {:.3} (tp/fp/fn = {}/{}/{})",
-                    accum.iou, val_mean, precision, recall, map, accum.tp, accum.fp, accum.fn_
-                );
-                if accum.iou == args.val_iou_thresh {
-                    if val_mean > best_val + args.patience_min_delta {
-                        best_val = val_mean;
-                        no_improve = 0;
+                for accum in val_accum.iter() {
+                    if accum.batches == 0 {
+                        continue;
+                    }
+                    let val_mean = if accum.matched > 0 {
+                        accum.val_sum / accum.matched as f32
                     } else {
-                        no_improve += 1;
-                        if args.patience > 0 && no_improve >= args.patience {
-                            println!(
-                                "Early stopping: no val improvement for {} epochs (best {:.4})",
-                                args.patience, best_val
-                            );
-                            stop_early = true;
+                        0.0
+                    };
+                    let precision = if accum.tp + accum.fp > 0 {
+                        accum.tp as f32 / (accum.tp + accum.fp) as f32
+                    } else {
+                        0.0
+                    };
+                    let recall = if accum.tp + accum.fn_ > 0 {
+                        accum.tp as f32 / (accum.tp + accum.fn_) as f32
+                    } else {
+                        0.0
+                    };
+                    let mut pr_points: Vec<(f32, usize, usize, usize)> = accum.pr_curve.clone();
+                    pr_points
+                        .sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+                    let map = compute_map(&pr_points);
+                    println!(
+                        "val@IoU{:.2} mean IoU = {:.4}, precision = {:.3}, recall = {:.3}, mAP ~= {:.3} (tp/fp/fn = {}/{}/{})",
+                        accum.iou, val_mean, precision, recall, map, accum.tp, accum.fp, accum.fn_
+                    );
+                    if accum.iou == args.val_iou_thresh {
+                        if val_mean > best_val + args.patience_min_delta {
+                            best_val = val_mean;
+                            no_improve = 0;
+                        } else {
+                            no_improve += 1;
+                            if args.patience > 0 && no_improve >= args.patience {
+                                println!(
+                                    "Early stopping: no val improvement for {} epochs (best {:.4})",
+                                    args.patience, best_val
+                                );
+                                stop_early = true;
+                            }
                         }
                     }
                 }
+            } else {
+                println!("No val batches found under {:?}", val_root);
             }
-        } else {
-            println!("No val batches found under {:?}", val_root);
-        }
 
             if args.ckpt_every_epochs > 0 && (epoch + 1) % args.ckpt_every_epochs == 0 {
                 save_checkpoint(
@@ -481,7 +487,11 @@ mod real {
         let tmask = tgt_mask.to_data().to_vec::<f32>().unwrap_or_default();
         let dims = obj_logits.dims();
         let hw = dims[2] * dims[3];
-        let first_obj: Vec<f32> = obj.iter().take(hw).map(|v| 1.0 / (1.0 + (-v).exp())).collect();
+        let first_obj: Vec<f32> = obj
+            .iter()
+            .take(hw)
+            .map(|v| 1.0 / (1.0 + (-v).exp()))
+            .collect();
         let first_boxes: Vec<[f32; 4]> = (0..4)
             .map(|c| {
                 (0..hw)
@@ -514,14 +524,8 @@ mod real {
             .collect();
         println!(
             "DEBUG batch: obj min/max={:.3}/{:.3}, first obj cells (sigmoid) {:?}",
-            first_obj
-                .iter()
-                .cloned()
-                .fold(f32::INFINITY, f32::min),
-            first_obj
-                .iter()
-                .cloned()
-                .fold(f32::NEG_INFINITY, f32::max),
+            first_obj.iter().cloned().fold(f32::INFINITY, f32::min),
+            first_obj.iter().cloned().fold(f32::NEG_INFINITY, f32::max),
             &first_obj[..first_obj.len().min(8)]
         );
         println!(
@@ -640,17 +644,21 @@ mod real {
         if sched_path.with_extension("bin").exists() {
             match scheduler {
                 Scheduler::Linear(s) => {
-                    if let Ok(record) =
-                        burn::record::Recorder::<ADBackend>::load(&recorder, sched_path.clone(), device)
-                    {
+                    if let Ok(record) = burn::record::Recorder::<ADBackend>::load(
+                        &recorder,
+                        sched_path.clone(),
+                        device,
+                    ) {
                         *s = burn::lr_scheduler::LrScheduler::<ADBackend>::load_record(*s, record);
                         println!("Loaded scheduler checkpoint (linear)");
                     }
                 }
                 Scheduler::Cosine(s) => {
-                    if let Ok(record) =
-                        burn::record::Recorder::<ADBackend>::load(&recorder, sched_path.clone(), device)
-                    {
+                    if let Ok(record) = burn::record::Recorder::<ADBackend>::load(
+                        &recorder,
+                        sched_path.clone(),
+                        device,
+                    ) {
                         *s = burn::lr_scheduler::LrScheduler::<ADBackend>::load_record(*s, record);
                         println!("Loaded scheduler checkpoint (cosine)");
                     }
@@ -980,8 +988,14 @@ mod real {
         seed: Option<u64>,
     ) -> Result<()> {
         let manifest = SplitManifest {
-            train: train.iter().map(|s| s.label_path.display().to_string()).collect(),
-            val: val.iter().map(|s| s.label_path.display().to_string()).collect(),
+            train: train
+                .iter()
+                .map(|s| s.label_path.display().to_string())
+                .collect(),
+            val: val
+                .iter()
+                .map(|s| s.label_path.display().to_string())
+                .collect(),
             seed,
         };
         if let Some(parent) = path.parent() {
@@ -995,7 +1009,10 @@ mod real {
 
     fn load_split_manifest(
         path: &Path,
-    ) -> Result<(Vec<colon_sim::tools::burn_dataset::SampleIndex>, Vec<colon_sim::tools::burn_dataset::SampleIndex>)> {
+    ) -> Result<(
+        Vec<colon_sim::tools::burn_dataset::SampleIndex>,
+        Vec<colon_sim::tools::burn_dataset::SampleIndex>,
+    )> {
         let raw = fs::read_to_string(path)?;
         let manifest: SplitManifest = serde_json::from_str(&raw)?;
         let train = manifest

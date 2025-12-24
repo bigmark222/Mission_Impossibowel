@@ -1,18 +1,18 @@
 #![cfg(feature = "burn_runtime")]
 
 use anyhow::Result;
-use colon_sim::tools::burn_dataset::{BatchIter, DatasetConfig, SampleIndex};
-use colon_sim::burn_model::{TinyDet, TinyDetConfig};
-use burn::backend::{ndarray::NdArray, autodiff::Autodiff};
+use burn::backend::{autodiff::Autodiff, ndarray::NdArray};
 use burn::lr_scheduler::linear::LinearLrSchedulerConfig;
-use burn::optim::{AdamW, AdamWConfig, GradientsParams, Optimizer};
 use burn::optim::adaptor::OptimizerAdaptor;
+use burn::optim::{AdamW, AdamWConfig, GradientsParams, Optimizer};
 use burn::tensor::backend::AutodiffBackend;
+use colon_sim::burn_model::{TinyDet, TinyDetConfig};
+use colon_sim::tools::burn_dataset::{BatchIter, DatasetConfig, SampleIndex};
 use image::RgbImage;
-use tempfile::tempdir;
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
+use tempfile::tempdir;
 
 type Backend = NdArray<f32>;
 type ADBackend = Autodiff<Backend>;
@@ -77,10 +77,7 @@ fn train_harness_runs_multi_step_batch_gt1() -> Result<()> {
     // Two steps over batch_size=2.
     let mut loader = BatchIter::from_indices(indices, cfg).expect("loader");
     let mut steps = 0;
-    while let Some(batch) = loader
-        .next_batch::<ADBackend>(2, &device)
-        .expect("batch")
-    {
+    while let Some(batch) = loader.next_batch::<ADBackend>(2, &device).expect("batch") {
         steps += 1;
         let (obj, boxes) = model.forward(batch.images.clone());
         // Build simple targets: one box per image in the center.
@@ -102,12 +99,15 @@ fn train_harness_runs_multi_step_batch_gt1() -> Result<()> {
             tgt_mask[base + 2 * hw] = 1.0;
             tgt_mask[base + 3 * hw] = 1.0;
         }
-        let tgt_obj_t = burn::tensor::Tensor::<ADBackend, 1>::from_floats(tgt_obj.as_slice(), &device)
-            .reshape([batch_len, 1, obj.dims()[2], obj.dims()[3]]);
-        let tgt_boxes_t = burn::tensor::Tensor::<ADBackend, 1>::from_floats(tgt_boxes.as_slice(), &device)
-            .reshape([batch_len, 4, obj.dims()[2], obj.dims()[3]]);
-        let tgt_mask_t = burn::tensor::Tensor::<ADBackend, 1>::from_floats(tgt_mask.as_slice(), &device)
-            .reshape([batch_len, 4, obj.dims()[2], obj.dims()[3]]);
+        let tgt_obj_t =
+            burn::tensor::Tensor::<ADBackend, 1>::from_floats(tgt_obj.as_slice(), &device)
+                .reshape([batch_len, 1, obj.dims()[2], obj.dims()[3]]);
+        let tgt_boxes_t =
+            burn::tensor::Tensor::<ADBackend, 1>::from_floats(tgt_boxes.as_slice(), &device)
+                .reshape([batch_len, 4, obj.dims()[2], obj.dims()[3]]);
+        let tgt_mask_t =
+            burn::tensor::Tensor::<ADBackend, 1>::from_floats(tgt_mask.as_slice(), &device)
+                .reshape([batch_len, 4, obj.dims()[2], obj.dims()[3]]);
 
         let loss = model.loss(
             obj.clone(),
