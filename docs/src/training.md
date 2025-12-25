@@ -25,9 +25,9 @@ Full one-liner (Windows, repo root, forces NVIDIA DX12 and logs adapter):
 <summary>NVIDIA (DX12)</summary>
 
 ```powershell
-$env:WGPU_POWER_PREF="high-performance"; $env:WGPU_BACKEND="dx12"; $env:WGPU_ADAPTER_NAME="NVIDIA"; $env:RUST_LOG="info,wgpu_core=info"; cargo train_hp -- --batch-size 64 --epochs 20 --scheduler cosine --lr-start 3e-4 --lr-end 1e-5 --status-file logs/train_hp_status.json
+$env:WGPU_POWER_PREF="high-performance"; $env:WGPU_BACKEND="dx12"; $env:WGPU_ADAPTER_NAME="NVIDIA"; $env:RUST_LOG="info,wgpu_core=info"; cargo train_hp
 ```
-If DX12 picks WARP/CPU, try `WGPU_BACKEND="vulkan"` and set `WGPU_ADAPTER_NAME` to the exact adapter name from Device Manager.
+If DX12 picks WARP/CPU, try `WGPU_BACKEND="vulkan"` and set `WGPU_ADAPTER_NAME` to the exact adapter name from Device Manager. Override flags by appending them without an extra `--`, e.g., `cargo train_hp --batch-size 128`.
 
 </details>
 
@@ -35,9 +35,9 @@ If DX12 picks WARP/CPU, try `WGPU_BACKEND="vulkan"` and set `WGPU_ADAPTER_NAME` 
 <summary>AMD (DX12)</summary>
 
 ```powershell
-$env:WGPU_POWER_PREF="high-performance"; $env:WGPU_BACKEND="dx12"; $env:WGPU_ADAPTER_NAME="AMD"; $env:RUST_LOG="info,wgpu_core=info"; cargo train_hp -- --batch-size 64 --epochs 20 --scheduler cosine --lr-start 3e-4 --lr-end 1e-5 --status-file logs/train_hp_status.json
+$env:WGPU_POWER_PREF="high-performance"; $env:WGPU_BACKEND="dx12"; $env:WGPU_ADAPTER_NAME="AMD"; $env:RUST_LOG="info,wgpu_core=info"; cargo train_hp
 ```
-If DX12 picks WARP/CPU, try `WGPU_BACKEND="vulkan"` and set `WGPU_ADAPTER_NAME` to the exact adapter name from Device Manager.
+If DX12 picks WARP/CPU, try `WGPU_BACKEND="vulkan"` and set `WGPU_ADAPTER_NAME` to the exact adapter name from Device Manager. Override flags by appending them without an extra `--`, e.g., `cargo train_hp --batch-size 128`.
 
 </details>
 
