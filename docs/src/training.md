@@ -132,6 +132,10 @@ cargo run --features "burn_runtime,burn_wgpu" --bin train -- `
   --lr-end 1e-5 `
   --val-ratio 0.1
 ```
+PowerShell one-liner variant:
+```pwsh
+$env:WGPU_POWER_PREF="high-performance"; $env:WGPU_BACKEND="dx12"; $env:WGPU_ADAPTER_NAME="NVIDIA"; $env:RUST_LOG="info,wgpu_core=info"; $env:TENSOR_WAREHOUSE_MANIFEST="artifacts/tensor_warehouse/v<version>/manifest.json"; cargo train_hp -- --batch-size 64 --epochs 20 --scheduler cosine --lr-start 3e-4 --lr-end 1e-5 --val-ratio 0.1
+```
 
 ```bash
 # Linux / Vulkan (NVIDIA/AMD), from repo root
