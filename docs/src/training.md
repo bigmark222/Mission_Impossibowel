@@ -117,16 +117,36 @@ cargo run --features burn_runtime --bin train -- \
 ```
 
 Sample run (wgpu backend, warehouse preferred if set):
+```pwsh
+# Windows / NVIDIA (DX12), from repo root
+$env:WGPU_POWER_PREF="high-performance"
+$env:WGPU_BACKEND="dx12"
+$env:WGPU_ADAPTER_NAME="NVIDIA"   # omit if single GPU
+$env:RUST_LOG="info,wgpu_core=info"
+$env:TENSOR_WAREHOUSE_MANIFEST="artifacts/tensor_warehouse/v<version>/manifest.json"  # required
+cargo run --features "burn_runtime,burn_wgpu" --bin train -- `
+  --batch-size 64 `
+  --epochs 20 `
+  --scheduler cosine `
+  --lr-start 3e-4 `
+  --lr-end 1e-5 `
+  --val-ratio 0.1
+```
+
 ```bash
-CARGO_WGPU_POWER_PREF=high-performance \
-TENSOR_WAREHOUSE_MANIFEST=artifacts/tensor_warehouse/manifest.json \
+# Linux / Vulkan (NVIDIA/AMD), from repo root
+WGPU_POWER_PREF=high-performance \
+WGPU_BACKEND=vulkan \
+WGPU_ADAPTER_NAME="NVIDIA" \
+RUST_LOG=info,wgpu_core=info \
+TENSOR_WAREHOUSE_MANIFEST=artifacts/tensor_warehouse/v<version>/manifest.json \
 cargo run --features "burn_runtime,burn_wgpu" --bin train -- \
-  --batch-size 4 \
-  --epochs 5 \
+  --batch-size 64 \
+  --epochs 20 \
   --scheduler cosine \
-  --lr-start 1e-3 \
-  --lr-end 1e-4 \
-  --val-ratio 0.2
+  --lr-start 3e-4 \
+  --lr-end 1e-5 \
+  --val-ratio 0.1
 ```
 
 Validation thresholds:
