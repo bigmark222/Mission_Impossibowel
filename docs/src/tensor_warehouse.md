@@ -15,6 +15,12 @@ A versioned, precomputed tensor store so training never decodes or resizes on th
 ## Build (ETL)
 - Base command (f32, 256x256 letterbox):  
   `CODE_VERSION=$(git rev-parse --short HEAD 2>/dev/null || echo "") cargo run --bin warehouse_etl -- --input-root assets/datasets/captures_filtered --output-root artifacts/tensor_warehouse --target-size 256x256 --resize-mode letterbox --max-boxes 16 --shard-samples 1024`
+- PowerShell equivalent:  
+  ```pwsh
+  $env:CODE_VERSION = (git rev-parse --short HEAD 2>$null)
+  cargo run --bin warehouse_etl -- --input-root assets/datasets/captures_filtered --output-root artifacts/tensor_warehouse --target-size 256x256 --resize-mode letterbox --max-boxes 16 --shard-samples 1024
+  ```
+  (Set once per PowerShell session; reuse for multiple runs unless you change commits—then re-run the assignment to keep the hash current.)
 - Controls:  
   - `WAREHOUSE_CLEAR=1` to delete the computed version directory before writing.  
   - `WAREHOUSE_SKIP_IF_EXISTS=1` to exit early if the versioned manifest already exists.  

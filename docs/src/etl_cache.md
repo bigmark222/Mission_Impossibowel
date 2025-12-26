@@ -1,1 +1,1 @@
-# ETL Cache Architecture (Proposal)
+# ETL Cache Architecture

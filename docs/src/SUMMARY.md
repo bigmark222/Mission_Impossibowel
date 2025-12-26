@@ -7,7 +7,6 @@
   - [Datagen Scheduler](datagen_scheduler.md)
   - [Burn Dataset](burn_dataset.md)
   - [Tensor Warehouse](tensor_warehouse.md)
-  - [ETL Cache Architecture](etl_cache.md)
 - [Training](training_overview.md)
   - [Training Harness](training.md)
   - [ML Pipeline](ml_pipeline.md)
