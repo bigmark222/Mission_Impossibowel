@@ -14,11 +14,11 @@ A versioned, precomputed tensor store so training never decodes or resizes on th
 
 ## Build (ETL)
 - Base command (f32, 256x256 letterbox):  
-  `CODE_VERSION=$(git rev-parse --short HEAD 2>/dev/null || echo "") cargo run --bin warehouse_etl -- --input-root assets/datasets/captures_filtered --output-root artifacts/tensor_warehouse --target-size 256x256 --resize-mode letterbox --max-boxes 16 --shard-samples 1024`
+  `CODE_VERSION=$(git rev-parse --short HEAD 2>/dev/null || echo "") cargo run --bin warehouse_etl -- --input-root assets/datasets/captures_filtered --output-root artifacts/tensor_warehouse --target-size 384x384 --resize-mode letterbox --max-boxes 16 --shard-samples 1024`
 - PowerShell equivalent:  
   ```pwsh
   $env:CODE_VERSION = (git rev-parse --short HEAD 2>$null)
-  cargo run --bin warehouse_etl -- --input-root assets/datasets/captures_filtered --output-root artifacts/tensor_warehouse --target-size 256x256 --resize-mode letterbox --max-boxes 16 --shard-samples 1024
+  cargo run --bin warehouse_etl -- --input-root assets/datasets/captures_filtered --output-root artifacts/tensor_warehouse --target-size 384x384 --resize-mode letterbox --max-boxes 16 --shard-samples 1024
   ```
   (Set once per PowerShell session; reuse for multiple runs unless you change commits—then re-run the assignment to keep the hash current.)
 - Controls:  
@@ -37,10 +37,13 @@ A versioned, precomputed tensor store so training never decodes or resizes on th
 ## Analytics
 - Export manifest summaries to Parquet:  
   `cargo run --bin warehouse_export -- --manifest artifacts/tensor_warehouse/v<version>/manifest.json --out logs/warehouse_summary.parquet`
-- Quick peek with DuckDB:  
-  `duckdb -c "SELECT * FROM 'logs/warehouse_summary.parquet' LIMIT 5"`
+- Quick peek with Polars/DataFusion (Rust examples):
+  - Polars (Rust): load with `polars::prelude::LazyFrame::scan_parquet("logs/warehouse_summary.parquet", Default::default())?;`
+  - DataFusion (SQL): use a `SessionContext`, `register_parquet`, then `sql("SELECT * FROM warehouse_summary LIMIT 5")`.
 
 ## Notes
 - Version key = SHA256(source root + cacheable transform config + max_boxes + skip_empty + code_version), stored in manifest; shards live under `v<version>/`.
 - Checksums per shard (SHA256) are recorded; f32 shards only for now.
 - ETL trace: set `WAREHOUSE_TRACE=logs/warehouse_trace.jsonl` to emit per-shard timing.
+- Warehouse loader store: choose via `WAREHOUSE_STORE` = `memory` (default), `mmap`, or `stream` (prefetch via `WAREHOUSE_PREFETCH`, default 2). Training also accepts `--warehouse-store` to override.
+  - Trade-offs: `memory` loads all shards up front (fast per-batch, high RAM). `mmap` keeps shards on disk (lower RAM, depends on IO). `stream` reads via a bounded prefetch queue (lowest RAM, may increase IO contention; tune `WAREHOUSE_PREFETCH`).
