@@ -2,7 +2,6 @@ use image::imageops::FilterType;
 use rand::{Rng, SeedableRng, seq::SliceRandom};
 use serde::Deserialize;
 use std::cmp::max;
-use std::cell::RefCell;
 use std::fs;
 use std::path::{Path, PathBuf};
 #[cfg(feature = "burn_runtime")]
@@ -244,7 +243,6 @@ pub struct TransformPipeline {
     pub blur_sigma: f32,
     pub max_boxes: usize,
     pub seed: Option<u64>,
-    rng: RefCell<Option<rand::rngs::StdRng>>,
 }
 
 impl TransformPipeline {
@@ -264,7 +262,6 @@ impl TransformPipeline {
             blur_sigma: cfg.blur_sigma,
             max_boxes: cfg.max_boxes,
             seed: cfg.seed,
-            rng: RefCell::new(cfg.seed.map(rand::rngs::StdRng::seed_from_u64)),
         }
     }
 
@@ -294,11 +291,13 @@ impl TransformPipeline {
 
     fn apply(&self, img: image::RgbImage, meta: &LabelEntry) -> DatasetResult<DatasetSample> {
         let (mut width, mut height) = img.dimensions();
-        // Choose RNG: seeded if provided, else thread-local.
+        // Choose RNG: seeded if provided (per-frame deterministic), else thread-local.
         let mut rng_local;
-        let mut rng_ref = self.rng.borrow_mut();
-        let rng: &mut dyn rand::RngCore = if let Some(r) = rng_ref.as_mut() {
-            r
+        let mut seeded_rng;
+        let rng: &mut dyn rand::RngCore = if let Some(seed) = self.seed {
+            let mixed = seed ^ meta.frame_id;
+            seeded_rng = rand::rngs::StdRng::seed_from_u64(mixed);
+            &mut seeded_rng
         } else {
             rng_local = rand::thread_rng();
             &mut rng_local
@@ -417,14 +416,12 @@ impl TransformPipeline {
 #[derive(Debug, Clone)]
 pub struct TransformPipelineBuilder {
     inner: TransformPipeline,
-    rng: Option<rand::rngs::StdRng>,
 }
 
 impl TransformPipelineBuilder {
     pub fn new() -> Self {
         Self {
             inner: TransformPipeline::from_config(&DatasetConfig::default()),
-            rng: None,
         }
     }
     pub fn target_size(mut self, size: Option<(u32, u32)>) -> Self {
@@ -466,16 +463,10 @@ impl TransformPipelineBuilder {
     }
     pub fn seed(mut self, seed: Option<u64>) -> Self {
         self.inner.seed = seed;
-        if let Some(s) = seed {
-            self.rng = Some(rand::rngs::StdRng::seed_from_u64(s));
-        }
         self
     }
     pub fn build(self) -> TransformPipeline {
-        let rng = self.rng;
-        let mut inner = self.inner;
-        inner.rng = RefCell::new(rng);
-        inner
+        self.inner
     }
 }
 
