@@ -1,13 +1,13 @@
 use image::imageops::FilterType;
 use rand::{Rng, SeedableRng, seq::SliceRandom};
-use serde::Deserialize;
-use std::cmp::max;
-use std::fs;
-use std::path::{Path, PathBuf};
 #[cfg(feature = "burn_runtime")]
 use rayon::prelude::*;
+use serde::{Deserialize, Serialize};
+use std::cmp::max;
+use std::fs;
 #[cfg(feature = "burn_runtime")]
 use std::io::Write;
+use std::path::{Path, PathBuf};
 #[cfg(feature = "burn_runtime")]
 use std::time::{Duration, Instant};
 use thiserror::Error;
@@ -127,10 +127,14 @@ pub fn split_runs_stratified(
 }
 
 pub fn count_boxes(idx: &SampleIndex) -> DatasetResult<usize> {
-    let raw = fs::read(&idx.label_path)
-        .map_err(|e| BurnDatasetError::Io { path: idx.label_path.clone(), source: e })?;
-    let meta: LabelEntry = serde_json::from_slice(&raw)
-        .map_err(|e| BurnDatasetError::Json { path: idx.label_path.clone(), source: e })?;
+    let raw = fs::read(&idx.label_path).map_err(|e| BurnDatasetError::Io {
+        path: idx.label_path.clone(),
+        source: e,
+    })?;
+    let meta: LabelEntry = serde_json::from_slice(&raw).map_err(|e| BurnDatasetError::Json {
+        path: idx.label_path.clone(),
+        source: e,
+    })?;
     Ok(meta.polyp_labels.len())
 }
 
@@ -199,7 +203,7 @@ impl Default for DatasetConfig {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ResizeMode {
     /// Stretch to fill the target dimensions (may distort boxes).
     Force,
@@ -227,8 +231,16 @@ struct PolypLabel {
     bbox_norm: Option<[f32; 4]>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CacheableTransformConfig {
+    pub target_size: Option<(u32, u32)>,
+    pub resize_mode: ResizeMode,
+    pub max_boxes: usize,
+}
+
 #[derive(Debug, Clone)]
 pub struct TransformPipeline {
+    pub cacheable: CacheableTransformConfig,
     pub target_size: Option<(u32, u32)>,
     pub resize_mode: ResizeMode,
     pub flip_horizontal_prob: f32,
@@ -248,6 +260,11 @@ pub struct TransformPipeline {
 impl TransformPipeline {
     pub fn from_config(cfg: &DatasetConfig) -> Self {
         Self {
+            cacheable: CacheableTransformConfig {
+                target_size: cfg.target_size,
+                resize_mode: cfg.resize_mode,
+                max_boxes: cfg.max_boxes,
+            },
             target_size: cfg.target_size,
             resize_mode: cfg.resize_mode,
             flip_horizontal_prob: cfg.flip_horizontal_prob,
@@ -285,7 +302,9 @@ impl TransformPipeline {
             self.blur_prob,
             self.blur_sigma,
             self.max_boxes,
-            self.seed.map(|s| s.to_string()).unwrap_or_else(|| "none".to_string())
+            self.seed
+                .map(|s| s.to_string())
+                .unwrap_or_else(|| "none".to_string())
         )
     }
 
@@ -390,7 +409,12 @@ impl TransformPipeline {
         let mut boxes = normalize_boxes(&meta.polyp_labels, width, height);
         let mut img = img;
         maybe_hflip(&mut img, &mut boxes, self.flip_horizontal_prob, rng);
-        maybe_jitter(&mut img, self.color_jitter_prob, self.color_jitter_strength, rng);
+        maybe_jitter(
+            &mut img,
+            self.color_jitter_prob,
+            self.color_jitter_strength,
+            rng,
+        );
         maybe_scale_jitter(
             &mut img,
             &mut boxes,
@@ -401,14 +425,8 @@ impl TransformPipeline {
         );
         maybe_noise(&mut img, self.noise_prob, self.noise_strength, rng);
         maybe_blur(&mut img, self.blur_prob, self.blur_sigma, rng);
-        let sample = build_sample_from_image(
-            img,
-            width,
-            height,
-            boxes,
-            meta.frame_id,
-            self.max_boxes,
-        )?;
+        let sample =
+            build_sample_from_image(img, width, height, boxes, meta.frame_id, self.max_boxes)?;
         Ok(sample)
     }
 }
@@ -426,10 +444,12 @@ impl TransformPipelineBuilder {
     }
     pub fn target_size(mut self, size: Option<(u32, u32)>) -> Self {
         self.inner.target_size = size;
+        self.inner.cacheable.target_size = size;
         self
     }
     pub fn resize_mode(mut self, mode: ResizeMode) -> Self {
         self.inner.resize_mode = mode;
+        self.inner.cacheable.resize_mode = mode;
         self
     }
     pub fn flip_horizontal_prob(mut self, p: f32) -> Self {
@@ -459,6 +479,7 @@ impl TransformPipelineBuilder {
     }
     pub fn max_boxes(mut self, max_boxes: usize) -> Self {
         self.inner.max_boxes = max_boxes;
+        self.inner.cacheable.max_boxes = max_boxes;
         self
     }
     pub fn seed(mut self, seed: Option<u64>) -> Self {
@@ -470,7 +491,7 @@ impl TransformPipelineBuilder {
     }
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct RunSummary {
     pub run_dir: PathBuf,
     pub total: usize,
@@ -481,10 +502,312 @@ pub struct RunSummary {
     pub invalid: usize,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct DatasetSummary {
     pub runs: Vec<RunSummary>,
     pub totals: RunSummary,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ValidationOutcome {
+    Pass,
+    Warn,
+    Fail,
+}
+
+impl ValidationOutcome {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            ValidationOutcome::Pass => "pass",
+            ValidationOutcome::Warn => "warn",
+            ValidationOutcome::Fail => "fail",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct ValidationThresholds {
+    pub max_invalid: Option<usize>,
+    pub max_missing: Option<usize>,
+    pub max_empty: Option<usize>,
+    pub max_invalid_ratio: Option<f32>,
+    pub max_missing_ratio: Option<f32>,
+    pub max_empty_ratio: Option<f32>,
+}
+
+impl ValidationThresholds {
+    pub fn from_env() -> Self {
+        fn parse_usize(key: &str) -> Option<usize> {
+            std::env::var(key).ok()?.parse().ok()
+        }
+        fn parse_ratio(key: &str) -> Option<f32> {
+            std::env::var(key).ok()?.parse().ok()
+        }
+        ValidationThresholds {
+            max_invalid: parse_usize("BURN_DATASET_MAX_INVALID"),
+            max_missing: parse_usize("BURN_DATASET_MAX_MISSING"),
+            max_empty: parse_usize("BURN_DATASET_MAX_EMPTY"),
+            max_invalid_ratio: parse_ratio("BURN_DATASET_MAX_INVALID_RATIO"),
+            max_missing_ratio: parse_ratio("BURN_DATASET_MAX_MISSING_RATIO"),
+            max_empty_ratio: parse_ratio("BURN_DATASET_MAX_EMPTY_RATIO"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ValidationReport {
+    pub outcome: ValidationOutcome,
+    pub reasons: Vec<String>,
+    pub summary: DatasetSummary,
+}
+
+fn apply_thresholds(
+    label: &str,
+    count: usize,
+    ratio: f32,
+    max_count: Option<usize>,
+    max_ratio: Option<f32>,
+    outcome: &mut ValidationOutcome,
+    reasons: &mut Vec<String>,
+) {
+    if let Some(max) = max_count {
+        if count > max {
+            *outcome = ValidationOutcome::Fail;
+            reasons.push(format!("{label}: {count} exceeds max {max}"));
+        }
+    }
+    if let Some(max_r) = max_ratio {
+        if ratio > max_r {
+            *outcome = ValidationOutcome::Fail;
+            reasons.push(format!(
+                "{label}: ratio {:.3} exceeds max {:.3}",
+                ratio, max_r
+            ));
+        }
+    }
+    if count > 0 {
+        if *outcome == ValidationOutcome::Pass {
+            *outcome = ValidationOutcome::Warn;
+        }
+        reasons.push(format!("{label}: {count} observed"));
+    }
+}
+
+pub fn validate_summary(
+    summary: DatasetSummary,
+    thresholds: &ValidationThresholds,
+) -> ValidationReport {
+    let totals = &summary.totals;
+    let checked = totals.total + totals.missing_file + totals.missing_image + totals.invalid;
+    let denom = checked.max(1) as f32;
+    let missing = totals.missing_file + totals.missing_image;
+
+    let mut outcome = ValidationOutcome::Pass;
+    let mut reasons = Vec::new();
+
+    apply_thresholds(
+        "missing (image/file)",
+        missing,
+        missing as f32 / denom,
+        thresholds.max_missing,
+        thresholds.max_missing_ratio,
+        &mut outcome,
+        &mut reasons,
+    );
+    apply_thresholds(
+        "invalid labels",
+        totals.invalid,
+        totals.invalid as f32 / denom,
+        thresholds.max_invalid,
+        thresholds.max_invalid_ratio,
+        &mut outcome,
+        &mut reasons,
+    );
+    apply_thresholds(
+        "empty labels",
+        totals.empty,
+        totals.empty as f32 / denom,
+        thresholds.max_empty,
+        thresholds.max_empty_ratio,
+        &mut outcome,
+        &mut reasons,
+    );
+
+    ValidationReport {
+        outcome,
+        reasons,
+        summary,
+    }
+}
+
+pub fn summarize_with_thresholds(
+    indices: &[SampleIndex],
+    thresholds: &ValidationThresholds,
+) -> DatasetResult<ValidationReport> {
+    let summary = summarize_runs(indices)?;
+    Ok(validate_summary(summary, thresholds))
+}
+
+pub fn summarize_root_with_thresholds(
+    root: &Path,
+    thresholds: &ValidationThresholds,
+) -> DatasetResult<ValidationReport> {
+    let indices = index_runs(root)?;
+    summarize_with_thresholds(&indices, thresholds)
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ShardMetadata {
+    pub id: String,
+    /// Path to the shard file, relative to the warehouse root (UTF-8).
+    pub relative_path: String,
+    /// Shard format version (for binary header layout).
+    pub shard_version: u32,
+    pub samples: usize,
+    pub width: u32,
+    pub height: u32,
+    pub channels: u32,
+    pub max_boxes: usize,
+    /// Hex-encoded SHA256 of the shard contents (optional until populated).
+    pub checksum_sha256: Option<String>,
+    pub dtype: ShardDType,
+    pub endianness: Endianness,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub enum ShardDType {
+    F32,
+    F16,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub enum Endianness {
+    Little,
+    Big,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WarehouseManifest {
+    /// Source dataset root as a UTF-8 string.
+    pub dataset_root: String,
+    pub transform: CacheableTransformConfig,
+    /// Warehouse version key (hex-encoded SHA256 of source + config tuple).
+    pub version: String,
+    /// Version recipe: sha256(dataset_root + cacheable_transform + max_boxes + skip_empty + code_version).
+    pub version_recipe: String,
+    /// Code version used in the key (crate version or VCS hash).
+    pub code_version: String,
+    /// Default shard dtype for this manifest.
+    pub default_dtype: ShardDType,
+    /// Default shard format version.
+    pub default_shard_version: u32,
+    pub created_at_ms: u64,
+    pub shards: Vec<ShardMetadata>,
+    pub summary: DatasetSummary,
+    pub thresholds: ValidationThresholds,
+}
+
+impl WarehouseManifest {
+    /// Default code version string (crate version).
+    pub fn default_code_version() -> String {
+        env!("CARGO_PKG_VERSION").to_string()
+    }
+
+    /// Resolve code version with optional override (e.g., git hash).
+    pub fn resolve_code_version() -> String {
+        if let Ok(val) = std::env::var("CODE_VERSION") {
+            if !val.trim().is_empty() {
+                return val;
+            }
+        }
+        Self::default_code_version()
+    }
+
+    /// Compute a canonical warehouse version (SHA256 hex) from inputs.
+    pub fn compute_version(
+        dataset_root: &Path,
+        transform: &CacheableTransformConfig,
+        skip_empty: bool,
+        code_version: &str,
+    ) -> String {
+        #[derive(Serialize)]
+        struct VersionTuple<'a> {
+            dataset_root: &'a str,
+            target_size: Option<(u32, u32)>,
+            resize_mode: &'a ResizeMode,
+            max_boxes: usize,
+            skip_empty: bool,
+            code_version: &'a str,
+        }
+        let tuple = VersionTuple {
+            dataset_root: &dataset_root.display().to_string(),
+            target_size: transform.target_size,
+            resize_mode: &transform.resize_mode,
+            max_boxes: transform.max_boxes,
+            skip_empty,
+            code_version,
+        };
+        let bytes = serde_json::to_vec(&tuple).unwrap_or_default();
+        use sha2::Digest;
+        let hash = sha2::Sha256::digest(bytes);
+        format!("{:x}", hash)
+    }
+
+    pub fn save(&self, path: &Path) -> DatasetResult<()> {
+        let parent = path.parent().unwrap_or_else(|| Path::new("."));
+        if !parent.exists() {
+            fs::create_dir_all(parent).map_err(|e| BurnDatasetError::Io {
+                path: parent.to_path_buf(),
+                source: e,
+            })?;
+        }
+        let data =
+            serde_json::to_vec_pretty(self).map_err(|e| BurnDatasetError::Other(e.to_string()))?;
+        fs::write(path, data).map_err(|e| BurnDatasetError::Io {
+            path: path.to_path_buf(),
+            source: e,
+        })
+    }
+
+    pub fn load(path: &Path) -> DatasetResult<Self> {
+        let raw = fs::read(path).map_err(|e| BurnDatasetError::Io {
+            path: path.to_path_buf(),
+            source: e,
+        })?;
+        serde_json::from_slice(&raw).map_err(|e| BurnDatasetError::Json {
+            path: path.to_path_buf(),
+            source: e,
+        })
+    }
+
+    pub fn new(
+        dataset_root: PathBuf,
+        transform: CacheableTransformConfig,
+        version: String,
+        version_recipe: String,
+        code_version: String,
+        shards: Vec<ShardMetadata>,
+        summary: DatasetSummary,
+        thresholds: ValidationThresholds,
+    ) -> Self {
+        let created_at_ms = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_millis() as u64)
+            .unwrap_or_default();
+        Self {
+            dataset_root: dataset_root.display().to_string(),
+            transform,
+            version,
+            version_recipe,
+            code_version,
+            default_dtype: ShardDType::F32,
+            default_shard_version: 1,
+            created_at_ms,
+            shards,
+            summary,
+            thresholds,
+        }
+    }
 }
 
 #[cfg(feature = "burn_runtime")]
@@ -533,7 +856,7 @@ fn validate_label_entry(meta: &LabelEntry, path: &Path) -> DatasetResult<()> {
                 return Err(BurnDatasetError::Validation {
                     path: path.to_path_buf(),
                     msg: format!("polyp_labels[{i}] has no bbox_norm or bbox_px"),
-                })
+                });
             }
             (Some(b), _) => {
                 if b.iter().any(|v| !v.is_finite() || *v < 0.0 || *v > 1.0) {
@@ -1107,10 +1430,7 @@ impl BatchIter {
         Self::from_indices(indices, cfg)
     }
 
-    pub fn from_indices(
-        mut indices: Vec<SampleIndex>,
-        cfg: DatasetConfig,
-    ) -> DatasetResult<Self> {
+    pub fn from_indices(mut indices: Vec<SampleIndex>, cfg: DatasetConfig) -> DatasetResult<Self> {
         use rand::seq::SliceRandom;
         let mut rng = match cfg.seed {
             Some(seed) => rand::rngs::StdRng::seed_from_u64(seed),
@@ -1215,7 +1535,10 @@ impl BatchIter {
                     Err(e) => {
                         if self.permissive_errors {
                             if !self.warn_once {
-                                eprintln!("Warning: skipping label {}: {e}", idx.label_path.display());
+                                eprintln!(
+                                    "Warning: skipping label {}: {e}",
+                                    idx.label_path.display()
+                                );
                             }
                             self.skipped_errors += 1;
                             continue;
@@ -1307,11 +1630,9 @@ impl BatchIter {
             let boxes_shape = [batch_len, self.cfg.max_boxes, 4];
             let mask_shape = [batch_len, self.cfg.max_boxes];
 
-            let images = burn::tensor::Tensor::<B, 1>::from_floats(
-                self.images_buf.as_slice(),
-                device,
-            )
-            .reshape(image_shape);
+            let images =
+                burn::tensor::Tensor::<B, 1>::from_floats(self.images_buf.as_slice(), device)
+                    .reshape(image_shape);
             let boxes =
                 burn::tensor::Tensor::<B, 1>::from_floats(self.boxes_buf.as_slice(), device)
                     .reshape(boxes_shape);
@@ -1330,7 +1651,13 @@ impl BatchIter {
             self.skipped_missing += skipped_missing;
             self.total_load_time += load_elapsed;
             self.total_assemble_time += assemble_elapsed;
-            self.maybe_trace(batch_len, width as usize, height as usize, load_elapsed, assemble_elapsed);
+            self.maybe_trace(
+                batch_len,
+                width as usize,
+                height as usize,
+                load_elapsed,
+                assemble_elapsed,
+            );
             self.maybe_log_progress();
 
             return Ok(Some(BurnBatch {
@@ -1346,7 +1673,9 @@ impl BatchIter {
         let Some(threshold) = self.log_every_samples else {
             return;
         };
-        let processed_since = self.processed_samples.saturating_sub(self.last_logged_samples);
+        let processed_since = self
+            .processed_samples
+            .saturating_sub(self.last_logged_samples);
         let elapsed = self.started.elapsed();
         let since_last = self.last_log.elapsed();
         let should_log = processed_since >= threshold || since_last >= Duration::from_secs(30);

@@ -56,6 +56,13 @@ if let Some(batch) = train.next_batch::<burn_ndarray::NdArrayBackend<f32>>(8)? {
 - Warning aggregation: set `BURN_DATASET_WARN_ONCE=1` to suppress per-sample warnings and emit only aggregated progress logs.
 - Optional trace: set `BURN_DATASET_TRACE=<path/to/trace.jsonl>` to write per-batch JSONL records (batch idx, samples, dims, skips, load/assemble ms).
 
+## Validation thresholds
+- Optionally gate training on dataset quality; thresholds apply to the computed summary before entering the training loop.
+- Counts: set `BURN_DATASET_MAX_INVALID=<N>`, `BURN_DATASET_MAX_MISSING=<N>` (missing images/files), and/or `BURN_DATASET_MAX_EMPTY=<N>`.
+- Ratios (0–1): `BURN_DATASET_MAX_INVALID_RATIO=<f32>`, `BURN_DATASET_MAX_MISSING_RATIO=<f32>`, `BURN_DATASET_MAX_EMPTY_RATIO=<f32>`.
+- Any threshold exceeded → validation **fail** and the train binary exits; otherwise non-zero counts are surfaced as warnings.
+- Example: `BURN_DATASET_MAX_INVALID_RATIO=0.01 BURN_DATASET_MAX_MISSING=10 cargo train_hp`
+
 ## Transform pipeline builder
 - Compose a custom pipeline (resize/letterbox + augments + max_boxes) and attach it to `DatasetConfig.transform`:
 ```rust

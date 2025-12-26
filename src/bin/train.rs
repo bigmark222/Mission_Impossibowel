@@ -118,6 +118,9 @@ mod real {
         /// Optional val flip prob (defaults to 0.0).
         #[arg(long)]
         val_flip_prob: Option<f32>,
+        /// (Stub) Optional tensor warehouse root; when set will load precomputed tensors instead of raw captures (not yet implemented).
+        #[arg(long)]
+        tensor_warehouse: Option<String>,
         /// Optional val max boxes (defaults to train max_boxes).
         #[arg(long)]
         val_max_boxes: Option<usize>,
@@ -191,6 +194,12 @@ mod real {
         println!("Transforms (train): {}", pipeline.describe());
 
         let root = Path::new(&args.input_root);
+        if let Some(wh) = args.tensor_warehouse.as_ref() {
+            println!(
+                "Tensor warehouse requested at {} (stub: falling back to live loader for now)",
+                wh
+            );
+        }
         println!("Indexing dataset under {} ...", root.display());
         let indices = colon_sim::tools::burn_dataset::index_runs(root)
             .map_err(|e| anyhow::anyhow!("{:?}", e))?;
@@ -215,18 +224,21 @@ mod real {
                 split_runs(indices.clone(), args.val_ratio)
             }
         };
+        let thresholds = colon_sim::tools::burn_dataset::ValidationThresholds::from_env();
         if let Ok(summary) = colon_sim::tools::burn_dataset::summarize_runs(&indices) {
+            let report = colon_sim::tools::burn_dataset::validate_summary(summary, &thresholds);
             println!(
-                "Dataset summary: runs={} frames={} non_empty={} empty={} missing_image={} missing_file={} invalid={}",
-                summary.runs.len(),
-                summary.totals.total,
-                summary.totals.non_empty,
-                summary.totals.empty,
-                summary.totals.missing_image,
-                summary.totals.missing_file,
-                summary.totals.invalid
+                "Dataset summary ({}): runs={} frames={} non_empty={} empty={} missing_image={} missing_file={} invalid={}",
+                report.outcome.as_str(),
+                report.summary.runs.len(),
+                report.summary.totals.total,
+                report.summary.totals.non_empty,
+                report.summary.totals.empty,
+                report.summary.totals.missing_image,
+                report.summary.totals.missing_file,
+                report.summary.totals.invalid
             );
-            for run in summary.runs.iter() {
+            for run in report.summary.runs.iter() {
                 println!(
                     " - {}: total={} non_empty={} empty={} missing_image={} missing_file={} invalid={}",
                     run.run_dir.display(),
@@ -237,6 +249,15 @@ mod real {
                     run.missing_file,
                     run.invalid
                 );
+            }
+            if !report.reasons.is_empty() {
+                println!("Validation notes:");
+                for reason in report.reasons.iter() {
+                    println!(" - {}", reason);
+                }
+            }
+            if report.outcome == colon_sim::tools::burn_dataset::ValidationOutcome::Fail {
+                anyhow::bail!("Dataset validation failed; see notes above");
             }
         } else {
             eprintln!("Dataset summary: failed to compute");
