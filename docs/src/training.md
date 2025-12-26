@@ -96,6 +96,7 @@ Use only if Vulkan isn’t available; performance may be lower.
 - `--drop-last`: drop the last partial training batch (can help BN stability). Validation never drops.
 - `--demo-checkpoint <path>`: optional model checkpoint to load at startup (model only; skips optimizer/scheduler). Useful for bundled/demo weights.
 - `--metrics-out <path>`: append per-epoch val metrics (IoU/PR/mAP, tp/fp/fn) with seed/thresholds.
+- `--tensor-warehouse <manifest>` (or env `TENSOR_WAREHOUSE_MANIFEST`): prefer precomputed tensor shards; falls back to live loader with a warning if unavailable.
 
 Sample run (CPU backend):
 ```bash
@@ -115,8 +116,10 @@ cargo run --features burn_runtime --bin train -- \
   --demo-checkpoint assets/checkpoints/tinydet_demo.bin
 ```
 
-Sample run (wgpu backend):
+Sample run (wgpu backend, warehouse preferred if set):
 ```bash
+CARGO_WGPU_POWER_PREF=high-performance \
+TENSOR_WAREHOUSE_MANIFEST=artifacts/tensor_warehouse/manifest.json \
 cargo run --features "burn_runtime,burn_wgpu" --bin train -- \
   --batch-size 4 \
   --epochs 5 \
@@ -144,4 +147,3 @@ Runtime inference thresholds are adjusted via hotkeys in the sim (`-`/`=` for ob
 - Demo/bundled checkpoint: pass `--demo-checkpoint <path>` during training/eval; for runtime, place it at `checkpoints/tinydet.bin` (or update CLI flags) so the sim loads it automatically.
 - Runtime knobs: during sim, adjust thresholds with `-`/`=` (objectness) and `[`/`]` (IoU); press `B` to toggle between Burn and heuristic detectors. The HUD shows mode, box count, inference latency, and fallback banners.
 - Eval-only: `cargo run --features burn_runtime --bin eval -- --checkpoint <path> --input-root <val_root> [--val-iou-sweep ...] [--metrics-out ...]`.
-

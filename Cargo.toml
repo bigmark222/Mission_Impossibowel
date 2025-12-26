@@ -72,6 +72,10 @@ thiserror = "1.0"
 nvml-wrapper = { version = "0.8", optional = true }
 rayon = "1.8"
 sha2 = "0.10"
+arrow-array = "46"
+arrow-schema = "46"
+arrow-select = "46"
+parquet = { version = "46", features = ["arrow"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 metal = "0.29"

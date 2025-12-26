@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::cmp::max;
 use std::fs;
 #[cfg(feature = "burn_runtime")]
-use std::io::Write;
+use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 #[cfg(feature = "burn_runtime")]
 use std::time::{Duration, Instant};
@@ -654,6 +654,14 @@ pub fn summarize_root_with_thresholds(
 ) -> DatasetResult<ValidationReport> {
     let indices = index_runs(root)?;
     summarize_with_thresholds(&indices, thresholds)
+}
+
+/// Public entrypoint for deterministic sample loading (used by the warehouse ETL).
+pub fn load_sample_for_etl(
+    idx: &SampleIndex,
+    pipeline: &TransformPipeline,
+) -> DatasetResult<DatasetSample> {
+    load_sample(idx, pipeline)
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1765,4 +1773,316 @@ impl BatchIter {
             self.trace_file = None;
         }
     }
+}
+
+#[cfg(feature = "burn_runtime")]
+struct ShardBuffer {
+    samples: usize,
+    width: u32,
+    height: u32,
+    max_boxes: usize,
+    images: Vec<f32>,
+    boxes: Vec<f32>,
+    masks: Vec<f32>,
+}
+
+#[cfg(feature = "burn_runtime")]
+pub struct WarehouseBatchIter {
+    order: Vec<(usize, usize)>, // (shard_idx, sample_idx)
+    shards: std::sync::Arc<Vec<ShardBuffer>>,
+    cursor: usize,
+    drop_last: bool,
+    width: u32,
+    height: u32,
+    max_boxes: usize,
+}
+
+#[cfg(feature = "burn_runtime")]
+#[derive(Clone)]
+pub struct WarehouseLoaders {
+    shards: std::sync::Arc<Vec<ShardBuffer>>,
+    train_order: Vec<(usize, usize)>,
+    val_order: Vec<(usize, usize)>,
+    drop_last: bool,
+    width: u32,
+    height: u32,
+    max_boxes: usize,
+}
+
+#[cfg(feature = "burn_runtime")]
+impl WarehouseBatchIter {
+    pub fn len(&self) -> usize {
+        self.order.len()
+    }
+
+    pub fn next_batch<B: burn::tensor::backend::Backend>(
+        &mut self,
+        batch_size: usize,
+        device: &B::Device,
+    ) -> DatasetResult<Option<BurnBatch<B>>> {
+        if self.cursor >= self.order.len() {
+            return Ok(None);
+        }
+        let end = (self.cursor + batch_size).min(self.order.len());
+        let slice = &self.order[self.cursor..end];
+        self.cursor = end;
+        if self.drop_last && slice.len() < batch_size {
+            return Ok(None);
+        }
+        let mut images = Vec::new();
+        let mut boxes = Vec::new();
+        let mut masks = Vec::new();
+        let mut frame_ids = Vec::new();
+        for (global_idx, (shard_idx, sample_idx)) in slice.iter().enumerate() {
+            let shard = &self.shards[*shard_idx];
+            let w = shard.width as usize;
+            let h = shard.height as usize;
+            let img_offset = sample_idx * 3 * w * h;
+            let box_offset = sample_idx * shard.max_boxes * 4;
+            let mask_offset = sample_idx * shard.max_boxes;
+            images.extend_from_slice(&shard.images[img_offset..img_offset + 3 * w * h]);
+            boxes.extend_from_slice(&shard.boxes[box_offset..box_offset + shard.max_boxes * 4]);
+            masks.extend_from_slice(&shard.masks[mask_offset..mask_offset + shard.max_boxes]);
+            frame_ids.push(global_idx as f32);
+        }
+        let image_shape = [slice.len(), 3, self.height as usize, self.width as usize];
+        let boxes_shape = [slice.len(), self.max_boxes, 4];
+        let mask_shape = [slice.len(), self.max_boxes];
+
+        let images = burn::tensor::Tensor::<B, 1>::from_floats(images.as_slice(), device)
+            .reshape(image_shape);
+        let boxes = burn::tensor::Tensor::<B, 1>::from_floats(boxes.as_slice(), device)
+            .reshape(boxes_shape);
+        let box_mask =
+            burn::tensor::Tensor::<B, 1>::from_floats(masks.as_slice(), device).reshape(mask_shape);
+        let frame_ids = burn::tensor::Tensor::<B, 1>::from_floats(frame_ids.as_slice(), device)
+            .reshape([slice.len()]);
+
+        Ok(Some(BurnBatch {
+            images,
+            boxes,
+            box_mask,
+            frame_ids,
+        }))
+    }
+}
+
+#[cfg(feature = "burn_runtime")]
+impl WarehouseLoaders {
+    pub fn from_manifest_path(
+        manifest_path: &Path,
+        val_ratio: f32,
+        seed: Option<u64>,
+        drop_last: bool,
+    ) -> DatasetResult<Self> {
+        let manifest = WarehouseManifest::load(manifest_path)?;
+        let root = manifest_path.parent().unwrap_or_else(|| Path::new("."));
+        let shards_vec = manifest
+            .shards
+            .iter()
+            .enumerate()
+            .map(|(i, meta)| {
+                let t0 = Instant::now();
+                let shard = load_shard(root, meta)?;
+                let ms = t0.elapsed().as_millis();
+                println!(
+                    "[warehouse] loaded shard {} (id={}, samples={}, size={}x{}, max_boxes={}) in {} ms",
+                    i,
+                    meta.id,
+                    shard.samples,
+                    shard.width,
+                    shard.height,
+                    shard.max_boxes,
+                    ms
+                );
+                Ok(shard)
+            })
+            .collect::<DatasetResult<Vec<_>>>()?;
+        let shards = std::sync::Arc::new(shards_vec);
+        let total_samples: usize = shards.iter().map(|s| s.samples).sum();
+        let mut order: Vec<(usize, usize)> = Vec::with_capacity(total_samples);
+        for (si, shard) in shards.iter().enumerate() {
+            for i in 0..shard.samples {
+                order.push((si, i));
+            }
+        }
+        if let Some(s) = seed {
+            let mut rng = rand::rngs::StdRng::seed_from_u64(s);
+            order.shuffle(&mut rng);
+        }
+        let val_count =
+            ((val_ratio.clamp(0.0, 1.0) * order.len() as f32).round() as usize).min(order.len());
+        let (val_order, train_order) = order.split_at(val_count);
+        let width = shards.get(0).map(|s| s.width).unwrap_or(0);
+        let height = shards.get(0).map(|s| s.height).unwrap_or(0);
+        let max_boxes = shards.get(0).map(|s| s.max_boxes).unwrap_or(0);
+        Ok(WarehouseLoaders {
+            shards,
+            train_order: train_order.to_vec(),
+            val_order: val_order.to_vec(),
+            drop_last,
+            width,
+            height,
+            max_boxes,
+        })
+    }
+
+    pub fn train_iter(&self) -> WarehouseBatchIter {
+        WarehouseBatchIter {
+            order: self.train_order.clone(),
+            shards: self.shards.clone(),
+            cursor: 0,
+            drop_last: self.drop_last,
+            width: self.width,
+            height: self.height,
+            max_boxes: self.max_boxes,
+        }
+    }
+
+    pub fn val_iter(&self) -> WarehouseBatchIter {
+        WarehouseBatchIter {
+            order: self.val_order.clone(),
+            shards: self.shards.clone(),
+            cursor: 0,
+            drop_last: false,
+            width: self.width,
+            height: self.height,
+            max_boxes: self.max_boxes,
+        }
+    }
+
+    pub fn train_len(&self) -> usize {
+        self.train_order.len()
+    }
+
+    pub fn val_len(&self) -> usize {
+        self.val_order.len()
+    }
+}
+
+#[cfg(feature = "burn_runtime")]
+fn read_u32_le(data: &[u8]) -> u32 {
+    let mut arr = [0u8; 4];
+    arr.copy_from_slice(data);
+    u32::from_le_bytes(arr)
+}
+
+#[cfg(feature = "burn_runtime")]
+fn read_u64_le(data: &[u8]) -> u64 {
+    let mut arr = [0u8; 8];
+    arr.copy_from_slice(data);
+    u64::from_le_bytes(arr)
+}
+
+#[cfg(feature = "burn_runtime")]
+fn load_shard(root: &Path, meta: &ShardMetadata) -> DatasetResult<ShardBuffer> {
+    let path = root.join(&meta.relative_path);
+    let data = fs::read(&path).map_err(|e| BurnDatasetError::Io {
+        path: path.clone(),
+        source: e,
+    })?;
+    if data.len() < 4 {
+        return Err(BurnDatasetError::Other(format!(
+            "shard {} too small",
+            path.display()
+        )));
+    }
+    if &data[0..4] != b"TWH1" {
+        return Err(BurnDatasetError::Other(format!(
+            "bad magic in shard {}",
+            path.display()
+        )));
+    }
+    let shard_version = read_u32_le(&data[4..8]);
+    if shard_version != meta.shard_version {
+        return Err(BurnDatasetError::Other(format!(
+            "shard version mismatch {} vs {}",
+            shard_version, meta.shard_version
+        )));
+    }
+    let dtype = read_u32_le(&data[8..12]);
+    if dtype != 0 {
+        return Err(BurnDatasetError::Other(format!(
+            "unsupported dtype {} in {}",
+            dtype,
+            path.display()
+        )));
+    }
+    let width = read_u32_le(&data[16..20]);
+    let height = read_u32_le(&data[20..24]);
+    let channels = read_u32_le(&data[24..28]);
+    if channels != 3 {
+        return Err(BurnDatasetError::Other(format!(
+            "unsupported channels {} in {}",
+            channels,
+            path.display()
+        )));
+    }
+    let max_boxes = read_u32_le(&data[28..32]) as usize;
+    let samples = read_u64_le(&data[32..40]) as usize;
+    let image_offset = read_u64_le(&data[40..48]) as usize;
+    let boxes_offset = read_u64_le(&data[48..56]) as usize;
+    let mask_offset = read_u64_le(&data[56..64]) as usize;
+
+    let image_elems = samples
+        .checked_mul(3)
+        .and_then(|v| v.checked_mul(width as usize))
+        .and_then(|v| v.checked_mul(height as usize))
+        .ok_or_else(|| BurnDatasetError::Other("overflow computing image elems".into()))?;
+    let box_elems = samples
+        .checked_mul(max_boxes)
+        .and_then(|v| v.checked_mul(4))
+        .ok_or_else(|| BurnDatasetError::Other("overflow computing box elems".into()))?;
+    let mask_elems = samples
+        .checked_mul(max_boxes)
+        .ok_or_else(|| BurnDatasetError::Other("overflow computing mask elems".into()))?;
+
+    let image_bytes = image_elems * std::mem::size_of::<f32>();
+    let box_bytes = box_elems * std::mem::size_of::<f32>();
+    let mask_bytes = mask_elems * std::mem::size_of::<f32>();
+
+    if image_offset + image_bytes > data.len()
+        || boxes_offset + box_bytes > data.len()
+        || mask_offset + mask_bytes > data.len()
+    {
+        return Err(BurnDatasetError::Other(format!(
+            "shard {} truncated",
+            path.display()
+        )));
+    }
+
+    let images = data[image_offset..image_offset + image_bytes]
+        .chunks_exact(4)
+        .map(|c| {
+            let mut arr = [0u8; 4];
+            arr.copy_from_slice(c);
+            f32::from_le_bytes(arr)
+        })
+        .collect();
+    let boxes = data[boxes_offset..boxes_offset + box_bytes]
+        .chunks_exact(4)
+        .map(|c| {
+            let mut arr = [0u8; 4];
+            arr.copy_from_slice(c);
+            f32::from_le_bytes(arr)
+        })
+        .collect();
+    let masks = data[mask_offset..mask_offset + mask_bytes]
+        .chunks_exact(4)
+        .map(|c| {
+            let mut arr = [0u8; 4];
+            arr.copy_from_slice(c);
+            f32::from_le_bytes(arr)
+        })
+        .collect();
+
+    Ok(ShardBuffer {
+        samples,
+        width,
+        height,
+        max_boxes,
+        images,
+        boxes,
+        masks,
+    })
 }

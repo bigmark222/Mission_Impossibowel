@@ -22,11 +22,8 @@ mod real {
     use burn_wgpu::Wgpu;
     use clap::Parser;
     use colon_sim::burn_model::{TinyDet, TinyDetConfig, assign_targets_to_grid, nms};
-    use colon_sim::tools::burn_dataset::{
-        BatchIter, BurnBatch, DatasetConfig, SampleIndex, split_runs, split_runs_stratified,
-    };
+    use colon_sim::tools::burn_dataset::{BurnBatch, WarehouseLoaders, WarehouseManifest};
     use serde::{Deserialize, Serialize};
-    use std::collections::HashSet;
 
     #[derive(Parser, Debug)]
     #[command(name = "train", about = "TinyDet training harness")]
@@ -106,24 +103,9 @@ mod real {
         /// Optional training status file (JSON) to report progress for UIs.
         #[arg(long)]
         status_file: Option<String>,
-        /// Target size for training images (e.g., 128x128).
-        #[arg(long, value_parser = parse_target_size, default_value = "128x128")]
-        target_size: (u32, u32),
-        /// Optional val target size (e.g., 256x256). Defaults to train target_size.
-        #[arg(long, value_parser = parse_target_size)]
-        val_target_size: Option<(u32, u32)>,
-        /// Optional val resize mode (force|letterbox). Defaults to train resize_mode.
-        #[arg(long, value_parser = ["force", "letterbox"])]
-        val_resize_mode: Option<String>,
-        /// Optional val flip prob (defaults to 0.0).
-        #[arg(long)]
-        val_flip_prob: Option<f32>,
-        /// (Stub) Optional tensor warehouse root; when set will load precomputed tensors instead of raw captures (not yet implemented).
-        #[arg(long)]
+        /// Tensor warehouse manifest path (preferred). If set, training reads precomputed shards.
+        #[arg(long, env = "TENSOR_WAREHOUSE_MANIFEST")]
         tensor_warehouse: Option<String>,
-        /// Optional val max boxes (defaults to train max_boxes).
-        #[arg(long)]
-        val_max_boxes: Option<usize>,
     }
 
     #[cfg(feature = "burn_wgpu")]
@@ -141,25 +123,6 @@ mod real {
     enum Scheduler {
         Linear(LinearLrScheduler),
         Cosine(CosineAnnealingLrScheduler),
-    }
-
-    fn parse_target_size(s: &str) -> Result<(u32, u32), String> {
-        let parts: Vec<&str> = s.split(['x', 'X']).collect();
-        if parts.len() != 2 {
-            return Err("expected WxH (e.g., 256x256)".into());
-        }
-        let w = parts[0]
-            .trim()
-            .parse::<u32>()
-            .map_err(|_| "invalid width".to_string())?;
-        let h = parts[1]
-            .trim()
-            .parse::<u32>()
-            .map_err(|_| "invalid height".to_string())?;
-        if w == 0 || h == 0 {
-            return Err("width/height must be > 0".into());
-        }
-        Ok((w, h))
     }
 
     fn count_nonempty_samples(indices: &[SampleIndex]) -> usize {
@@ -182,144 +145,60 @@ mod real {
         let effective_seed = args.seed.or(Some(42));
         println!("Using seed {:?}", effective_seed);
         let batch_size = args.batch_size.max(1);
-        let cfg = DatasetConfig {
-            target_size: Some(args.target_size),
-            flip_horizontal_prob: 0.5,
-            max_boxes: 8,
-            seed: effective_seed,
-            drop_last: args.drop_last,
-            ..Default::default()
-        };
-        let pipeline = colon_sim::tools::burn_dataset::TransformPipeline::from_config(&cfg);
-        println!("Transforms (train): {}", pipeline.describe());
-
-        let root = Path::new(&args.input_root);
-        if let Some(wh) = args.tensor_warehouse.as_ref() {
-            println!(
-                "Tensor warehouse requested at {} (stub: falling back to live loader for now)",
-                wh
-            );
-        }
-        println!("Indexing dataset under {} ...", root.display());
-        let indices = colon_sim::tools::burn_dataset::index_runs(root)
-            .map_err(|e| anyhow::anyhow!("{:?}", e))?;
-        let (train_idx, default_val_idx) = {
-            if let Some(manifest_path) = &args.split_manifest {
-                let manifest_path = Path::new(manifest_path);
-                if manifest_path.exists() {
-                    println!("Loading split from {}", manifest_path.display());
-                    load_split_manifest(manifest_path)?
-                } else {
-                    let split = if args.stratify_split {
-                        split_runs_stratified(indices.clone(), args.val_ratio, args.seed)
-                    } else {
-                        split_runs(indices.clone(), args.val_ratio)
-                    };
-                    save_split_manifest(manifest_path, &split.0, &split.1, args.seed)?;
-                    split
-                }
-            } else if args.stratify_split {
-                split_runs_stratified(indices.clone(), args.val_ratio, args.seed)
-            } else {
-                split_runs(indices.clone(), args.val_ratio)
-            }
-        };
-        let thresholds = colon_sim::tools::burn_dataset::ValidationThresholds::from_env();
-        if let Ok(summary) = colon_sim::tools::burn_dataset::summarize_runs(&indices) {
-            let report = colon_sim::tools::burn_dataset::validate_summary(summary, &thresholds);
-            println!(
-                "Dataset summary ({}): runs={} frames={} non_empty={} empty={} missing_image={} missing_file={} invalid={}",
-                report.outcome.as_str(),
-                report.summary.runs.len(),
-                report.summary.totals.total,
-                report.summary.totals.non_empty,
-                report.summary.totals.empty,
-                report.summary.totals.missing_image,
-                report.summary.totals.missing_file,
-                report.summary.totals.invalid
-            );
-            for run in report.summary.runs.iter() {
-                println!(
-                    " - {}: total={} non_empty={} empty={} missing_image={} missing_file={} invalid={}",
-                    run.run_dir.display(),
-                    run.total,
-                    run.non_empty,
-                    run.empty,
-                    run.missing_image,
-                    run.missing_file,
-                    run.invalid
-                );
-            }
-            if !report.reasons.is_empty() {
-                println!("Validation notes:");
-                for reason in report.reasons.iter() {
-                    println!(" - {}", reason);
-                }
-            }
-            if report.outcome == colon_sim::tools::burn_dataset::ValidationOutcome::Fail {
-                anyhow::bail!("Dataset validation failed; see notes above");
-            }
-        } else {
-            eprintln!("Dataset summary: failed to compute");
-        }
-        let (val_idx, val_root) = if let Some(real_val_dir) = args.real_val_dir.as_ref() {
-            let val_path = Path::new(real_val_dir).to_path_buf();
-            let val_indices = colon_sim::tools::burn_dataset::index_runs(&val_path)
-                .map_err(|e| anyhow::anyhow!("{:?}", e))?;
-            (val_indices, val_path)
-        } else {
-            (default_val_idx, root.to_path_buf())
-        };
-        // Quick stats so users see progress before the first batch.
-        let train_runs: HashSet<_> = train_idx.iter().map(|i| i.run_dir.clone()).collect();
-        let val_runs: HashSet<_> = val_idx.iter().map(|i| i.run_dir.clone()).collect();
-        let train_nonempty = count_nonempty_samples(&train_idx);
-        let val_nonempty = count_nonempty_samples(&val_idx);
+        let manifest_path = args
+            .tensor_warehouse
+            .clone()
+            .or_else(|| std::env::var("TENSOR_WAREHOUSE_MANIFEST").ok())
+            .ok_or_else(|| anyhow::anyhow!("tensor warehouse manifest is required; set --tensor-warehouse or TENSOR_WAREHOUSE_MANIFEST"))?;
+        let manifest_path = Path::new(&manifest_path);
+        let manifest = WarehouseManifest::load(manifest_path)
+            .map_err(|e| anyhow::anyhow!("failed to load warehouse manifest: {:?}", e))?;
         println!(
-            "Dataset: train runs {} samples {} (non-empty {}), val runs {} samples {} (non-empty {})",
-            train_runs.len(),
-            train_idx.len(),
-            train_nonempty,
-            val_runs.len(),
-            val_idx.len(),
-            val_nonempty
+            "Using tensor warehouse manifest {} (code_version={})",
+            manifest_path.display(),
+            manifest.code_version
         );
-        if train_nonempty == 0 {
-            eprintln!("No non-empty training samples found (all frames missing boxes). Aborting.");
-            return Ok(());
+        println!(
+            "Transforms (warehouse): target_size={:?} resize={:?} max_boxes={}",
+            manifest.transform.target_size,
+            manifest.transform.resize_mode,
+            manifest.transform.max_boxes
+        );
+        println!(
+            "Warehouse summary: runs={} total={} non_empty={} empty={} missing_image={} missing_file={} invalid={}",
+            manifest.summary.runs.len(),
+            manifest.summary.totals.total,
+            manifest.summary.totals.non_empty,
+            manifest.summary.totals.empty,
+            manifest.summary.totals.missing_image,
+            manifest.summary.totals.missing_file,
+            manifest.summary.totals.invalid
+        );
+        let loaders = WarehouseLoaders::from_manifest_path(
+            manifest_path,
+            args.val_ratio,
+            args.seed,
+            args.drop_last,
+        )
+        .map_err(|e| anyhow::anyhow!("{:?}", e))?;
+        let train_len = loaders.train_len();
+        let val_len = loaders.val_len();
+        if train_len == 0 {
+            anyhow::bail!("No training samples found in warehouse manifest");
         }
+        println!(
+            "Dataset (warehouse): train samples {}, val samples {}",
+            train_len, val_len
+        );
         println!(
             "Entering training loop (log_every={}, batch_size={}, epochs={})",
             args.log_every, batch_size, args.epochs
         );
-        let val_cfg = {
-            let mut base = cfg.clone();
-            base.target_size = args.val_target_size.or(base.target_size);
-            if let Some(mode) = args.val_resize_mode.as_deref() {
-                base.resize_mode = match mode {
-                    "force" => colon_sim::tools::burn_dataset::ResizeMode::Force,
-                    _ => colon_sim::tools::burn_dataset::ResizeMode::Letterbox,
-                };
-            }
-            if let Some(p) = args.val_flip_prob {
-                base.flip_horizontal_prob = p;
-            } else {
-                base.flip_horizontal_prob = 0.0;
-            }
-            if let Some(mb) = args.val_max_boxes {
-                base.max_boxes = mb;
-            }
-            base.shuffle = false;
-            base.drop_last = false;
-            base
-        };
-        let val_pipeline = colon_sim::tools::burn_dataset::TransformPipeline::from_config(&val_cfg);
-        println!("Transforms (val): {}", val_pipeline.describe());
 
         let mut model = TinyDet::<ADBackend>::new(TinyDetConfig::default(), &device);
         let mut optim = AdamWConfig::new().with_weight_decay(1e-4).init();
         let total_steps = {
-            let per_epoch = (train_idx.len().max(1) + args.batch_size - 1) / args.batch_size;
+            let per_epoch = (train_len.max(1) + args.batch_size - 1) / args.batch_size;
             per_epoch.max(1) * args.epochs
         };
         let mut scheduler = match args.scheduler.as_str() {
@@ -378,8 +257,7 @@ mod real {
                     }),
                 );
             }
-            let mut train = BatchIter::from_indices(train_idx.clone(), cfg.clone())
-                .map_err(|e| anyhow::anyhow!("{:?}", e))?;
+            let mut train = loaders.train_iter();
             let mut step = 0usize;
             let mut global_step = 0usize;
 
@@ -451,8 +329,7 @@ mod real {
                 }
             }
 
-            let mut val = BatchIter::from_indices(val_idx.clone(), val_cfg.clone())
-                .map_err(|e| anyhow::anyhow!("{:?}", e))?;
+            let mut val = loaders.val_iter();
             let mut iou_thresholds: Vec<f32> = vec![args.val_iou_thresh];
             if let Some(extra) = &args.val_iou_sweep {
                 for part in extra.split(',') {
@@ -614,7 +491,7 @@ mod real {
                     }
                 }
             } else {
-                println!("No val batches found under {:?}", val_root);
+                println!("No val batches found (val_len={})", val_len);
             }
             if let Some(path) = args.status_file.as_ref() {
                 let _ = write_status(
