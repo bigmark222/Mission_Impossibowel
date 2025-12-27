@@ -23,6 +23,14 @@ TENSOR_WAREHOUSE_MANIFEST=artifacts/tensor_warehouse/v<version>/manifest.json \
 WAREHOUSE_STORE=memory \
 cargo train_hp
 ```
+PowerShell variant:
+```pwsh
+$env:TENSOR_WAREHOUSE_MANIFEST="artifacts/tensor_warehouse/v<version>/manifest.json"; `
+$env:WAREHOUSE_STORE="memory"; `
+cargo train_hp
+```
+- **PowerShell helper (Rust)**: run `cargo run --bin warehouse_ps_command` to print a one-liner; edit defaults in `tools/warehouse_commands/` (manifest path, store mode, prefetch, model, batch size, log cadence).
+- **Bash helper (Rust)**: run `cargo run --bin warehouse_sh_command` for a Linux/macOS one-liner; edit the same defaults in `tools/warehouse_commands/`.
 - **CLI flag (mmap)**:
 ```bash
 TENSOR_WAREHOUSE_MANIFEST=artifacts/tensor_warehouse/v<version>/manifest.json \
