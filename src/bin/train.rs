@@ -602,6 +602,9 @@ mod real {
                 if args.trace_steps {
                     println!("epoch {} step {}: loss computed", epoch + 1, step);
                 }
+                if args.trace_steps {
+                    println!("epoch {} step {}: serializing loss scalar", epoch + 1, step);
+                }
                 let loss_scalar = loss
                     .to_data()
                     .to_vec::<f32>()
@@ -609,12 +612,21 @@ mod real {
                     .first()
                     .copied()
                     .unwrap_or(0.0);
+                if args.trace_steps {
+                    println!("epoch {} step {}: computing mean IoU", epoch + 1, step);
+                }
                 let mean_iou_batch = mean_iou_host(&box_logits, &t_boxes, &t_obj);
+                if args.trace_steps {
+                    println!("epoch {} step {}: starting backward", epoch + 1, step);
+                }
                 let grads = loss.backward();
                 if args.trace_steps {
                     println!("epoch {} step {}: backward pass done", epoch + 1, step);
                 }
                 let grads = GradientsParams::from_grads(grads, &model);
+                if args.trace_steps {
+                    println!("epoch {} step {}: stepping optimizer", epoch + 1, step);
+                }
                 let lr = scheduler_step(&mut scheduler);
                 model = optim.step(lr, model, grads);
 
