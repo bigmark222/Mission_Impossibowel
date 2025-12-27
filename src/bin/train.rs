@@ -25,7 +25,9 @@ mod real {
         BigDet, BigDetConfig, BoundingBoxModel, ModelOutputs, ModelTargets, TinyDet, TinyDetConfig,
         assign_targets_to_grid, nms,
     };
-    use colon_sim::tools::burn_dataset::{BurnBatch, WarehouseLoaders, WarehouseManifest};
+    use colon_sim::tools::burn_dataset::{
+        BurnBatch, WarehouseLoaders, WarehouseManifest, WarehouseStoreMode,
+    };
     use colon_sim::tools_postprocess::{collect_gt_boxes, decode_grid_preds};
 
     #[derive(Parser, Debug)]
