@@ -42,6 +42,9 @@ mod real {
         /// Log every N steps.
         #[arg(long, default_value_t = 1)]
         log_every: usize,
+        /// Trace every training step (logs batch start/end even before log_every triggers).
+        #[arg(long, default_value_t = true)]
+        trace_steps: bool,
         /// Starting learning rate.
         #[arg(long, default_value_t = 1e-3)]
         lr_start: f64,
@@ -564,6 +567,14 @@ mod real {
             {
                 step += 1;
                 global_step += 1;
+                if args.trace_steps {
+                    println!(
+                        "epoch {} step {}: fetched batch ({} samples)",
+                        epoch + 1,
+                        step,
+                        batch_size
+                    );
+                }
                 let outputs = model.forward(batch.images.clone());
                 let (obj_logits, box_logits) =
                     (outputs.obj_logits.clone(), outputs.box_logits.clone());
@@ -594,6 +605,17 @@ mod real {
                 let grads = GradientsParams::from_grads(grads, &model);
                 let lr = scheduler_step(&mut scheduler);
                 model = optim.step(lr, model, grads);
+
+                if args.trace_steps {
+                    println!(
+                        "epoch {} step {}: done (loss={:.4}, mean_iou={:.4}, lr={:.3e})",
+                        epoch + 1,
+                        step,
+                        loss_scalar,
+                        mean_iou_batch,
+                        lr
+                    );
+                }
 
                 if step % args.log_every == 0 {
                     println!(

@@ -80,7 +80,7 @@ Use only if Vulkan isn’t available; performance may be lower.
 ## Common flags
 - `--batch-size <N>`: train/val batch size (default 2); targets built per-image.
 - `--epochs <N>`: number of epochs (default 1).
-- `--log-every <N>`: log loss/IoU every N steps (default 1).
+- `--log-every <N>`: log loss/IoU every N steps (default 1). Step tracing is on by default (`--trace-steps`/`--no-trace-steps`) to print batch start/end even before the first log interval.
 - `--lr-start <f64>`, `--lr-end <f64>`: linear LR schedule endpoints.
 - `--scheduler <linear|cosine>`: LR schedule type.
 - `--ckpt-every-steps <usize>` / `--ckpt-every-epochs <usize>`: checkpoint cadence (0 disables).
