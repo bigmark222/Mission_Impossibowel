@@ -1,8 +1,9 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use crate::probe::{ProbeSegment, SegmentSpring};
+use crate::probe_types::{ProbeSegment, SegmentSpring};
 
+/// Control parameters for probe actuation.
 #[derive(Resource, Clone)]
 pub struct ControlParams {
     pub tension: f32,

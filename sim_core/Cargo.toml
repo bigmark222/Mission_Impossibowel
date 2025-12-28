@@ -1,0 +1,9 @@
+[package]
+name = "sim_core"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+bevy = "0.17.3"
+bevy_rapier3d = { version = "0.32", features = ["simd-stable", "debug-render-3d"] }

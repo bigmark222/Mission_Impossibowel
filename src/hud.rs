@@ -4,7 +4,7 @@ use bevy::ui::{
     PositionType, UiRect, Val,
 };
 
-use crate::controls::ControlParams;
+use sim_core::controls::ControlParams;
 use crate::polyp::PolypTelemetry;
 use crate::vision::overlay::normalize_box;
 use crate::probe::TipSense;

@@ -7,8 +7,9 @@ use std::f32::consts::FRAC_PI_2;
 
 use crate::sim::autopilot::AutoDrive;
 use crate::balloon_control::BalloonControl;
-use crate::camera::ProbePovCamera;
-use crate::controls::ControlParams;
+use sim_core::camera::ProbePovCamera;
+use sim_core::controls::ControlParams;
+use sim_core::probe_types::ProbeSegment;
 use crate::polyp::{PolypRemoval, PolypTelemetry};
 use crate::tunnel::{advance_centerline, tunnel_centerline, tunnel_tangent_rotation};
 use crate::vision::{FrontCamera, FrontCaptureCamera, FrontCaptureTarget};
@@ -44,16 +45,8 @@ pub struct ProbeTip;
 pub struct ProbeHead;
 
 #[derive(Component)]
-pub struct ProbeSegment;
-
-#[derive(Component)]
 pub struct ProbeParam {
     pub tail_z: f32,
-}
-
-#[derive(Component)]
-pub struct SegmentSpring {
-    pub base_rest: f32,
 }
 
 #[derive(Component)]

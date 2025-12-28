@@ -426,7 +426,7 @@ pub fn polyp_removal_system(
         Option<&mut Collider>,
         Option<&mut Visibility>,
     )>,
-    cam_q: Query<&GlobalTransform, With<crate::camera::ProbePovCamera>>,
+    cam_q: Query<&GlobalTransform, With<sim_core::camera::ProbePovCamera>>,
     head_q: Query<&GlobalTransform, With<crate::probe::ProbeHead>>,
 ) {
     let removal_center = if let Ok(cam_tf) = cam_q.single() {

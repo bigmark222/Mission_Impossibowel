@@ -1,10 +1,8 @@
 pub mod balloon_control;
 #[cfg(feature = "burn_runtime")]
 pub mod burn_model;
-pub mod camera;
 pub mod cli;
 pub mod common_cli;
-pub mod controls;
 pub mod hud;
 pub mod polyp;
 pub mod probe;
@@ -31,8 +29,8 @@ use balloon_control::{
     BalloonControl, balloon_body_update, balloon_control_input, balloon_marker_update,
     spawn_balloon_body, spawn_balloon_marker,
 };
-use camera::{PovState, camera_controller, pov_toggle_system, setup_camera};
-use controls::{ControlParams, control_inputs_and_apply};
+use sim_core::camera::{PovState, camera_controller, pov_toggle_system, setup_camera};
+use sim_core::controls::{ControlParams, control_inputs_and_apply};
 use crate::cli::RunMode;
 use hud::{spawn_controls_ui, spawn_detection_overlay, update_controls_ui};
 use sim::recorder::{

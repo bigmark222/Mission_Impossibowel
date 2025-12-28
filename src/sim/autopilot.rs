@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::balloon_control::BalloonControl;
-use crate::camera::{Flycam, PovState, ProbePovCamera};
+use sim_core::camera::{Flycam, PovState, ProbePovCamera};
 use crate::cli::RunMode;
 use crate::polyp::PolypRemoval;
 use crate::probe::ProbeHead;

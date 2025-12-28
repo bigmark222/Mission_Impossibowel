@@ -12,7 +12,7 @@ use std::fs;
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use crate::camera::PovState;
+use sim_core::camera::PovState;
 use crate::cli::RunMode;
 use crate::polyp::PolypSpawnMeta;
 use crate::polyp::PolypTelemetry;

@@ -2530,6 +2530,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
+ "sim_core",
  "smallvec",
  "sysinfo 0.30.13",
  "tempfile",
@@ -7159,6 +7160,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7664a098b8e616bdfcc2dc0e9ac44eb231eedf41db4e9fe95d8d32ec728dedad"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "sim_core"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy_rapier3d",
 ]
 
 [[package]]
