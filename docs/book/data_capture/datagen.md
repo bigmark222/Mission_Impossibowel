@@ -15,7 +15,7 @@ cargo run --release --bin datagen_headless -- \
 ## Datagen scheduler (optional guards)
 - Launch controlled runs with resource guards:
 ```bash
-cargo run --bin datagen_scheduler -- \
+cargo run -p colon_sim_tools --bin datagen_scheduler -- \
   --runs 1 \
   --max-frames 200 \
   --output-root assets/datasets/captures_raw

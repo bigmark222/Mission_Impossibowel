@@ -68,6 +68,7 @@ pub fn run_app(args: crate::cli::AppArgs) {
     let infer_thresh = thresh_opts.to_inference_thresholds();
     let weights_opts: common_cli::WeightsOpts = (&args).into();
     let weights_path = weights_opts.detector_weights.as_deref();
+    let capture_opts: common_cli::CaptureOutputOpts = (&args).into();
     let mut app = App::new();
 
     if args.mode == RunMode::Inference {
@@ -107,9 +108,9 @@ pub fn run_app(args: crate::cli::AppArgs) {
         })
         .insert_resource(DetectionOverlayState::default())
         .insert_resource(RecorderConfig {
-            output_root: args.output_root.clone(),
-            prune_empty: args.prune_empty,
-            prune_output_root: args.prune_output_root.clone(),
+            output_root: capture_opts.output_root.clone(),
+            prune_empty: capture_opts.prune_empty,
+            prune_output_root: capture_opts.prune_output_root.clone(),
             ..default()
         })
         .insert_resource(RecorderState::default())

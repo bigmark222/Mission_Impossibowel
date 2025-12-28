@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use image::Rgba;
 use serde::Deserialize;
 
-use colon_sim::vision::overlay::{draw_rect, normalize_box};
+use colon_sim_tools::overlay::{draw_rect, normalize_box};
 
 #[derive(Deserialize)]
 struct PolypLabel {

@@ -2,13 +2,18 @@
 
 ## ETL (warehouse_etl)
 ```bash
-cargo run --bin warehouse_etl -- \
+cargo run -p colon_sim_tools --bin warehouse_etl -- \
   --input-root assets/datasets/captures_filtered \
   --output-root artifacts/tensor_warehouse \
   --target-size 384x384 \
   --resize-mode letterbox \
   --max-boxes 16 \
   --shard-samples 1024
+
+# Optional: export manifest summary to Parquet (defaults manifest to <output-root>/manifest.json)
+cargo run -p colon_sim_tools --bin warehouse_export -- \
+  --output-root artifacts/tensor_warehouse \
+  --out warehouse_summary.parquet
 ```
 
 ## Training (train_hp)

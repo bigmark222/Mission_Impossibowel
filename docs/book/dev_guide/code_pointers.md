@@ -1,9 +1,9 @@
 # Code pointers and doc update rules
 
 ## Main modules (illustrative; adjust to actual paths)
-- ETL: `tools/warehouse_etl` (pipeline, transforms, manifest writing).
-- Warehouse commands: `tools/warehouse_commands` (one-liner builders, CLI).
-- Training loaders: `src/` or `tools/train_*` (tensor warehouse reader, store modes).
+- ETL: `tools/src/bin/warehouse_etl.rs` (pipeline, transforms, manifest writing).
+- Warehouse commands: `tools/src/bin/warehouse_cmd.rs` + `tools/src/warehouse_commands/` (one-liner builders, CLI).
+- Training loaders: `src/` (tensor warehouse reader, store modes).
 - Data schemas: `docs/src/data_schema.md` (legacy) and new reference tables in this book.
 
 ## When interfaces change

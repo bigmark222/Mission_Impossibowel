@@ -10,7 +10,7 @@ use sha2::Digest;
 use std::env;
 use std::fs::{self, File};
 use std::io::{BufWriter, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 #[derive(Parser, Debug)]
@@ -21,10 +21,10 @@ use std::time::Instant;
 struct Args {
     /// Input root containing capture runs.
     #[arg(long, default_value = "assets/datasets/captures_filtered")]
-    input_root: String,
+    input_root: PathBuf,
     /// Output root for the warehouse artifacts.
-    #[arg(long, default_value = "artifacts/tensor_warehouse")]
-    output_root: String,
+    #[command(flatten)]
+    output: colon_sim::common_cli::WarehouseOutputArgs,
     /// Target size WxH (e.g., 256x256).
     #[arg(long, value_parser = parse_target_size, default_value = "384x384")]
     target_size: (u32, u32),
@@ -65,8 +65,8 @@ fn main() -> anyhow::Result<()> {
         anyhow::bail!("only f32 shards are supported for now");
     }
 
-    let input_root = Path::new(&args.input_root);
-    let output_root = Path::new(&args.output_root);
+    let input_root = args.input_root.as_path();
+    let output_root = args.output.output_root.as_path();
     fs::create_dir_all(output_root)
         .with_context(|| format!("creating output root {}", output_root.display()))?;
 

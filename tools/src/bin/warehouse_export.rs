@@ -16,9 +16,11 @@ use std::sync::Arc;
     about = "Export warehouse manifest summaries to Parquet for analytics"
 )]
 struct Args {
+    #[command(flatten)]
+    output: colon_sim::common_cli::WarehouseOutputArgs,
     /// Path to manifest.json produced by warehouse_etl.
     #[arg(long)]
-    manifest: PathBuf,
+    manifest: Option<PathBuf>,
     /// Output parquet path.
     #[arg(long, default_value = "warehouse_summary.parquet")]
     out: PathBuf,
@@ -26,8 +28,11 @@ struct Args {
 
 fn main() -> anyhow::Result<()> {
     let args = Args::parse();
-    let manifest = WarehouseManifest::load(&args.manifest)
-        .with_context(|| format!("loading manifest {}", args.manifest.display()))?;
+    let manifest_path = args
+        .manifest
+        .unwrap_or_else(|| args.output.output_root.join("manifest.json"));
+    let manifest = WarehouseManifest::load(&manifest_path)
+        .with_context(|| format!("loading manifest {}", manifest_path.display()))?;
 
     let schema = Schema::new(vec![
         Field::new("run", DataType::Utf8, false),

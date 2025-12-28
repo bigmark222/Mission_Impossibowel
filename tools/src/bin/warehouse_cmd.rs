@@ -1,13 +1,8 @@
 //! Unified warehouse command generator CLI.
 
-#[path = "../lib/builder.rs"]
-mod builder;
-#[path = "../lib/common.rs"]
-mod common;
-
-use builder::{Shell, build_command};
 use clap::{Parser, Subcommand, ValueEnum};
-use common::{CmdConfig, ModelKind, WarehouseStore};
+use colon_sim_tools::warehouse_commands::{common::CmdConfig, builder::{Shell, build_command}, common::{ModelKind, WarehouseStore}};
+use std::path::PathBuf;
 
 #[derive(Clone, Copy, Debug, ValueEnum)]
 enum ShellArg {
@@ -71,6 +66,9 @@ enum Preset {
 #[derive(Parser, Debug)]
 #[command(author, version, about = "Generate warehouse one-liner commands")]
 struct Cli {
+    #[command(flatten)]
+    output: colon_sim::common_cli::WarehouseOutputArgs,
+
     #[arg(
         long,
         value_enum,
@@ -86,7 +84,7 @@ struct Cli {
     backend: Option<String>,
 
     #[arg(long, help = "Path to manifest JSON")]
-    manifest: Option<String>,
+    manifest: Option<PathBuf>,
 
     #[arg(long, value_enum, help = "Warehouse store mode")]
     store: Option<StoreArg>,
@@ -149,9 +147,10 @@ fn main() {
 
     apply_preset(&cli, &mut cfg, &mut shell);
 
-    if let Some(manifest) = cli.manifest {
-        cfg = cfg.with_manifest(manifest);
-    }
+    let manifest = cli
+        .manifest
+        .unwrap_or_else(|| cli.output.output_root.join("manifest.json"));
+    cfg = cfg.with_manifest(manifest.display().to_string());
 
     if let Some(store) = cli.store {
         cfg = cfg.with_store(store.into());

@@ -2,7 +2,7 @@
 
 ## Export manifest summaries
 ```bash
-cargo run --bin warehouse_export -- \
+cargo run -p colon_sim_tools --bin warehouse_export -- \
   --manifest artifacts/tensor_warehouse/v<version>/manifest.json \
   --out logs/warehouse_summary.parquet
 ```
@@ -24,9 +24,9 @@ df.show().await?;
 ```
 
 ## Log locations
-- ETL logs: stdout/stderr from `warehouse_etl`; optional trace if enabled.
+- ETL logs: stdout/stderr from `warehouse_etl` (`cargo run -p colon_sim_tools --bin warehouse_etl ...`); optional trace if enabled.
 - Training logs: `logs/train_status.json` (if `--status-file` set) plus stdout/stderr.
-- Export logs: stdout/stderr from `warehouse_export`.
+- Export logs: stdout/stderr from `warehouse_export` (`cargo run -p colon_sim_tools --bin warehouse_export ...`).
 
 ## Operational checks
 - Verify manifest + shard checksums before training.

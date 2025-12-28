@@ -1,3 +1,10 @@
+[workspace]
+members = [
+    ".",
+    "tools",
+]
+resolver = "2"
+
 [package]
 name = "colon_sim"
 version = "0.1.0"
@@ -24,43 +31,12 @@ name = "datagen_headless"
 path = "src/bin/datagen.rs"
 
 [[bin]]
-name = "overlay_labels"
-path = "src/bin/overlay_labels.rs"
-
-[[bin]]
 name = "train"
 path = "src/bin/train.rs"
 
 [[bin]]
 name = "eval"
 path = "src/bin/eval.rs"
-
-[[bin]]
-name = "tui"
-path = "src/bin/tui.rs"
-required-features = ["tui"]
-
-[[bin]]
-name = "gpu_macos_helper"
-path = "src/bin/gpu_macos_helper.rs"
-required-features = ["gpu_macos_helper"]
-
-[[bin]]
-name = "inference_view"
-path = "src/bin/inference_view.rs"
-
-[[bin]]
-name = "single_infer"
-path = "src/bin/single_infer.rs"
-
-[[bin]]
-name = "datagen_scheduler"
-path = "src/bin/datagen_scheduler.rs"
-required-features = ["scheduler"]
-
-[[bin]]
-name = "warehouse_cmd"
-path = "tools/warehouse_commands/bin/main.rs"
 
 [dependencies]
 bevy = "0.17.3"

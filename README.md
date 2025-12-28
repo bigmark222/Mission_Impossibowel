@@ -35,11 +35,11 @@ cargo run --release
 - PNGs are raw; boxes live in the JSON (`labels/frame_XXXXX.json`).
 - Render boxes onto PNGs (writes to `<run>/overlays` by default):
   ```bash
-  cargo run --release --bin overlay_labels -- assets/datasets/captures/run_<timestamp>
+  cargo run -p colon_sim_tools --release --bin overlay_labels -- assets/datasets/captures/run_<timestamp>
   ```
   Or pick an output dir:
   ```bash
-  cargo run --release --bin overlay_labels -- assets/datasets/captures/run_<timestamp> /tmp/overlays
+  cargo run -p colon_sim_tools --release --bin overlay_labels -- assets/datasets/captures/run_<timestamp> /tmp/overlays
   ```
 
 ## Polyp randomization / reproducibility
@@ -68,10 +68,10 @@ Key flags: `--batch-size`, `--epochs`, `--lr-start/--lr-end`, `--val-ratio`, `--
 
 ## Warehouse command helper
 Generate the training one-liner with a single CLI:
-- PowerShell + AMD (DX12): `cargo run --bin warehouse_cmd -- --shell ps --adapter amd`
-- PowerShell + NVIDIA (DX12): `cargo run --bin warehouse_cmd -- --shell ps --adapter nvidia`
-- Bash + AMD (Vulkan): `cargo run --bin warehouse_cmd -- --shell sh --adapter amd`
-- Bash + NVIDIA (Vulkan): `cargo run --bin warehouse_cmd -- --shell sh --adapter nvidia`
+- PowerShell + AMD (DX12): `cargo run -p colon_sim_tools --bin warehouse_cmd -- --shell ps --adapter amd`
+- PowerShell + NVIDIA (DX12): `cargo run -p colon_sim_tools --bin warehouse_cmd -- --shell ps --adapter nvidia`
+- Bash + AMD (Vulkan): `cargo run -p colon_sim_tools --bin warehouse_cmd -- --shell sh --adapter amd`
+- Bash + NVIDIA (Vulkan): `cargo run -p colon_sim_tools --bin warehouse_cmd -- --shell sh --adapter nvidia`
 
 Defaults (manifest path, store/prefetch, batch/log cadence) live in `tools/warehouse_commands/lib/common.rs`. Useful overrides:
 - `--manifest artifacts/tensor_warehouse/v2/manifest.json` to point at a specific version
