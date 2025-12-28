@@ -46,6 +46,14 @@ path = "src/bin/gpu_macos_helper.rs"
 required-features = ["gpu_macos_helper"]
 
 [[bin]]
+name = "inference_view"
+path = "src/bin/inference_view.rs"
+
+[[bin]]
+name = "single_infer"
+path = "src/bin/single_infer.rs"
+
+[[bin]]
 name = "datagen_scheduler"
 path = "src/bin/datagen_scheduler.rs"
 required-features = ["scheduler"]

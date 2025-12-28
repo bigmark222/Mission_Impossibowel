@@ -4,9 +4,38 @@ Run the simulator interactively to collect runs and inspect frames/labels before
 
 ## Launch interactive capture
 ```bash
-cargo run --bin sim_view -- \
-  --run-dir assets/datasets/captures_raw/<run_dir>
+cargo run --bin sim_view
 ```
+`sim_view` does not open an existing run_dir. It always creates a new `run_<timestamp>` under `--output-root` (default `assets/datasets/captures`) and writes `run_manifest.json`, `images/`, `labels/`, and `overlays/` there (see `init_run_dirs` in `vision.rs`). To choose where a new run is saved, set `--output-root <path>`; it will create the timestamped run inside that directory.
+
+<details>
+<summary>Flag reference</summary>
+
+- Full CLI with overrides:
+```bash
+cargo run --bin sim_view -- \
+  --mode sim \
+  --output-root assets/datasets/captures \
+  --max-frames <optional_cap> \
+  --headless <true|false> \
+  --seed <optional_seed> \
+  --infer-obj-thresh <float> \
+  --infer-iou-thresh <float> \
+  --prune-empty <true|false> \
+  --prune-output-root <path>
+```
+- `--mode sim` (optional, default `sim`): interactive simulator mode (vs `datagen`).
+- `--output-root <path>` (optional, default `assets/datasets/captures`): directory where a new `run_<timestamp>` will be created.
+- `--max-frames <N>` (optional): stop recording after N frames.
+- `--headless <bool>` (optional, default `false`): hide the main window (offscreen run).
+- `--seed <u64>` (optional): deterministic polyp layout/placement.
+- `--infer-obj-thresh <float>` (optional, default `0.3`): runtime objectness threshold for burn inference.
+- `--infer-iou-thresh <float>` (optional, default `0.5`): runtime IoU threshold for NMS.
+- `--prune-empty <bool>` (optional, default `false`): prune empty-label frames after datagen; writes a filtered copy.
+- `--prune-output-root <path>` (optional): target for the pruned copy; defaults to `<output_root>_filtered` when `--prune-empty` is set.
+</details>
+
+Note: live detector bounding boxes now live in `inference_view`; `sim_view` is focused on sim/datagen.
 
 ## Common controls
 - Use the on-screen HUD/help overlay in `sim_view`—it lists the active keybindings for capture start/stop, pause/resume, camera switches, overlays/boxes/HUD toggles, stepping frames, snapshots, and quit.

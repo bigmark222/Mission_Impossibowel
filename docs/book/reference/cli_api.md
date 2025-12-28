@@ -37,6 +37,15 @@
   - `--status-file <path>`
   - Other model/task-specific flags (list here once finalized).
 
+## single_infer
+- Purpose: run the detector on a single image and emit a boxed PNG.
+- Key flags:
+  - `--image <path>` (required)
+  - `--out <path>` (optional; defaults to `<stem>_boxed.png` next to input)
+  - `--infer-obj-thresh <float>` (default `0.3`)
+  - `--infer-iou-thresh <float>` (default `0.5`)
+- Notes: requires Burn features/weights to use the trained model; falls back to heuristic if weights are missing. Set WGPU envs if needed (`WGPU_BACKEND`, `WGPU_ADAPTER_NAME`, `WGPU_POWER_PREF`).
+
 ## Notes
 - Keep CLI help in sync with docs; update here when flags change.
 - Add examples per tool in their respective sections (Warehouse/Training).

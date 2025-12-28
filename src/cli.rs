@@ -45,4 +45,5 @@ pub struct AppArgs {
 pub enum RunMode {
     Sim,
     Datagen,
+    Inference,
 }

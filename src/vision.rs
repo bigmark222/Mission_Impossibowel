@@ -544,6 +544,7 @@ pub fn on_front_capture_readback(
 }
 
 pub fn schedule_burn_inference(
+    mode: Res<RunMode>,
     time: Res<Time>,
     mut burn_detector: ResMut<BurnDetector>,
     mut jobs: ResMut<BurnInferenceState>,
@@ -554,6 +555,9 @@ pub fn schedule_burn_inference(
     mut overlay: ResMut<DetectionOverlayState>,
     _thresh: Res<InferenceThresholds>,
 ) {
+    if *mode != RunMode::Inference {
+        return;
+    }
     jobs.debounce.tick(time.delta());
     if jobs.pending.is_some() || !jobs.debounce.is_finished() {
         return;
@@ -600,11 +604,15 @@ pub fn poll_burn_inference(jobs: Res<BurnInferenceState>, mut votes: ResMut<Poly
 }
 
 pub fn threshold_hotkeys(
+    mode: Res<RunMode>,
     keys: Res<ButtonInput<KeyCode>>,
     thresh: Option<ResMut<InferenceThresholds>>,
     handle: Option<ResMut<DetectorHandle>>,
     #[cfg(feature = "burn_runtime")] burn_loaded: Option<ResMut<BurnDetector>>,
 ) {
+    if *mode != RunMode::Inference {
+        return;
+    }
     let (Some(mut thresh), Some(mut handle)) = (thresh, handle) else {
         return;
     };
