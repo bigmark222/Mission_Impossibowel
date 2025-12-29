@@ -2,6 +2,7 @@
 members = [
     ".",
     "tools",
+    "capture_utils",
     "sim_core",
     "vision_core",
     "vision_runtime",
@@ -35,12 +36,20 @@ name = "sim_view"
 path = "apps/sim_view/main.rs"
 
 [[bin]]
-name = "datagen_headless"
-path = "src/bin/datagen.rs"
-
-[[bin]]
 name = "inference_view"
 path = "apps/inference_view/main.rs"
+
+[[bin]]
+name = "gpu_macos_helper"
+path = "tools/src/bin/gpu_macos_helper.rs"
+
+[[bin]]
+name = "datagen"
+path = "tools/src/bin/datagen.rs"
+
+[[bin]]
+name = "single_infer"
+path = "tools/src/bin/single_infer.rs"
 
 [dependencies]
 sim_core = { path = "sim_core" }
@@ -48,6 +57,7 @@ data_contracts = { path = "data_contracts" }
 vision_core = { path = "vision_core" }
 vision_runtime = { path = "vision_runtime" }
 inference = { path = "inference" }
+capture_utils = { path = "capture_utils" }
 colon_sim_app = { path = "apps/colon_sim" }
 bevy = "0.17.3"
 bevy_rapier3d = { version = "0.32", features = [ "simd-stable", "debug-render-3d" ] }

@@ -69,6 +69,15 @@ To build a custom sim, create your own app crate that:
 2) Registers those systems via `SimHooks` or your own plugins, keeping `sim_core` detector-free.  
 3) Builds the app with `sim_core::build_app`/`SimPlugin`, and adds `vision_runtime`/`inference` plugins when you need capture + inference.
 
+Workspace map (orchestrator + crates)
+- Root crate: orchestration/CLI only (`cli.rs`, `common_cli.rs`, `seed.rs`, `run_app`); domain systems live outside.
+- `apps/colon_sim`: reference app with world/entities, HUD, controls/autopilot hooks.
+- `sim_core`: Bevy plumbing (mode sets, camera/controls hooks, recorder/autopilot scaffolding).
+- `vision_core` / `vision_runtime`: detector interfaces and Bevy capture/inference plugins.
+- `models`: TinyDet/BigDet model definitions.
+- `training` / `inference`: training loop and Burn-backed detector factory.
+- `tools`: CLI utilities (overlay, prune, warehouse commands, datagen scheduler, single_infer, gpu helper) and shared helpers.
+
 ## License
 This project is licensed under the GNU Affero General Public License v3.0. See `LICENSE` for full terms. For commercial licensing options, see `COMMERCIAL_LICENSE.md` (no patent license is granted under the default AGPL; commercial use that practices relevant patents requires a separate agreement).
 

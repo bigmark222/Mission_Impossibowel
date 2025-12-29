@@ -8,4 +8,5 @@ pub mod polyp;
 pub mod tunnel;
 pub mod balloon_control;
 pub mod hud;
+pub mod recorder;
 pub mod prelude;

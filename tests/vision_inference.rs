@@ -8,7 +8,7 @@ use colon_sim::vision::{
 };
 use colon_sim::vision::interfaces::{DetectionResult, Detector, Frame};
 use std::time::Duration;
-use colon_sim::cli::RunMode;
+use sim_core::SimRunMode;
 
 #[derive(Clone)]
 struct FakeDetector;
@@ -35,7 +35,7 @@ fn inference_updates_overlay_and_latency() {
         let mut time = app.world_mut().resource_mut::<Time<Virtual>>();
         time.advance_by(Duration::from_millis(200));
     }
-    app.insert_resource(RunMode::Inference);
+    app.insert_resource(SimRunMode::Inference);
     app.insert_resource(BurnDetector::default());
     let mut jobs = BurnInferenceState::default();
     jobs.debounce = Timer::from_seconds(0.0, TimerMode::Repeating);

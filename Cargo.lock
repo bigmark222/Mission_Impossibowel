@@ -2349,6 +2349,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "capture_utils"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "data_contracts",
+ "image 0.24.9",
+ "serde",
+ "serde_json",
+ "vision_core",
+]
+
+[[package]]
 name = "cassowary"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2515,6 +2527,7 @@ dependencies = [
  "burn",
  "burn-ndarray",
  "burn-wgpu",
+ "capture_utils",
  "clap",
  "colon_sim_app",
  "crossbeam-channel",
@@ -2567,11 +2580,13 @@ dependencies = [
  "arrow-array",
  "arrow-schema",
  "arrow-select",
+ "capture_utils",
  "clap",
  "colon_sim",
  "crossterm",
  "data_contracts",
  "image 0.24.9",
+ "inference",
  "parquet",
  "pretty_assertions",
  "ratatui",
@@ -2580,6 +2595,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "sysinfo 0.30.13",
+ "thiserror 1.0.69",
  "vision_core",
 ]
 
@@ -7222,6 +7238,7 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "bevy_rapier3d",
+ "vision_core",
 ]
 
 [[package]]

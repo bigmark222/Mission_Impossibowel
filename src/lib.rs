@@ -19,6 +19,9 @@ use sim_core::camera::PovState;
 use sim_core::controls::ControlParams;
 use sim_core::recorder_types::{AutoRecordTimer, RecorderConfig, RecorderMotion, RecorderState};
 use sim_core::hooks::SimHooks;
+use sim_core::recorder_meta::{
+    BasicRecorderMeta, RecorderMetaProvider, RecorderSink, RecorderWorldState,
+};
 use sim_core::{ModeSet, SimConfig, SimPlugin, SimRunMode, build_app};
 use crate::cli::RunMode;
 use seed::{SeedState, resolve_seed};
@@ -71,7 +74,10 @@ pub fn run_app(args: crate::cli::AppArgs) {
 
     app
         .insert_resource(SeedState { value: polyp_seed })
-        .insert_resource(args.mode)
+        .insert_resource(sim_mode)
+        .insert_resource(RecorderMetaProvider {
+            provider: Box::new(BasicRecorderMeta { seed: polyp_seed }),
+        })
         .insert_resource(SimHooks {
             controls: Some(Box::new(colon_sim_app::controls::ControlsHookImpl)),
             autopilot: Some(Box::new(colon_sim_app::autopilot::AutopilotHookImpl)),
@@ -110,6 +116,8 @@ pub fn run_app(args: crate::cli::AppArgs) {
         })
         .insert_resource(RecorderState::default())
         .insert_resource(RecorderMotion::default())
+        .insert_resource(RecorderSink::default())
+        .insert_resource(RecorderWorldState::default())
         .insert_resource(vision::CaptureLimit {
             max_frames: sim_config.max_frames,
         })

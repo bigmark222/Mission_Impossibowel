@@ -14,6 +14,7 @@ use crate::sim::recorder::{
     auto_start_recording, auto_stop_recording_on_cecum, datagen_failsafe_recording,
     finalize_datagen_run, record_front_camera_metadata, recorder_toggle_hotkey,
 };
+use colon_sim_app::recorder::update_recorder_world_state;
 use colon_sim_app::tunnel::{
     cecum_detection, setup_tunnel, start_detection, tunnel_expansion_system,
 };
@@ -58,12 +59,19 @@ impl Plugin for SimSystemsPlugin {
                 Update,
                 (
                     balloon_marker_update,
+                    update_recorder_world_state,
                     recorder_toggle_hotkey,
                     auto_start_recording,
                     auto_stop_recording_on_cecum,
                     finalize_datagen_run.after(auto_stop_recording_on_cecum),
                     datagen_failsafe_recording,
                     record_front_camera_metadata,
+                )
+                    .in_set(ModeSet::SimDatagen),
+            )
+            .add_systems(
+                Update,
+                (
                     update_controls_ui,
                     cecum_detection,
                     start_detection,

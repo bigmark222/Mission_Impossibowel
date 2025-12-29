@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
 use colon_sim::common_cli::ThresholdOpts;
-use colon_sim::vision::prelude::{Frame, draw_rect, normalize_box};
+use colon_sim::vision::prelude::{draw_rect, normalize_box, Frame};
 use inference::prelude::{InferenceFactory, InferenceThresholds};
 
 #[derive(Parser, Debug)]

@@ -64,6 +64,10 @@ pub mod prelude {
     };
     pub use crate::hooks::{AutopilotHook, ControlsHook, SimHooks};
     pub use crate::controls::ControlParams;
+    pub use crate::recorder_meta::{
+        BasicRecorderMeta, RecorderMetaProvider, RecorderMetadataProvider, RecorderSink,
+        RecorderWorldState,
+    };
     pub use crate::recorder_types::{AutoRecordTimer, RecorderConfig, RecorderMotion, RecorderState};
     pub use crate::probe_types::{ProbeSegment, SegmentSpring};
     pub use crate::runtime::{SimRuntimePlugin, register_runtime_systems};
@@ -83,6 +87,7 @@ pub mod camera;
 pub mod controls;
 pub mod autopilot_types;
 pub mod probe_types;
+pub mod recorder_meta;
 pub mod recorder_types;
 pub mod runtime;
 pub mod hooks;
