@@ -35,8 +35,9 @@ use polyp::{
 use probe::{StretchState, TipSense};
 use seed::{SeedState, resolve_seed};
 use tunnel::CecumState;
+use inference::prelude::{InferenceFactory, InferenceThresholds as InferenceFactoryThresholds};
 use vision::{
-    BurnDetector, BurnInferenceState, DetectionOverlayState, DefaultDetectorFactory, DetectorFactory,
+    BurnDetector, BurnInferenceState, DetectionOverlayState, DetectorHandle, DetectorKind,
     FrontCameraFrameBuffer, FrontCameraState, FrontCaptureReadback, InferenceThresholds,
     poll_burn_inference, InferencePlugin,
 };
@@ -46,6 +47,10 @@ pub fn run_app(args: crate::cli::AppArgs) {
     let headless = args.headless;
     let thresh_opts: common_cli::ThresholdOpts = (&args).into();
     let infer_thresh = thresh_opts.to_inference_thresholds();
+    let factory_thresh = InferenceFactoryThresholds {
+        obj_thresh: infer_thresh.obj_thresh,
+        iou_thresh: infer_thresh.iou_thresh,
+    };
     let weights_opts: common_cli::WeightsOpts = (&args).into();
     let weights_path = weights_opts.detector_weights.as_deref();
     let capture_opts: common_cli::CaptureOutputOpts = (&args).into();
@@ -68,8 +73,13 @@ pub fn run_app(args: crate::cli::AppArgs) {
     let mut app = build_app(sim_config.clone());
 
     if args.mode == RunMode::Inference {
-        let factory = DefaultDetectorFactory;
-        app.insert_resource(factory.build(infer_thresh, weights_path));
+        let factory = InferenceFactory;
+        let detector = factory.build(factory_thresh, weights_path);
+        app.insert_resource(DetectorHandle {
+            detector,
+            // InferenceFactory currently returns a heuristic detector; mark as such.
+            kind: DetectorKind::Heuristic,
+        });
     }
 
     app

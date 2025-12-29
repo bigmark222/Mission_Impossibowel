@@ -1,7 +1,7 @@
+use burn::module::Module;
 use burn::nn;
 use burn::tensor::activation::relu;
 use burn::tensor::Tensor;
-use burn::module::Module;
 
 #[derive(Debug, Clone)]
 pub struct TinyDetConfig {

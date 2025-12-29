@@ -1,8 +1,7 @@
-pub mod model;
 pub mod dataset;
 pub mod util;
 
-pub use model::{TinyDetConfig, TinyDet};
+pub use models::{TinyDetConfig, TinyDet};
 pub use dataset::{DatasetConfig, RunSample, collate};
 pub use util::{TrainArgs, run_train};
 /// Backend alias for training/eval (NdArray by default; WGPU if enabled).

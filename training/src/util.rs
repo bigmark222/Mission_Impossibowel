@@ -1,4 +1,8 @@
-use burn::record::{BinBytesRecorder, RecorderError};
+use burn::backend::Autodiff;
+use burn::module::Module;
+use burn::nn::loss::{MseLoss, Reduction};
+use burn::optim::{AdamConfig, GradientsParams, Optimizer};
+use burn::record::{BinFileRecorder, FullPrecisionSettings, RecorderError};
 use std::path::Path;
 
 use crate::{DatasetConfig, TinyDet, TinyDetConfig, TrainBackend};
@@ -6,12 +10,12 @@ use clap::Parser;
 use std::fs;
 
 pub fn load_tinydet_from_checkpoint<P: AsRef<Path>>(
-    _path: P,
-    _device: &<TrainBackend as burn::tensor::backend::Backend>::Device,
+    path: P,
+    device: &<TrainBackend as burn::tensor::backend::Backend>::Device,
 ) -> Result<TinyDet<TrainBackend>, RecorderError> {
-    let _recorder: BinBytesRecorder<burn::record::HalfPrecisionSettings> = BinBytesRecorder::new();
-    // Placeholder: real checkpoint loading to be implemented.
-    Err(RecorderError::Unknown("checkpoint loading not implemented yet".into()))
+    let recorder = BinFileRecorder::<FullPrecisionSettings>::new();
+    TinyDet::<TrainBackend>::new(TinyDetConfig::default(), device)
+        .load_file(path.as_ref(), &recorder, device)
 }
 
 #[derive(Parser, Debug)]
@@ -58,30 +62,63 @@ pub fn run_train(args: TrainArgs) -> anyhow::Result<()> {
         return Ok(());
     }
 
-    let device = <TrainBackend as burn::tensor::backend::Backend>::Device::default();
-    let _model = TinyDet::<TrainBackend>::new(TinyDetConfig::default(), &device);
+    type ADBackend = Autodiff<TrainBackend>;
+    let device = <ADBackend as burn::tensor::backend::Backend>::Device::default();
+    let mut model = TinyDet::<ADBackend>::new(TinyDetConfig::default(), &device);
+    let mut optim = AdamConfig::new().init();
 
     let batch_size = args.batch_size.max(1);
     let data = samples.clone();
     for epoch in 0..args.epochs {
-        // Placeholder loop; shuffle omitted for now.
         let mut losses = Vec::new();
         for batch in data.chunks(batch_size) {
-            let _batch = crate::collate::<TrainBackend>(batch)?;
-            losses.push(0.0f32);
+            let batch = crate::collate::<ADBackend>(batch)?;
+            // Feature: take the first box (or zeros) as the input vector.
+            let boxes = batch.boxes.clone();
+            let first_box = boxes
+                .clone()
+                .slice([0..boxes.dims()[0], 0..1, 0..4])
+                .reshape([boxes.dims()[0], 4]);
+
+            // Target: 1.0 if any box present, else 0.0.
+            let mask = batch.box_mask.clone();
+            let has_box = mask
+                .clone()
+                .sum_dim(1)
+                .reshape([mask.dims()[0], 1]);
+
+            let preds = model.forward(first_box);
+            let mse = MseLoss::new();
+            let loss = mse.forward(preds, has_box, Reduction::Mean);
+            let loss_detached = loss.clone().detach();
+            let grads = GradientsParams::from_grads(loss.backward(), &model);
+            model = optim.step(args.lr as f64, model, grads);
+
+            let loss_val: f32 = loss_detached
+                .into_data()
+                .to_vec::<f32>()
+                .unwrap_or_default()
+                .into_iter()
+                .next()
+                .unwrap_or(0.0);
+            losses.push(loss_val);
         }
         let avg_loss: f32 = if losses.is_empty() {
             0.0
         } else {
             losses.iter().sum::<f32>() / losses.len() as f32
         };
-        println!("epoch {epoch}: avg loss {avg_loss:.4} (stub)");
+        println!("epoch {epoch}: avg loss {avg_loss:.4}");
     }
 
     if let Some(parent) = Path::new(&args.checkpoint_out).parent() {
         fs::create_dir_all(parent)?;
     }
-    fs::write(&args.checkpoint_out, b"stub checkpoint")?;
+    let recorder = BinFileRecorder::<FullPrecisionSettings>::new();
+    model
+        .clone()
+        .save_file(Path::new(&args.checkpoint_out), &recorder)
+        .map_err(|e| anyhow::anyhow!("failed to save checkpoint: {e}"))?;
     println!("Saved checkpoint to {}", args.checkpoint_out);
     Ok(())
 }

@@ -6,6 +6,8 @@ members = [
     "vision_core",
     "data_contracts",
     "training",
+    "inference",
+    "models",
 ]
 resolver = "2"
 
@@ -34,18 +36,11 @@ path = "src/main.rs"
 name = "datagen_headless"
 path = "src/bin/datagen.rs"
 
-[[bin]]
-name = "train"
-path = "src/bin/train.rs"
-
-[[bin]]
-name = "eval"
-path = "src/bin/eval.rs"
-
 [dependencies]
 sim_core = { path = "sim_core" }
 data_contracts = { path = "data_contracts" }
 vision_core = { path = "vision_core" }
+inference = { path = "inference" }
 bevy = "0.17.3"
 bevy_rapier3d = { version = "0.32", features = [ "simd-stable", "debug-render-3d" ] }
 smallvec = "1.13"

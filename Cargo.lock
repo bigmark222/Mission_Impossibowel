@@ -2521,6 +2521,7 @@ dependencies = [
  "data_contracts",
  "futures-lite",
  "image 0.24.9",
+ "inference",
  "memmap2",
  "metal 0.29.0",
  "nvml-wrapper 0.8.0",
@@ -4637,6 +4638,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "inference"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bevy",
+ "burn",
+ "burn-ndarray",
+ "burn-wgpu",
+ "models",
+ "sim_core",
+ "vision_core",
+]
+
+[[package]]
 name = "inflections"
 version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5179,6 +5194,13 @@ dependencies = [
  "log",
  "wasi",
  "windows-sys 0.48.0",
+]
+
+[[package]]
+name = "models"
+version = "0.1.0"
+dependencies = [
+ "burn",
 ]
 
 [[package]]
@@ -7897,6 +7919,8 @@ dependencies = [
  "burn-wgpu",
  "clap",
  "data_contracts",
+ "image 0.24.9",
+ "models",
  "serde",
  "serde_json",
  "tempfile",
