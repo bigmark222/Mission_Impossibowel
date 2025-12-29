@@ -3,27 +3,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use image::Rgba;
-use serde::Deserialize;
-
 use vision_core::overlay::{draw_rect, normalize_box};
-
-#[derive(Deserialize)]
-struct PolypLabel {
-    #[allow(dead_code)]
-    center_world: [f32; 3],
-    bbox_px: Option<[f32; 4]>,
-    #[allow(dead_code)]
-    bbox_norm: Option<[f32; 4]>,
-}
-
-#[derive(Deserialize)]
-struct CaptureMetadata {
-    image: String,
-    image_present: bool,
-    #[allow(dead_code)]
-    polyp_seed: Option<u64>,
-    polyp_labels: Vec<PolypLabel>,
-}
+use data_contracts::capture::CaptureMetadata;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = env::args().skip(1);

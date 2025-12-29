@@ -110,3 +110,4 @@ mod tests {
         nn::LinearConfig::new(32, 32).with_bias(true).init(device)
     }
 }
+use alloc::string::ToString;

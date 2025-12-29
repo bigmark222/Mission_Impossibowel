@@ -1,5 +1,5 @@
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use bevy::app::AppExit;
@@ -8,7 +8,7 @@ use bevy::prelude::{
     Vec3, With,
 };
 use image::{ColorType, ImageFormat, Rgba, RgbaImage};
-use serde::{Deserialize, Serialize};
+use data_contracts::RunManifestSchemaVersion;
 
 use sim_core::autopilot_types::{AutoDrive, DataRun, DatagenInit};
 use sim_core::camera::PovState;
@@ -29,34 +29,9 @@ const IMAGES_DIR: &str = "images";
 const LABELS_DIR: &str = "labels";
 const OVERLAYS_DIR: &str = "overlays";
 
-#[derive(Serialize)]
-struct SimRunManifest {
-    schema_version: u32,
-    seed: u64,
-    output_root: PathBuf,
-    run_dir: PathBuf,
-    started_at_unix: f64,
-    max_frames: Option<u32>,
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-struct SimPolypLabel {
-    center_world: [f32; 3],
-    bbox_px: Option<[f32; 4]>,
-    bbox_norm: Option<[f32; 4]>,
-}
-
-#[derive(Serialize, Deserialize)]
-struct SimCaptureMetadata {
-    frame_id: u64,
-    sim_time: f64,
-    unix_time: f64,
-    image: String,
-    image_present: bool,
-    camera_active: bool,
-    polyp_seed: u64,
-    polyp_labels: Vec<SimPolypLabel>,
-}
+type SimRunManifest = data_contracts::RunManifest;
+type SimPolypLabel = data_contracts::capture::PolypLabel;
+type SimCaptureMetadata = data_contracts::capture::CaptureMetadata;
 
 pub(crate) fn recorder_init_run_dirs(
     state: &mut RecorderState,
@@ -82,8 +57,8 @@ pub(crate) fn recorder_init_run_dirs(
     let _ = fs::create_dir_all(state.session_dir.join(OVERLAYS_DIR));
     if !state.manifest_written {
         let manifest = SimRunManifest {
-            schema_version: 1,
-            seed: polyp_meta.seed,
+            schema_version: RunManifestSchemaVersion::V1,
+            seed: Some(polyp_meta.seed),
             output_root: config.output_root.clone(),
             run_dir: state.session_dir.clone(),
             started_at_unix: started_unix,
