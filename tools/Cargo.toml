@@ -2,6 +2,8 @@
 default = []
 tui = ["colon_sim/tui", "crossterm", "ratatui"]
 scheduler = ["colon_sim/scheduler", "sysinfo"]
+# Optional GPU feature flag to mirror root workspace flag.
+gpu_nvidia = ["nvml-wrapper"]
 
 [package]
 name = "colon_sim_tools"
@@ -34,6 +36,7 @@ parquet = { version = "46", features = ["arrow"] }
 crossterm = { version = "0.27", optional = true }
 ratatui = { version = "0.26", optional = true, default-features = false, features = ["crossterm"] }
 thiserror = "1.0"
+nvml-wrapper = { version = "0.8", optional = true }
 
 [dev-dependencies]
 pretty_assertions = "1.4"

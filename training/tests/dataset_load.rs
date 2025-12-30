@@ -44,14 +44,32 @@ fn load_and_collate_synthetic() {
     assert_eq!(samples.len(), 1);
 
     // Collate with NdArray backend
-    let batch = collate::<burn_ndarray::NdArray<f32>>(&samples).unwrap();
+    let batch = collate::<burn_ndarray::NdArray<f32>>(&samples, 4).unwrap();
     assert_eq!(batch.images.dims(), [1, 3, 2, 2]);
-    assert_eq!(batch.boxes.dims(), [1, 1, 4]);
-    assert_eq!(batch.box_mask.dims(), [1, 1]);
+    assert_eq!(batch.boxes.dims(), [1, 4, 4]);
+    assert_eq!(batch.box_mask.dims(), [1, 4]);
+    assert_eq!(batch.features.dims(), [1, 8]);
     let mask: Vec<f32> = batch
         .box_mask
         .into_data()
         .to_vec::<f32>()
         .unwrap_or_default();
-    assert_eq!(mask, vec![1.0]);
+    assert_eq!(mask, vec![1.0, 0.0, 0.0, 0.0]);
+
+    // Features: mean/std RGB, aspect ratio, box count.
+    let feats: Vec<f32> = batch
+        .features
+        .into_data()
+        .to_vec::<f32>()
+        .unwrap_or_default();
+    // Red image -> mean near 1.0 for R, 0 for G/B; std near 0; aspect 1.0; box_count 1.
+    assert_eq!(feats.len(), 8);
+    assert!((feats[0] - 1.0).abs() < 1e-5);
+    assert!((feats[1] - 0.0).abs() < 1e-5);
+    assert!((feats[2] - 0.0).abs() < 1e-5);
+    assert!((feats[3]).abs() < 1e-5);
+    assert!((feats[4]).abs() < 1e-5);
+    assert!((feats[5]).abs() < 1e-5);
+    assert!((feats[6] - 1.0).abs() < 1e-5); // aspect ratio
+    assert!((feats[7] - 1.0).abs() < 1e-5); // box count
 }

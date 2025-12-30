@@ -17,7 +17,7 @@ use ratatui::{
 };
 use serde_json::json;
 
-use tools::services;
+use colon_sim_tools::services;
 
 #[derive(Clone, Copy)]
 struct Theme {
@@ -291,14 +291,14 @@ fn draw_ui(f: &mut ratatui::Frame<'_>, state: &AppState) {
 
     let mut status_lines = vec![state.status.clone()];
     if let Some(pid) = state.datagen_pid {
-        let alive = service::is_process_running(pid);
+        let alive = services::is_process_running(pid);
         status_lines.push(format!(
             "datagen pid: {pid} [{}]",
             if alive { "running" } else { "stopped" }
         ));
     }
     if let Some(pid) = state.train_pid {
-        let alive = service::is_process_running(pid);
+        let alive = services::is_process_running(pid);
         status_lines.push(format!(
             "train pid: {pid} [{}]",
             if alive { "running" } else { "stopped" }

@@ -12,7 +12,6 @@ use bevy_rapier3d::prelude::*;
 const RAPIER_DEBUG_WIREFRAMES: bool = true;
 
 use sim_core::camera::PovState;
-use sim_core::controls::ControlParams;
 use sim_core::recorder_types::{AutoRecordTimer, RecorderConfig, RecorderMotion, RecorderState};
 use sim_core::hooks::SimHooks;
 use sim_core::recorder_meta::{
@@ -83,15 +82,6 @@ pub fn run_app(args: crate::cli::AppArgs) {
             brightness: 0.4,
             affects_lightmapped_meshes: true,
         })
-        .insert_resource(BalloonControl::default())
-        .insert_resource(StretchState::default())
-        .insert_resource(TipSense::default())
-        .insert_resource(PolypSpawnMeta { seed: polyp_seed })
-        .insert_resource(PolypRandom::new(polyp_seed))
-        .insert_resource(PolypTelemetry::default())
-        .insert_resource(PolypDetectionVotes::default())
-        .insert_resource(PolypRemoval::default())
-        .insert_resource(CecumState::default())
         .insert_resource(PovState::default())
         .insert_resource(FrontCameraState::default())
         .insert_resource(FrontCameraFrameBuffer::default())
@@ -117,16 +107,11 @@ pub fn run_app(args: crate::cli::AppArgs) {
         .insert_resource(vision::CaptureLimit {
             max_frames: sim_config.max_frames,
         })
-        .insert_resource(AutoRecordTimer::default())
-        .insert_resource(ControlParams {
-            tension: 0.5,
-            stiffness: 500.0,
-            damping: 20.0,
-            thrust: 40.0,
-            target_speed: 1.2,
-            linear_damping: 0.2,
-            friction: 1.2,
-        })
+        .insert_resource(AutoRecordTimer::default());
+
+    insert_domain_resources(&mut app, polyp_seed);
+
+    app
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 visible: !headless,

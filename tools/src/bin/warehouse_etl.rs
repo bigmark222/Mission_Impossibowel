@@ -24,7 +24,7 @@ struct Args {
     input_root: PathBuf,
     /// Output root for the warehouse artifacts.
     #[command(flatten)]
-    output: colon_sim::common_cli::WarehouseOutputArgs,
+    output: colon_sim::cli::common::WarehouseOutputArgs,
     /// Target size WxH (e.g., 256x256).
     #[arg(long, value_parser = parse_target_size, default_value = "384x384")]
     target_size: (u32, u32),

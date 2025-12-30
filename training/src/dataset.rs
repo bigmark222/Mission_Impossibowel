@@ -25,6 +25,8 @@ pub struct CollatedBatch<B: Backend> {
     pub boxes: Tensor<B, 3>,
     /// Mask indicating which box slots are populated (shape: [batch, max_boxes]).
     pub box_mask: Tensor<B, 2>,
+    /// Global/image features per sample (mean/std RGB, aspect ratio, box count) shape [batch, F].
+    pub features: Tensor<B, 2>,
 }
 
 impl DatasetConfig {
@@ -50,10 +52,11 @@ impl DatasetConfig {
     }
 }
 
-pub fn collate<B: Backend>(samples: &[RunSample]) -> anyhow::Result<CollatedBatch<B>> {
+pub fn collate<B: Backend>(samples: &[RunSample], max_boxes: usize) -> anyhow::Result<CollatedBatch<B>> {
     if samples.is_empty() {
         anyhow::bail!("cannot collate empty batch");
     }
+    let max_boxes = max_boxes.max(1);
 
     // Load first image to establish dimensions.
     let first = image::open(&samples[0].image)
@@ -64,10 +67,10 @@ pub fn collate<B: Backend>(samples: &[RunSample]) -> anyhow::Result<CollatedBatc
     let batch = samples.len();
     let num_pixels = (width * height) as usize;
     let mut image_buf: Vec<f32> = Vec::with_capacity(batch * num_pixels * 3);
+    let mut features: Vec<f32> = Vec::with_capacity(batch * 6); // mean/std RGB, aspect, box_count
 
-    // Gather normalized boxes; track the maximum per-sample count.
+    // Gather normalized boxes, truncated to max_boxes.
     let mut all_boxes: Vec<Vec<[f32; 4]>> = Vec::with_capacity(batch);
-    let mut max_boxes = 0usize;
 
     for (idx, sample) in samples.iter().enumerate() {
         let img = if idx == 0 {
@@ -92,14 +95,30 @@ pub fn collate<B: Backend>(samples: &[RunSample]) -> anyhow::Result<CollatedBatc
         };
 
         // Push normalized pixel data in CHW order.
+        let mut sum = [0f32; 3];
+        let mut sumsq = [0f32; 3];
         for c in 0..3 {
             for y in 0..height {
                 for x in 0..width {
                     let p = img.get_pixel(x, y);
-                    image_buf.push(p[c] as f32 / 255.0);
+                    let v = p[c] as f32 / 255.0;
+                    image_buf.push(v);
+                    sum[c] += v;
+                    sumsq[c] += v * v;
                 }
             }
         }
+        let pix_count = (width * height) as f32;
+        let mean = [
+            sum[0] / pix_count,
+            sum[1] / pix_count,
+            sum[2] / pix_count,
+        ];
+        let std = [
+            (sumsq[0] / pix_count - mean[0] * mean[0]).max(0.0).sqrt(),
+            (sumsq[1] / pix_count - mean[1] * mean[1]).max(0.0).sqrt(),
+            (sumsq[2] / pix_count - mean[2] * mean[2]).max(0.0).sqrt(),
+        ];
 
         let mut boxes = Vec::new();
         for label in &sample.metadata.polyp_labels {
@@ -116,20 +135,21 @@ pub fn collate<B: Backend>(samples: &[RunSample]) -> anyhow::Result<CollatedBatc
                 continue;
             };
             boxes.push(bbox);
+            if boxes.len() >= max_boxes {
+                break;
+            }
         }
-        max_boxes = max_boxes.max(boxes.len());
+        let box_count = boxes.len() as f32;
+        features.extend_from_slice(&[
+            mean[0], mean[1], mean[2], std[0], std[1], std[2], width as f32 / height as f32, box_count,
+        ]);
         all_boxes.push(boxes);
-    }
-
-    if max_boxes == 0 {
-        // Ensure downstream tensors have at least one slot.
-        max_boxes = 1;
     }
 
     let mut boxes_buf = vec![0.0f32; batch * max_boxes * 4];
     let mut mask_buf = vec![0.0f32; batch * max_boxes];
     for (b, boxes) in all_boxes.iter().enumerate() {
-        for (i, bbox) in boxes.iter().take(max_boxes).enumerate() {
+        for (i, bbox) in boxes.iter().enumerate() {
             let base = (b * max_boxes + i) * 4;
             boxes_buf[base..base + 4].copy_from_slice(bbox);
             mask_buf[b * max_boxes + i] = 1.0;
@@ -153,9 +173,15 @@ pub fn collate<B: Backend>(samples: &[RunSample]) -> anyhow::Result<CollatedBatc
         device,
     );
 
+    let features = Tensor::<B, 2>::from_data(
+        TensorData::new(features, [batch, 8]),
+        device,
+    );
+
     Ok(CollatedBatch {
         images,
         boxes,
         box_mask,
+        features,
     })
 }

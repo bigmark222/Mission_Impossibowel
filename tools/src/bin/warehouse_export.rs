@@ -17,7 +17,7 @@ use std::sync::Arc;
 )]
 struct Args {
     #[command(flatten)]
-    output: colon_sim::common_cli::WarehouseOutputArgs,
+    output: colon_sim::cli::common::WarehouseOutputArgs,
     /// Path to manifest.json produced by warehouse_etl.
     #[arg(long)]
     manifest: Option<PathBuf>,

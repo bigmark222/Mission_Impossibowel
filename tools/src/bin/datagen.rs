@@ -1,6 +1,6 @@
 use clap::Parser;
-use colon_sim::common_cli::CaptureOutputArgs;
-use colon_sim::seed::resolve_seed;
+use colon_sim::cli::common::CaptureOutputArgs;
+use colon_sim::cli::seed::resolve_seed;
 use std::process::Command;
 
 #[derive(Parser, Debug)]

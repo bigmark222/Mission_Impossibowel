@@ -9,5 +9,6 @@ pub mod tunnel;
 pub mod balloon_control;
 pub mod hud;
 pub mod recorder;
+pub mod bootstrap;
 pub mod prelude;
 pub mod systems;

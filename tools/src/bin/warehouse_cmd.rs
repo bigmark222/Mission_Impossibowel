@@ -67,7 +67,7 @@ enum Preset {
 #[command(author, version, about = "Generate warehouse one-liner commands")]
 struct Cli {
     #[command(flatten)]
-    output: colon_sim::common_cli::WarehouseOutputArgs,
+    output: colon_sim::cli::common::WarehouseOutputArgs,
 
     #[arg(
         long,

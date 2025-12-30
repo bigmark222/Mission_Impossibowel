@@ -8,5 +8,5 @@ fn collate_runs_with_empty_images() {
         images_subdir: ".".into(),
     };
     let samples = Vec::new();
-    assert!(collate::<burn_ndarray::NdArray<f32>>(&samples).is_err());
+    assert!(collate::<burn_ndarray::NdArray<f32>>(&samples, 4).is_err());
 }

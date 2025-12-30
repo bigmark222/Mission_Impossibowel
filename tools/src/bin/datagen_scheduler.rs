@@ -4,7 +4,7 @@ use std::thread;
 use std::time::Duration;
 
 use clap::Parser;
-use tools::services::{self, DatagenOptions};
+use colon_sim_tools::services::{self, DatagenOptions};
 #[cfg(target_os = "macos")]
 use serde::Deserialize;
 use sysinfo::System;

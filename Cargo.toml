@@ -80,6 +80,7 @@ metal = "0.29"
 
 [dev-dependencies]
 tempfile = "3.10"
+models = { path = "models" }
 
 [patch.crates-io]
 burn-core = { path = "vendor/burn-core-0.14.0" }
