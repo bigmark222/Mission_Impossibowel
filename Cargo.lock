@@ -2576,7 +2576,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
- "sim_core",
+ "sim_core 0.1.0",
  "smallvec",
  "sysinfo 0.30.13",
  "tempfile",
@@ -2596,7 +2596,7 @@ dependencies = [
  "data_contracts 0.1.0",
  "models",
  "rand 0.8.5",
- "sim_core",
+ "sim_core 0.1.0",
  "smallvec",
  "vision_core 0.1.0",
  "vision_runtime",
@@ -2902,7 +2902,7 @@ dependencies = [
  "data_contracts 0.1.0",
  "inference",
  "models",
- "sim_core",
+ "sim_core 0.1.0",
  "training",
  "vision_core 0.1.0",
  "vision_runtime",
@@ -4510,7 +4510,7 @@ name = "hello_substrate"
 version = "0.1.0"
 dependencies = [
  "bevy",
- "sim_core",
+ "sim_core 0.1.0",
 ]
 
 [[package]]
@@ -4754,7 +4754,7 @@ dependencies = [
  "burn-ndarray",
  "burn-wgpu",
  "models",
- "sim_core",
+ "sim_core 0.1.0",
  "vision_core 0.1.0",
 ]
 
@@ -7315,6 +7315,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "sim_core"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ac05908a420cbbf3118a624657de801b785af891ccf9de420794e417c046ce07"
+dependencies = [
+ "bevy",
+ "bevy_rapier3d",
+ "vision_core 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "simba"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8312,8 +8323,8 @@ dependencies = [
  "bevy_camera",
  "futures-lite",
  "image 0.24.9",
- "sim_core",
- "vision_core 0.1.0",
+ "sim_core 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "vision_core 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

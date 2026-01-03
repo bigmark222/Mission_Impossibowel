@@ -16,8 +16,8 @@ rust-version = "1.75"
 [dependencies]
 bevy = "0.17.3"
 bevy_camera = "0.17.3"
-sim_core = { path = "../sim_core", version = "0.1.0" }
-vision_core = { path = "../vision_core", version = "0.1.0" }
+sim_core = { version = "0.1.0" }
+vision_core = { version = "0.1.0" }
 anyhow = "1.0"
 image = { version = "0.24", default-features = false, features = ["png"] }
 futures-lite = "2.3"
