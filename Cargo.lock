@@ -2559,6 +2559,7 @@ dependencies = [
  "capture_utils",
  "clap",
  "colon_sim_app",
+ "cortenforge-models",
  "crossbeam-channel",
  "crossterm",
  "data_contracts 0.1.0",
@@ -2567,7 +2568,6 @@ dependencies = [
  "inference",
  "memmap2",
  "metal 0.29.0",
- "models",
  "nvml-wrapper 0.8.0",
  "parquet",
  "rand 0.8.5",
@@ -2593,8 +2593,8 @@ dependencies = [
  "bevy",
  "bevy_mesh",
  "bevy_rapier3d",
+ "cortenforge-models",
  "data_contracts 0.1.0",
- "models",
  "rand 0.8.5",
  "sim_core 0.1.0",
  "smallvec",
@@ -2899,13 +2899,21 @@ dependencies = [
  "burn_dataset",
  "capture_utils",
  "cli_support",
+ "cortenforge-models",
  "data_contracts 0.1.0",
  "inference",
- "models",
  "sim_core 0.1.0",
  "training",
  "vision_core 0.1.0",
  "vision_runtime",
+]
+
+[[package]]
+name = "cortenforge-models"
+version = "0.1.0"
+dependencies = [
+ "bincode",
+ "burn",
 ]
 
 [[package]]
@@ -4753,9 +4761,9 @@ dependencies = [
  "burn",
  "burn-ndarray",
  "burn-wgpu",
- "models",
- "sim_core 0.1.0",
- "vision_core 0.1.0",
+ "cortenforge-models",
+ "sim_core 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "vision_core 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -5301,14 +5309,6 @@ dependencies = [
  "log",
  "wasi",
  "windows-sys 0.48.0",
-]
-
-[[package]]
-name = "models"
-version = "0.1.0"
-dependencies = [
- "bincode",
- "burn",
 ]
 
 [[package]]
@@ -8039,9 +8039,9 @@ dependencies = [
  "burn-ndarray",
  "burn-wgpu",
  "clap",
- "data_contracts 0.1.0",
+ "cortenforge-models",
+ "data_contracts 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "image 0.24.9",
- "models",
  "serde",
  "serde_json",
  "tempfile",
