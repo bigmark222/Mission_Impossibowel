@@ -1,11 +1,11 @@
 [package]
 name = "cortenforge"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 license = "Apache-2.0"
 description = "Umbrella crate for the CortenForge stack; re-exports app-agnostic crates with feature wiring."
-repository = "https://github.com/via-balaena/Deep_Poo"
-homepage = "https://github.com/via-balaena/Deep_Poo"
+repository = "https://github.com/via-balaena/CortenForge"
+homepage = "https://github.com/via-balaena/CortenForge"
 documentation = "https://docs.rs/cortenforge"
 readme = "README.md"
 keywords = ["vision", "simulation", "training", "inference", "bevy"]
@@ -28,18 +28,17 @@ burn-dataset = ["burn_dataset"]
 cli-support = ["cli_support"]
 
 [dependencies]
-sim_core = { package = "cortenforge-sim-core", version = "0.1.0", optional = true }
-vision_core = { package = "cortenforge-vision-core", version = "0.1.0", optional = true }
-vision_runtime = { package = "cortenforge-vision-runtime", version = "0.1.0", optional = true }
-capture_utils = { package = "cortenforge-capture-utils", version = "0.1.0", optional = true }
-data_contracts = { package = "cortenforge-data-contracts", version = "0.1.0", optional = true }
-models = { package = "cortenforge-models", version = "0.1.0", optional = true }
-inference = { package = "cortenforge-inference", version = "0.1.0", optional = true }
-training = { package = "cortenforge-training", version = "0.1.0", optional = true }
-burn_dataset = { package = "cortenforge-burn-dataset", version = "0.1.0", optional = true }
-cli_support = { package = "cortenforge-cli-support", version = "0.1.0", optional = true }
+sim_core = { package = "cortenforge-sim-core", version = "0.1.1", optional = true }
+vision_core = { package = "cortenforge-vision-core", version = "0.1.1", optional = true }
+vision_runtime = { package = "cortenforge-vision-runtime", version = "0.1.1", optional = true }
+capture_utils = { package = "cortenforge-capture-utils", version = "0.1.1", optional = true }
+data_contracts = { package = "cortenforge-data-contracts", version = "0.1.1", optional = true }
+models = { package = "cortenforge-models", version = "0.1.1", optional = true }
+inference = { package = "cortenforge-inference", version = "0.1.1", optional = true }
+training = { package = "cortenforge-training", version = "0.1.1", optional = true }
+burn_dataset = { package = "cortenforge-burn-dataset", version = "0.1.1", optional = true }
+cli_support = { package = "cortenforge-cli-support", version = "0.1.1", optional = true }
 burn = { version = "0.14", optional = true, default-features = false, features = ["autodiff", "std"] }
 burn-ndarray = { version = "0.14", optional = true, default-features = false }
 burn-wgpu = { version = "0.14", optional = true, default-features = true }
 bincode = { version = "2.0.0-rc.3", optional = true, default-features = false, features = ["alloc", "serde"] }
-workspace-hack = { version = "0.1", path = "../../workspace-hack" }

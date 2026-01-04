@@ -1,12 +1,12 @@
 [package]
 name = "cortenforge-inference"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 license = "Apache-2.0"
 publish = true
 description = "Detector factory and inference helpers (Burn-backed or heuristic) for the CortenForge stack."
-repository = "https://github.com/via-balaena/Deep_Poo"
-homepage = "https://github.com/via-balaena/Deep_Poo"
+repository = "https://github.com/via-balaena/CortenForge"
+homepage = "https://github.com/via-balaena/CortenForge"
 documentation = "https://docs.rs/cortenforge-inference"
 readme = "README.md"
 keywords = ["inference", "burn", "detector", "bevy"]
@@ -26,12 +26,11 @@ path = "src/lib.rs"
 
 [dependencies]
 anyhow = "1.0"
-vision_core = { package = "cortenforge-vision-core", version = "0.1.0" }
-sim_core = { package = "cortenforge-sim-core", version = "0.1.0" }
+vision_core = { package = "cortenforge-vision-core", version = "0.1.1" }
+sim_core = { package = "cortenforge-sim-core", version = "0.1.1" }
 bevy = "0.17.3"
 burn = { version = "0.14", default-features = false, features = ["autodiff"] }
 burn-ndarray = { version = "0.14", default-features = false, optional = true }
 burn-wgpu = { version = "0.14", optional = true, default-features = true }
-models = { package = "cortenforge-models", version = "0.1.0" }
+models = { package = "cortenforge-models", version = "0.1.1" }
 bincode = { version = "2.0.0-rc.3", default-features = false, features = ["alloc", "serde"] }
-workspace-hack = { version = "0.1", path = "../workspace-hack" }

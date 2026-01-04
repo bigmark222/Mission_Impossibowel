@@ -5,7 +5,7 @@ Guidance for moving code/features into the current layout and branding.
 ## Refactor snapshot
 - This repository is library-only: shared crates (sim_core, vision_core/runtime, data_contracts, capture_utils, models, training, inference, colon_sim_tools) intended for crates.io.
 - Apps (including the `colon_sim` reference and `hello_substrate` demo) live in their own repository; pull them from the app repo when you need binaries.
-- Crates.io: version `0.1.0` published for the shared crates. App repo: https://github.com/via-balaena/Deep-Poo.
+- Crates.io: version `0.1.1` published for the shared crates. App repo: https://github.com/via-balaena/Deep-Poo.
 - Tools live in `colon_sim_tools`; bins reuse shared helpers via `cortenforge-cli-support` and `colon_sim_tools::services`.
 - Recorder defaults to `JsonRecorder`; apps supply metadata/world-state hooks and can inject sinks.
 - Branding: substrate is “CortenForge”; app crates consume it.

@@ -8,7 +8,7 @@ Welcome to the contributor guide for CortenForge. This book explains how the sub
 - A map for contributors: where code lives, how pieces talk, and how to add or change behavior safely.
 
 ## Crates/versions/features (crates.io)
-- Version `0.1.0` on crates.io: `cortenforge-sim-core`, `cortenforge-vision-core`, `cortenforge-vision-runtime`, `cortenforge-data-contracts`, `cortenforge-capture-utils`, `cortenforge-models`, `cortenforge-training`, `cortenforge-inference`, `cortenforge-cli-support`, `cortenforge-burn-dataset`.
+- Version `0.1.1` on crates.io: `cortenforge-sim-core`, `cortenforge-vision-core`, `cortenforge-vision-runtime`, `cortenforge-data-contracts`, `cortenforge-capture-utils`, `cortenforge-models`, `cortenforge-training`, `cortenforge-inference`, `cortenforge-cli-support`, `cortenforge-burn-dataset`.
 - Feature flags:
   - Training/inference: `backend-wgpu` for GPU; defaults to NdArray.
   - Inference: `tinydet`/`bigdet`.

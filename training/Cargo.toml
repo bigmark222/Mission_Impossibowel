@@ -7,13 +7,13 @@ bigdet = ["models/bigdet"]
 
 [package]
 name = "cortenforge-training"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 license = "Apache-2.0"
 publish = true
 description = "Burn-based training and eval for TinyDet/BigDet models in the CortenForge stack."
-repository = "https://github.com/via-balaena/Deep_Poo"
-homepage = "https://github.com/via-balaena/Deep_Poo"
+repository = "https://github.com/via-balaena/CortenForge"
+homepage = "https://github.com/via-balaena/CortenForge"
 documentation = "https://docs.rs/cortenforge-training"
 readme = "README.md"
 keywords = ["burn", "training", "computer-vision", "detection"]
@@ -34,16 +34,15 @@ path = "src/bin/eval.rs"
 [dependencies]
 anyhow = "1.0"
 clap = { version = "4.5", features = ["derive"] }
-data_contracts = { package = "cortenforge-data-contracts", version = "0.1.0" }
+data_contracts = { package = "cortenforge-data-contracts", version = "0.1.1" }
 burn = { version = "0.14", default-features = false, features = ["autodiff", "std"] }
 burn-ndarray = { version = "0.14", default-features = false, optional = true }
 burn-wgpu = { version = "0.14", optional = true, default-features = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 image = { version = "0.24", default-features = false, features = ["png"] }
-models = { package = "cortenforge-models", version = "0.1.0" }
+models = { package = "cortenforge-models", version = "0.1.1" }
 bincode = { version = "2.0.0-rc.3", default-features = false, features = ["alloc", "serde"] }
-workspace-hack = { version = "0.1", path = "../workspace-hack" }
 
 [dev-dependencies]
 tempfile = "3.10"
