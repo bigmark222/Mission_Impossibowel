@@ -12,6 +12,7 @@ Goal: phase out app-specific code from `colon_sim_tools` and keep only app-agnos
 ## What to keep (app-agnostic)
 - Shared services: CLI parsing, warehouse command builders, overlay/prune helpers that only depend on substrate crates (`capture_utils`, `data_contracts`, `vision_core`).
 - Bins that operate purely on captures/warehouse artifacts without domain logic: `overlay_labels`, `prune_empty`, `warehouse_etl`, `warehouse_export`, `warehouse_cmd`, `single_infer` (if detector selection remains generic).
+- Option: fold shared helpers into existing crates (`cli_support` for CLI scaffolding, `capture_utils` for recorder/overlay helpers) and keep only a thin bin crate here (or rename to a shared tools crate) once app-specific pieces move out.
 
 ## What to move to app repo
 - Bins that assume app/world context: `datagen_scheduler`, `tui`, any bin that pulls app configs or domain assets.
@@ -28,6 +29,7 @@ Goal: phase out app-specific code from `colon_sim_tools` and keep only app-agnos
 3) Slim `colon_sim_tools` to shared utilities:
    - Remove app-specific bins/features (`tui`, `scheduler`, `gpu_nvidia`) or gate them behind a new “app” feature that defaults off.
    - Update `Cargo.toml` to reflect unpublished status and clean feature list.
+   - Consider moving shared helpers into existing crates (`cli_support`, `capture_utils`) to reduce surface area here.
 4) Refactor shared bins to be app-agnostic:
    - Ensure inputs are captures/warehouse manifests; no app configs.
    - Keep schemas aligned with `data_contracts`; minimize hardcoded paths.
