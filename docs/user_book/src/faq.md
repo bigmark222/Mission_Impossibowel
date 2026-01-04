@@ -19,7 +19,7 @@
   Use `warehouse_cmd` to emit a tailored one-liner; override manifest/store/prefetch/batch/log flags as needed.
 
 - **Boxes not showing?**  
-  `sim_view` focuses on capture; real-time detector overlay is in `inference_view`. For offline overlays, run `overlay_labels` on a captured run.
+  App binaries live in the app repo (https://github.com/via-balaena/Deep-Poo). `sim_view` focuses on capture; real-time detector overlay is in `inference_view`. For offline overlays, run `overlay_labels` on a captured run.
 - **Recording doesn’t start?**  
   Ensure HUD shows `REC` when you press `L`; autopilot start/stop (`O`) only works in the tunnel flow. Check disk space under `assets/datasets/captures`.
 - **Store mode / version confusion?**  
@@ -31,4 +31,4 @@
 - **Do I need to set seeds?**  
   For reproducibility across capture/train/infer, set seeds in capture (`--seed`), keep ETL defaults, and train with the same manifest.
 - **datagen says sim_view missing in release?**  
-  Build `sim_view` in the same profile once: `cargo build --release --bin sim_view`, then rerun `datagen`.
+  Build `sim_view` in the app repo for the same profile (`cargo build --release --bin sim_view`), ensure it’s on PATH or next to the tool, then rerun `datagen`.

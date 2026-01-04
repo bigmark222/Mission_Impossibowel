@@ -167,15 +167,16 @@ pub struct TrainOptions {
 /// Build a command to launch the training binary with common options.
 pub fn train_command(opts: &TrainOptions) -> io::Result<ServiceCommand> {
     let bin = bin_path("train")?;
-    let mut args = Vec::new();
-    args.push("--input-root".into());
-    args.push(opts.input_root.display().to_string());
-    args.push("--val-ratio".into());
-    args.push(opts.val_ratio.to_string());
-    args.push("--batch-size".into());
-    args.push(opts.batch_size.to_string());
-    args.push("--epochs".into());
-    args.push(opts.epochs.to_string());
+    let mut args = vec![
+        "--input-root".into(),
+        opts.input_root.display().to_string(),
+        "--val-ratio".into(),
+        opts.val_ratio.to_string(),
+        "--batch-size".into(),
+        opts.batch_size.to_string(),
+        "--epochs".into(),
+        opts.epochs.to_string(),
+    ];
     if let Some(seed) = opts.seed {
         args.push("--seed".into());
         args.push(seed.to_string());
@@ -203,7 +204,7 @@ pub fn read_metrics(
     let reader = io::BufReader::new(file);
     let mut rows: Vec<serde_json::Value> = reader
         .lines()
-        .filter_map(|line| line.ok())
+        .map_while(Result::ok)
         .filter_map(|line| serde_json::from_str(&line).ok())
         .collect();
     if let Some(n) = limit {
@@ -218,7 +219,7 @@ pub fn read_metrics(
 pub fn read_log_tail(path: &Path, limit: usize) -> Result<Vec<String>, ServiceError> {
     let file = fs::File::open(path)?;
     let reader = io::BufReader::new(file);
-    let mut lines: Vec<String> = reader.lines().filter_map(|l| l.ok()).collect();
+    let mut lines: Vec<String> = reader.lines().map_while(Result::ok).collect();
     if lines.len() > limit {
         lines.drain(0..lines.len().saturating_sub(limit));
     }

@@ -1,15 +1,15 @@
 # Tools
 
-Tools live in the `colon_sim_tools` crate. Most run with defaults; heavy ones are feature-gated.
+Tools live in the `colon_sim_tools` crate. Most run with defaults; heavy ones are feature-gated. (App repo for binaries: https://github.com/via-balaena/Deep-Poo)
 
-Core (always available):
+Core (always available in this repo; app repo: https://github.com/via-balaena/Deep-Poo):
 - `overlay_labels`: render boxes onto run images.
 - `prune_empty`: filter runs to keep only labeled frames.
 - `warehouse_etl`: build warehouse shards/manifest.
 - `warehouse_export`: Parquet summary export.
 - `warehouse_cmd`: emit a training command.
 - `single_infer`: single-image detection → boxed PNG.
-- `datagen`: headless capture wrapper (runs sim headless and writes a run dir).
+- `datagen`: headless capture wrapper (expects the `sim_view` binary from the app repo to be on PATH/in the same target dir).
 
 Feature-gated:
 - `datagen_scheduler` (`--features scheduler`): schedule headless datagen runs.
@@ -27,7 +27,7 @@ Defaults:
 - Tools run with minimal flags; use defaults first, override only when needed (paths, thresholds, adapter/shell).
 - Feature flags keep the default build lean; enable only what you need.
 - Sane defaults: ETL targets `artifacts/tensor_warehouse`, prune defaults to keeping labeled frames, scheduler defaults to local machine (set shells/adapters if remote).
-- `datagen` shells out to `sim_view` in the same build profile; build `sim_view` in that profile once if it’s missing (`cargo build --release --bin sim_view` for release).
+- `datagen` shells out to `sim_view`; build `sim_view` in the app repo for the same profile and ensure it’s on PATH or next to the tool binary.
 
 Quick reference (defaults):
 - `overlay_labels <run_dir>` → writes overlays under the same run.

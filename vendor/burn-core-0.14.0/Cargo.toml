@@ -60,6 +60,9 @@ path = "tests/derive_record.rs"
 name = "record_resilience"
 path = "tests/record_resilience.rs"
 
+[dependencies]
+workspace-hack = { version = "0.1", path = "../../workspace-hack" }
+
 [dependencies.bincode]
 version = "2.0.0-rc.3"
 features = [

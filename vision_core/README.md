@@ -1,5 +1,7 @@
 # vision_core
 
+[![crates.io](https://img.shields.io/crates/v/cortenforge-vision-core.svg)](https://crates.io/crates/cortenforge-vision-core) [![docs.rs](https://docs.rs/cortenforge-vision-core/badge.svg)](https://docs.rs/cortenforge-vision-core) [![MSRV](https://img.shields.io/badge/rustc-1.75+-orange.svg)](#)
+
 Shared detector/capture/overlay interfaces for sims, tools, and inference.
 
 > Deprecated: this crate was renamed to `cortenforge-vision-core`. Please depend on the new crate name going forward.

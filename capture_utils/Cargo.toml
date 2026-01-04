@@ -13,6 +13,9 @@ keywords = ["capture", "recorder", "serde", "image"]
 categories = ["data-structures", "graphics", "computer-vision"]
 rust-version = "1.75"
 
+[lib]
+name = "capture_utils"
+
 [dependencies]
 vision_core = { package = "cortenforge-vision-core", version = "0.1.0" }
 data_contracts = { package = "cortenforge-data-contracts", version = "0.1.0" }
@@ -20,6 +23,7 @@ image = { version = "0.24", default-features = false, features = ["png", "rayon"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 anyhow = "1.0"
+workspace-hack = { version = "0.1", path = "../workspace-hack" }
 
 [dev-dependencies]
 tempfile = "3.10"

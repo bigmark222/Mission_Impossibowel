@@ -357,7 +357,7 @@ impl TransformPipeline {
 
                     let mut boxes = norm_boxes
                         .into_iter()
-                        .zip(px_boxes.into_iter())
+                        .zip(px_boxes)
                         .map(|(_norm, px)| {
                             let scaled = [
                                 px[0] * scale_x + pad_w as f32,
@@ -442,6 +442,12 @@ impl TransformPipeline {
 #[derive(Debug, Clone)]
 pub struct TransformPipelineBuilder {
     inner: TransformPipeline,
+}
+
+impl Default for TransformPipelineBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl TransformPipelineBuilder {
@@ -826,6 +832,7 @@ impl WarehouseManifest {
         })
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         dataset_root: PathBuf,
         transform: CacheableTransformConfig,
@@ -1375,7 +1382,7 @@ fn normalize_boxes_with_px(
 
 pub(crate) fn maybe_hflip(
     img: &mut image::RgbImage,
-    boxes: &mut Vec<[f32; 4]>,
+    boxes: &mut [[f32; 4]],
     prob: f32,
     rng: &mut dyn rand::RngCore,
 ) {
@@ -1440,7 +1447,7 @@ pub(crate) fn maybe_noise(
 
 pub(crate) fn maybe_scale_jitter(
     img: &mut image::RgbImage,
-    boxes: &mut Vec<[f32; 4]>,
+    boxes: &mut [[f32; 4]],
     prob: f32,
     min_scale: f32,
     max_scale: f32,
@@ -1521,24 +1528,6 @@ pub(crate) fn maybe_blur(
     }
     let blurred = image::imageops::blur(img, sigma);
     *img = blurred;
-}
-
-#[cfg(test)]
-mod aug_tests {
-    use super::maybe_hflip;
-    use rand::thread_rng;
-
-    #[test]
-    fn hflip_boxes_are_inverted() {
-        let mut img = image::RgbImage::new(2, 2);
-        let mut boxes = vec![[0.25, 0.0, 0.75, 1.0]];
-        let mut rng = thread_rng();
-        maybe_hflip(&mut img, &mut boxes, 1.0, &mut rng);
-        let flipped = boxes[0];
-        assert!((flipped[0] - 0.25).abs() < 1e-6);
-        assert!((flipped[2] - 0.75).abs() < 1e-6);
-        assert!(flipped[0] < flipped[2]);
-    }
 }
 
 #[cfg(feature = "burn_runtime")]
@@ -2203,9 +2192,9 @@ impl StreamingStore {
         let val_count =
             ((val_ratio.clamp(0.0, 1.0) * order.len() as f32).round() as usize).min(order.len());
         let (val_order, train_order) = order.split_at(val_count);
-        let width = shards.get(0).map(|s| s.width).unwrap_or(0);
-        let height = shards.get(0).map(|s| s.height).unwrap_or(0);
-        let max_boxes = shards.get(0).map(|s| s.max_boxes).unwrap_or(0);
+        let width = shards.first().map(|s| s.width).unwrap_or(0);
+        let height = shards.first().map(|s| s.height).unwrap_or(0);
+        let max_boxes = shards.first().map(|s| s.max_boxes).unwrap_or(0);
         Ok(StreamingStore {
             shards,
             train_order: train_order.to_vec(),
@@ -2368,9 +2357,9 @@ impl InMemoryStore {
         let val_count =
             ((val_ratio.clamp(0.0, 1.0) * order.len() as f32).round() as usize).min(order.len());
         let (val_order, train_order) = order.split_at(val_count);
-        let width = shards.get(0).map(|s| s.width).unwrap_or(0);
-        let height = shards.get(0).map(|s| s.height).unwrap_or(0);
-        let max_boxes = shards.get(0).map(|s| s.max_boxes).unwrap_or(0);
+        let width = shards.first().map(|s| s.width).unwrap_or(0);
+        let height = shards.first().map(|s| s.height).unwrap_or(0);
+        let max_boxes = shards.first().map(|s| s.max_boxes).unwrap_or(0);
         Ok(InMemoryStore {
             shards,
             train_order: train_order.to_vec(),
@@ -2483,9 +2472,9 @@ impl MmapStore {
         let val_count =
             ((val_ratio.clamp(0.0, 1.0) * order.len() as f32).round() as usize).min(order.len());
         let (val_order, train_order) = order.split_at(val_count);
-        let width = shards.get(0).map(|s| s.width).unwrap_or(0);
-        let height = shards.get(0).map(|s| s.height).unwrap_or(0);
-        let max_boxes = shards.get(0).map(|s| s.max_boxes).unwrap_or(0);
+        let width = shards.first().map(|s| s.width).unwrap_or(0);
+        let height = shards.first().map(|s| s.height).unwrap_or(0);
+        let max_boxes = shards.first().map(|s| s.max_boxes).unwrap_or(0);
         Ok(MmapStore {
             shards,
             train_order: train_order.to_vec(),
@@ -2551,6 +2540,10 @@ impl WarehouseBatchIter {
             WarehouseBatchIterKind::Direct { order, .. } => order.len(),
             WarehouseBatchIterKind::Stream { remaining, .. } => *remaining,
         }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     pub fn next_batch<B: burn::tensor::backend::Backend>(
@@ -2867,7 +2860,7 @@ fn load_shard_mmap(root: &Path, meta: &ShardMetadata) -> DatasetResult<ShardBuff
             .map(&file)
             .map_err(|e| BurnDatasetError::Io {
                 path: path.clone(),
-                source: std::io::Error::new(std::io::ErrorKind::Other, e.to_string()),
+                source: std::io::Error::other(e.to_string()),
             })?
     };
     let data = &mmap[..];
@@ -3067,4 +3060,22 @@ fn load_shard_streamed(root: &Path, meta: &ShardMetadata) -> DatasetResult<Shard
             samples,
         },
     })
+}
+
+#[cfg(test)]
+mod aug_tests {
+    use super::maybe_hflip;
+    use rand::thread_rng;
+
+    #[test]
+    fn hflip_boxes_are_inverted() {
+        let mut img = image::RgbImage::new(2, 2);
+        let mut boxes = vec![[0.25, 0.0, 0.75, 1.0]];
+        let mut rng = thread_rng();
+        maybe_hflip(&mut img, &mut boxes, 1.0, &mut rng);
+        let flipped = boxes[0];
+        assert!((flipped[0] - 0.25).abs() < 1e-6);
+        assert!((flipped[2] - 0.75).abs() < 1e-6);
+        assert!(flipped[0] < flipped[2]);
+    }
 }

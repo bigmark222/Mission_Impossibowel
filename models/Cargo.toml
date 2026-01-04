@@ -19,6 +19,7 @@ name = "models"
 [dependencies]
 burn = { version = "0.14", default-features = false, features = ["autodiff", "std"] }
 bincode = { version = "2.0.0-rc.3", default-features = false, features = ["alloc", "serde"] }
+workspace-hack = { version = "0.1", path = "../workspace-hack" }
 
 [features]
 default = ["tinydet"]

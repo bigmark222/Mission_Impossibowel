@@ -13,8 +13,12 @@ keywords = ["vision", "graphics", "capture", "overlay", "serde"]
 categories = ["graphics", "computer-vision", "game-engines"]
 rust-version = "1.75"
 
+[lib]
+name = "vision_core"
+
 [dependencies]
 anyhow = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 image = { version = "0.24", default-features = false, features = ["png"] }
 bevy = { version = "0.17.3", default-features = false, features = ["bevy_core_pipeline"] }
+workspace-hack = { version = "0.1", path = "../workspace-hack" }

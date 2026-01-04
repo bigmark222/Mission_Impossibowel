@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::thread;
 use std::time::Duration;
@@ -182,8 +182,8 @@ fn resources_ok(
     true
 }
 
-fn default_prune_root(output_root: &PathBuf) -> Option<PathBuf> {
-    let mut base = output_root.clone();
+fn default_prune_root(output_root: &Path) -> Option<PathBuf> {
+    let mut base = output_root.to_path_buf();
     let suffix = base
         .file_name()
         .and_then(|s| s.to_str())
@@ -457,9 +457,9 @@ fn sample_intel_mem_text(text: &str) -> Option<u64> {
         if lower.contains("mem") {
             if let Some(num) = line
                 .split_whitespace()
-                .filter_map(|w| Some(w.trim_end_matches(['%', 'm', 'M', 'b', 'B'])))
+                .map(|w| w.trim_end_matches(['%', 'm', 'M', 'b', 'B']))
                 .filter_map(|w| w.parse::<f64>().ok())
-                .last()
+                .next_back()
             {
                 if num > 10_000.0 {
                     return Some((num / 1024.0 / 1024.0) as u64);

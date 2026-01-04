@@ -1,5 +1,7 @@
 # training
 
+[![crates.io](https://img.shields.io/crates/v/cortenforge-training.svg)](https://crates.io/crates/cortenforge-training) [![docs.rs](https://docs.rs/cortenforge-training/badge.svg)](https://docs.rs/cortenforge-training) [![MSRV](https://img.shields.io/badge/rustc-1.75+-orange.svg)](#)
+
 Burn-based training/eval for TinyDet and the multibox BigDet model.
 
 Contents

@@ -14,4 +14,4 @@ What to expect:
 Housekeeping:
 - Build this book: `mdbook build docs/contributor_book`
 - Build the user book (end-user flows): `mdbook build docs/user_book`
-- Recent refactor highlights: see `MIGRATION.md` (root orchestrator, app crates under `apps/`, tools split, recorder defaults, tests/docs refresh).
+- Recent refactor highlights: see `MIGRATION.md` (library-only repo, apps now in their own repo, tools retained here, recorder defaults, tests/docs refresh).

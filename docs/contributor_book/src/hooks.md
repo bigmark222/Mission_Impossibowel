@@ -4,7 +4,7 @@ Where apps plug into the substrate without modifying core crates.
 
 ## Sim hooks (controls/autopilot)
 - `SimHooks` resource holds optional `ControlsHook` and `AutopilotHook` trait objects supplied by the app.
-- Apps implement these traits to register control/autopilot systems and insert them during setup (e.g., in `run_app`).
+- Apps implement these traits to register control/autopilot systems and insert them during app setup.
 - Use `ModeSet`/`SimRunMode` to gate your systems (e.g., enable autopilot only in datagen).
 
 ## Recorder hooks

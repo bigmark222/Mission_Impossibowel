@@ -12,6 +12,9 @@ keywords = ["cli", "args", "capture", "warehouse"]
 categories = ["command-line-interface"]
 rust-version = "1.75"
 
+[lib]
+name = "cli_support"
+
 [features]
 default = []
 bevy-resource = ["bevy"]
@@ -19,3 +22,4 @@ bevy-resource = ["bevy"]
 [dependencies]
 clap = { version = "4.5", features = ["derive"] }
 bevy = { version = "0.17.3", optional = true, default-features = false }
+workspace-hack = { version = "0.1", path = "../../workspace-hack" }

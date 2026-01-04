@@ -12,6 +12,9 @@ keywords = ["dataset", "burn", "vision"]
 categories = ["science", "computer-vision"]
 rust-version = "1.75"
 
+[lib]
+name = "burn_dataset"
+
 [features]
 default = []
 burn_runtime = ["burn", "burn-ndarray", "crossbeam-channel", "memmap2", "rayon"]
@@ -23,13 +26,14 @@ serde_json = "1.0"
 rand = "0.8"
 thiserror = "1.0"
 image = { version = "0.24", default-features = false, features = ["png", "rayon"] }
-data_contracts = { package = "cortenforge-data-contracts", path = "../../data_contracts", version = "0.1.0" }
+data_contracts = { package = "cortenforge-data-contracts", version = "0.1.0" }
 burn = { version = "0.14", default-features = false, optional = true, features = ["autodiff", "std"] }
 burn-ndarray = { version = "0.14", default-features = false, optional = true }
 crossbeam-channel = { version = "0.5", optional = true }
 memmap2 = { version = "0.9", optional = true }
 rayon = { version = "1.8", optional = true }
 sha2 = "0.10"
+workspace-hack = { version = "0.1", path = "../../workspace-hack" }
 
 [dev-dependencies]
 tempfile = "3.10"

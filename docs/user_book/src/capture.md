@@ -1,9 +1,9 @@
 # Capture
 
-Two primary ways to capture data:
+Two primary ways to capture data. App binaries (`sim_view`) live in the app repository; run those commands there (https://github.com/via-balaena/Deep-Poo). The headless wrapper (`datagen`) is provided by `colon_sim_tools` in this repo and expects `sim_view` from the app repo to be available.
 
-## Interactive (sim_view)
-Run the sim, drive manually, and record:
+## Interactive (sim_view, from app repo)
+Run the sim, drive manually, and record (from the app repo):
 ```bash
 cargo run --bin sim_view
 ```
@@ -17,7 +17,7 @@ cargo run --bin sim_view
 - Data run shortcut: `O` enables autopilot, switches to probe POV, and auto-starts/stops recording at the tunnel end.
 
 ## Headless wrapper (datagen)
-Run headless capture with defaults:
+Run headless capture with defaults (requires `sim_view` built in the app repo and on PATH/alongside):
 ```bash
 cargo run -p colon_sim_tools --bin datagen
 ```
@@ -29,7 +29,7 @@ Use optimized binaries when you want max throughput or smooth playback:
 cargo run --release --bin sim_view
 cargo run -p colon_sim_tools --release --bin datagen
 ```
-How it’s wired: `datagen` is a thin wrapper that spawns `sim_view` with the right args. It looks for `sim_view` in the same `target/<profile>/` directory as itself; build `sim_view` once in that profile (`cargo build --release --bin sim_view`) so the wrapper can find it. If you prefer debug, build debug `sim_view` (`cargo build --bin sim_view`) and run the debug `datagen`, or put any `sim_view` on your `PATH`.
+How it’s wired: `datagen` is a thin wrapper that spawns `sim_view` with the right args. Build `sim_view` in the app repo for the same profile (`cargo build --release --bin sim_view`) and ensure it is on PATH or next to the tool binary. If you prefer debug, build debug `sim_view` and run the debug `datagen`, or put `sim_view` on your `PATH`.
 
 ## Run layout
 - `run_manifest.json`: metadata for the run (seed, timing, camera, version).
@@ -62,6 +62,6 @@ cargo run -p colon_sim_tools --bin prune_empty -- --input assets/datasets/captur
 - If you re-run overlays after pruning, point to the pruned root to keep paths consistent.
 
 Quality tips:
-- Keep HUD on while recording so you can confirm camera/record status.
+- Keep HUD on while recording so you can confirm camera/record status (in the app repo).
 - If you want deterministic runs, pass `--seed <n>` to `sim_view` or use headless `datagen` (defaults to headless + auto-run dir).
 - Verify run completeness by checking `frames` count in `run_manifest.json` and matching `images/` + `labels/` counts.

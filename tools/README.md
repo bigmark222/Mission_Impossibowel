@@ -1,5 +1,7 @@
 # colon_sim_tools
 
+[![MSRV](https://img.shields.io/badge/rustc-1.75+-orange.svg)](#) (not published to crates.io)
+
 CLI utilities packaged in the `tools` crate:
 
 - Core (always available): `overlay_labels`, `prune_empty`, `warehouse_etl`, `warehouse_export`, `warehouse_cmd`.

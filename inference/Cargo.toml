@@ -34,3 +34,4 @@ burn-ndarray = { version = "0.14", default-features = false, optional = true }
 burn-wgpu = { version = "0.14", optional = true, default-features = true }
 models = { package = "cortenforge-models", version = "0.1.0" }
 bincode = { version = "2.0.0-rc.3", default-features = false, features = ["alloc", "serde"] }
+workspace-hack = { version = "0.1", path = "../workspace-hack" }

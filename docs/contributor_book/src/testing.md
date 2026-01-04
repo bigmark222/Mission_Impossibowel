@@ -17,13 +17,13 @@ Expectations for contributors: fast-by-default tests, heavier paths gated behind
 - Fast pass: `cargo check --workspace`
 - Default tests: `cargo test --workspace`
 - Opt-in sweep: `cargo test --workspace --all-features` (enables scheduler/tui/gpu_nvidia/burn_wgpu where available)
-- Manual smokes: run bins with defaults on small inputs (`sim_view`, `warehouse_etl`, `train`, `inference_view`).
+- Manual smokes: run bins with defaults on small inputs (app repo: `sim_view`/`inference_view`; this repo: `warehouse_etl`, `train`, tools).
 
 ## Adding tests
 - Prefer synthetic fixtures; avoid touching large datasets.
 - Gate GPU/WGPU paths behind features; keep NdArray as the default.
 - Mirror user-facing defaults in CLI tests; minimize required args.
-- Place tool tests under `tools/tests/`, app tests under app crates, core tests in their crates.
+- Place tool tests under `tools/tests/`; app tests live in the app repositories; core tests stay in their crates.
 
 ## CI alignment
 - Default CI should mirror the default matrix (NdArray-only).

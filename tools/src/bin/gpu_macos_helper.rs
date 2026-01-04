@@ -27,7 +27,6 @@ fn main() {
             mem_used_mb: None,
         };
         let _ = serde_json::to_writer(std::io::stdout(), &payload);
-        return;
     }
 
     #[cfg(not(target_os = "macos"))]

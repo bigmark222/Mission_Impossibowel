@@ -1,7 +1,7 @@
 # Inference
 
 ## Real-time inference
-Launch the inference view (defaults shown):
+Launch the inference view from the app repo (defaults shown): https://github.com/via-balaena/Deep-Poo
 ```bash
 cargo run --bin inference_view
 ```
@@ -26,9 +26,9 @@ Notes:
 - Set WGPU envs if you need to force a backend/adapter.
 - For predictable results, supply a checkpoint (`--detector-weights`) and keep defaults unless you need to tune thresholds.
 - For repeatability, pin seeds in capture/training, then reuse the produced checkpoint here.
-- If overlays are missing, confirm you are in `inference_view` (not `sim_view`) and that thresholds are not too strict.
+- If overlays are missing, confirm you are in `inference_view` (not `sim_view`) and that thresholds are not too strict (app repo).
 - Expected outputs:
-  - `inference_view` shows live boxes in the viewport; if `--output-root` is set, it writes a run dir with overlays.
+  - `inference_view` (app repo) shows live boxes in the viewport; if `--output-root` is set, it writes a run dir with overlays.
   - `single_infer` writes `<stem>_boxed.png`; the log reports how many detections were drawn.
 
 Backend tips:

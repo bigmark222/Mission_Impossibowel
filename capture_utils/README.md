@@ -1,5 +1,7 @@
 # capture_utils
 
+[![crates.io](https://img.shields.io/crates/v/cortenforge-capture-utils.svg)](https://crates.io/crates/cortenforge-capture-utils) [![docs.rs](https://docs.rs/cortenforge-capture-utils/badge.svg)](https://docs.rs/cortenforge-capture-utils) [![MSRV](https://img.shields.io/badge/rustc-1.75+-orange.svg)](#)
+
 Shared capture helpers:
 - `JsonRecorder` writes frame metadata/labels to disk under `run_dir/labels/frame_XXXXX.json` (uses `data_contracts::CaptureMetadata`).
 - `generate_overlays` renders boxes onto PNGs in a run directory (`overlays/`).

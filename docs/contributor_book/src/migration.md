@@ -3,18 +3,18 @@
 Guidance for moving code/features into the current layout and branding.
 
 ## Refactor snapshot
-- Root crate is orchestration-only (`src/cli/*`, `run_app`); domain systems live in app crates under `apps/`.
-- Core crates are domain-agnostic (sim_core, vision_core/runtime, data_contracts, capture_utils, models, training, inference).
-- Tools live in `colon_sim_tools`; bins reuse shared helpers via `colon_sim::cli` and `colon_sim_tools::services`.
+- This repository is library-only: shared crates (sim_core, vision_core/runtime, data_contracts, capture_utils, models, training, inference, colon_sim_tools) intended for crates.io.
+- Apps (including the `colon_sim` reference and `hello_substrate` demo) live in their own repository; pull them from the app repo when you need binaries.
+- Crates.io: version `0.1.0` published for the shared crates. App repo: https://github.com/via-balaena/Deep-Poo.
+- Tools live in `colon_sim_tools`; bins reuse shared helpers via `cortenforge-cli-support` and `colon_sim_tools::services`.
 - Recorder defaults to `JsonRecorder`; apps supply metadata/world-state hooks and can inject sinks.
-- Reference app bins live under `apps/colon_sim/bin`; minimal demo at `apps/hello_substrate`.
 - Branding: substrate is “CortenForge”; app crates consume it.
 - See `MIGRATION.md` at repo root for detailed steps and notes.
 
 ## Porting a feature to the new layout
 1) Decide if it belongs in substrate (generic) or app (domain-specific).
 2) If generic, add hooks/helpers to core crates; gate heavy deps with features.
-3) If app-only, put code under `apps/your_app/src` and register via hooks/plugins.
+3) If app-only, implement it in the app repository and wire it through the app hooks/plugins.
 4) Update docs (user/contributor) and add a smoke test (NdArray) if applicable.
 
 ## PR checklist
@@ -23,7 +23,7 @@ Guidance for moving code/features into the current layout and branding.
 - Tests: `cargo check --workspace`; add feature-gated tests if new features introduced.
 
 ## Adding a new app
-- Start from `apps/hello_substrate` layout; wire hooks; add bins; add a short README and a smoke test.
+- Use the app repository template (or clone the reference app repo) as a starting point; wire hooks, bins, and tests there.
 
 ## Extending tools
 - Put helpers in `tools/src/services.rs` or `tools/src/warehouse_commands/`; keep bins thin; gate heavy deps with features.

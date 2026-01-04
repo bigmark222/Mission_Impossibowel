@@ -1,27 +1,30 @@
 # CortenForge
 
-Modular simulation substrate for data capture, ETL, training, and inference. CortenForge bundles the common crates, runtime wiring, and tooling; apps plug in domain logic on top.
+Shared Rust crates for the CortenForge simulation substrate (capture, ETL, training, inference, and tooling). This repo is library-only; the `colon_sim` app and other demos now live in their own repositories.
 
-- Core crates: `sim_core`, `vision_core` / `vision_runtime`, `data_contracts`, `capture_utils`, `models`, `training`, `inference`, `colon_sim_tools`.
-- Apps: `apps/colon_sim` (reference implementation, a.k.a. Deep Poo) and `apps/hello_substrate` (minimal demo). The root crate is orchestration/CLI glue only.
-- Docs: mdBook under `docs/user_book` (user workflows) and `docs/contributor_book` (architecture, extension points).
-- License: Apache-2.0 by default; see `LICENSE` and `COMMERCIAL_LICENSE.md` for terms.
+- What’s here: `sim_core`, `vision_core` / `vision_runtime`, `data_contracts`, `capture_utils`, `models`, `training`, `inference`, `colon_sim_tools`, plus supporting crates under `crates/`.
+- What moved: the `colon_sim` reference app, `hello_substrate`, and other app binaries. Use the dedicated app repo to run the interactive sim or headless wrappers: https://github.com/via-balaena/Deep-Poo
+- Docs: mdBook under `docs/user_book` (workflows) and `docs/contributor_book` (architecture/extension points) focused on the substrate crates.
+- Releases: see `RELEASE.md` for publish/tag steps.
+- License: Apache-2.0 by default; see `LICENSE` and `COMMERCIAL_LICENSE.md`.
+
+## Quick start
+- Build/test the crates: `cargo test --workspace --locked`
+- Format: `cargo fmt --all`
+- Docs: `mdbook build docs/user_book` and `mdbook build docs/contributor_book`
+
+## Using the crates from crates.io
+- Add deps with `version = "0.1.0"` (examples: `cortenforge-sim-core`, `cortenforge-vision-core`, `cortenforge-vision-runtime`, `cortenforge-data-contracts`, `cortenforge-capture-utils`, `cortenforge-models`, `cortenforge-training`, `cortenforge-inference`, `cortenforge-cli-support`, `cortenforge-burn-dataset`).
+- Feature flags:
+  - `cortenforge-training`: `backend-wgpu` (optional GPU); defaults to NdArray.
+  - `cortenforge-inference`: `backend-wgpu` (optional GPU); defaults to NdArray; `tinydet`/`bigdet` feature gates.
+  - Tools (`colon_sim_tools`): `scheduler`, `tui`, `gpu_nvidia` (not published by default).
+  - Vision/runtime crates are lean by default; enable only what you need.
+- MSRV: Rust 1.75+ across crates.
+- Note: `burn-core` is temporarily patched to a vendored 0.14.0; we’ll drop the patch once upstream releases a fixed version.
 
 ## Commercial opportunities
 - Via Balaena™ is offering a 50% profit split on commercial deals you source and help close. Reach out if you have leads or want to collaborate on deployments.
 
-## Quick start (defaults)
-- Interactive sim (reference app): `cargo run --bin sim_view`
-- Headless capture: `cargo run -p colon_sim_tools --bin datagen`
-- ETL: `cargo run -p colon_sim_tools --bin warehouse_etl`
-- Train: `cargo run -p training --features burn_runtime --bin train -- --manifest artifacts/tensor_warehouse/v<version>/manifest.json`
-- Inference (real-time): `cargo run --bin inference_view`
-
-Release builds: add `--release` for smoother playback/throughput. The `datagen` wrapper shells out to the sibling `sim_view` in the same target profile; build it once (`cargo build --release --bin sim_view`) if missing.
-
-## Apps
-- Reference (Deep Poo / colon_sim): domain systems, HUD, controls/autopilot, capture settings. See `apps/colon_sim/README.md` for controls, recording shortcuts, and dataset details.
-- hello_substrate: minimal app showing how to hook a custom plugin into the substrate without domain systems.
-
 ## Contributing
-See `docs/contributor_book` for architecture, extension points, and testing notes.
+See `docs/contributor_book` for architecture, extension points, and testing notes. App contributions now belong in the app repositories.

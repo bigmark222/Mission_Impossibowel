@@ -17,7 +17,7 @@ Contributor guide to `colon_sim_tools`: bins, shared helpers, feature flags, and
 
 ## Shared helpers
 - Reuse `data_contracts` and `vision_core`/`capture_utils` for overlay/prune/recorder schema.
-- Common CLI args imported from `colon_sim::cli`.
+- Common CLI args live in `colon_sim_tools::services`.
 - Warehouse helpers live in `tools/src/services.rs` and `tools/src/warehouse_commands/`; prefer adding helpers there instead of duplicating logic in bins.
 
 ## Defaults and features
@@ -26,7 +26,7 @@ Contributor guide to `colon_sim_tools`: bins, shared helpers, feature flags, and
 
 ## Adding a tool
 - Place the bin at `tools/src/bin/your_tool.rs`.
-- Reuse existing CLI parsers from `colon_sim::cli` when applicable.
+- Reuse existing CLI parsers/helpers from `colon_sim_tools::services` when applicable.
 - Use `capture_utils`/`vision_core` helpers for overlays/prune/labels; keep schemas consistent with `data_contracts`.
 - If the tool needs new shared logic, add it to `tools/src/services.rs` or `tools/src/warehouse_commands/` and import it.
 

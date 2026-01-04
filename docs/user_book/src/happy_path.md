@@ -1,10 +1,10 @@
 # Happy path (defaults only)
 
-Use these minimal commands to exercise the full pipeline with defaults:
+Use these minimal commands to exercise the full pipeline with defaults. App binaries (`sim_view`, `inference_view`) live in the app repository; run those commands there (colon_sim: https://github.com/via-balaena/Deep-Poo). Tools/training crates live here (or consume them via crates.io).
 
-1) Capture (interactive):
+1) Capture (interactive, from app repo):
 ```bash
- cargo run --bin sim_view
+cargo run --bin sim_view
 ```
 <details>
 <summary>Release (faster) & how it works</summary>
@@ -16,7 +16,7 @@ cargo run --release --bin sim_view
 - Same args apply (`--headless` if you need it).
 </details>
 
-   Headless wrapper:
+   Headless wrapper (requires `sim_view` built in the app repo and on PATH/alongside):
 ```bash
 cargo run -p colon_sim_tools --bin datagen
 ```
@@ -27,8 +27,8 @@ cargo run -p colon_sim_tools --bin datagen
 cargo run -p colon_sim_tools --release --bin datagen
 ```
 - `datagen` invokes `sim_view` and passes the appropriate flags automatically.
-- It looks for `sim_view` in the same profile dir (`target/release/sim_view` when using `--release`).
-- If `sim_view` is missing there, build it once: `cargo build --release --bin sim_view`.
+- Ensure the `sim_view` binary from the app repo is on PATH or in the same profile dir (`target/release/sim_view` when using `--release`).
+- If `sim_view` is missing there, build it once in the app repo: `cargo build --release --bin sim_view`.
 - You can pass extra args: `--max-frames 100 --headless` etc.
 </details>
 
@@ -62,7 +62,7 @@ cargo run -p training --release --features burn_runtime --bin train -- \
 - Binary path when built: `target/release/train`.
 </details>
 
-4) Inference (real-time):
+4) Inference (real-time, from app repo):
 ```bash
 cargo run --bin inference_view
 ```
@@ -86,12 +86,12 @@ Expected artifacts by the end:
 - `checkpoints/tinydet.bin` or `checkpoints/bigdet.bin` (training).
 - Overlays or boxed PNGs from inference.
 
-Quick defaults table:
+Quick defaults table (app binaries run from the app repo):
 | Stage     | Command (default)                                                                  | Command (release)                                                      | Output                                      |
 |-----------|------------------------------------------------------------------------------------|------------------------------------------------------------------------|---------------------------------------------|
-| Capture   | `cargo run --bin sim_view`                                                         | `cargo run --release --bin sim_view`                                   | `assets/datasets/captures/run_<ts>/`        |
+| Capture   | `cargo run --bin sim_view` (app repo)                                              | `cargo run --release --bin sim_view` (app repo)                        | `assets/datasets/captures/run_<ts>/`        |
 | Headless  | `cargo run -p colon_sim_tools --bin datagen`                                       | `cargo run -p colon_sim_tools --release --bin datagen`                 | `assets/datasets/captures/run_<ts>/`        |
 | ETL       | `cargo run -p colon_sim_tools --bin warehouse_etl`                                 | `cargo run -p colon_sim_tools --release --bin warehouse_etl`           | `artifacts/tensor_warehouse/v<ts>/manifest` |
 | Train     | `cargo run -p training --features burn_runtime --bin train -- --manifest ...`      | `cargo run -p training --release --features burn_runtime --bin train -- --manifest ...` | `checkpoints/tinydet.bin` (or bigdet)       |
-| Infer RT  | `cargo run --bin inference_view`                                                   | `cargo run --release --bin inference_view`                             | Live overlay; optional run dir if set       |
+| Infer RT  | `cargo run --bin inference_view` (app repo)                                        | `cargo run --release --bin inference_view` (app repo)                  | Live overlay; optional run dir if set       |
 | Infer Img | `cargo run -p colon_sim_tools --bin single_infer -- --image img.png`               | (usually debug is fine)                                                | `img_boxed.png`                             |
