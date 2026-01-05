@@ -1,3 +1,3 @@
-# Crate Dissections
+# Crates
 
-Add one folder per crate under `10_crates/` following the crate template.
+Per-crate deep dives: overviews, APIs, lifecycles, traits, errors, performance, examples, and design reviews.
