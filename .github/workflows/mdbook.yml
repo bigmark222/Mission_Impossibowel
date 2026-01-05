@@ -25,6 +25,14 @@ jobs:
           mdbook build docs/contributor_book
           mkdir -p docs/site_build
           cp -r docs/contributor_book/book docs/site_build/contributor
+      - name: Build dissection book
+        run: |
+          mdbook build docs/dissection_book
+          mkdir -p docs/site_build
+          cp -r docs/dissection_book/book docs/site_build/dissection
+      - name: Build docs index
+        run: |
+          mkdir -p docs/site_build
           cat > docs/site_build/index.html <<'EOF'
           <!DOCTYPE html>
           <html>
@@ -33,6 +41,7 @@ jobs:
           <h1>CortenForge Documentation</h1>
           <ul>
             <li><a href="contributor/">Contributor Guide</a></li>
+            <li><a href="dissection/">Crate Dissection Book</a></li>
           </ul>
           </body>
           </html>

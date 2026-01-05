@@ -1,0 +1,13 @@
+# Performance Notes (cortenforge)
+
+## Hot paths
+- None; facade crate only re-exports members.
+
+## Allocation patterns
+- None beyond what member crates perform.
+
+## Trait objects
+- None added; uses member crates’ APIs directly.
+
+## Assumptions
+- No performance impact; use member crates directly for fine-grained control.

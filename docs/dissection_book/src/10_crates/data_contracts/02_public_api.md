@@ -1,0 +1,11 @@
+# data_contracts: Public API
+
+| Item | Kind | Purpose |
+| ---- | ---- | ------- |
+| PolypLabel | struct | Label for a captured frame (bbox/class/metadata) |
+| CaptureMetadata | struct | Capture-level metadata |
+| ValidationError | enum | Errors from schema validation |
+| RunManifestSchemaVersion | enum | Manifest schema version identifier |
+| RunManifest | struct | Run manifest (id/seed/camera/resize/frame count/checksum) |
+| Modules (pub mod) | module | capture, manifest |
+| Re-exports | re-export | CaptureMetadata, PolypLabel, ValidationError, RunManifest, RunManifestSchemaVersion |
