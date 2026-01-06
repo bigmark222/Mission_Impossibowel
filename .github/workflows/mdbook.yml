@@ -20,6 +20,8 @@ jobs:
           wget https://github.com/rust-lang/mdBook/releases/download/v0.4.40/mdbook-v0.4.40-x86_64-unknown-linux-gnu.tar.gz
           tar -xzf mdbook-v0.4.40-x86_64-unknown-linux-gnu.tar.gz
           sudo mv mdbook /usr/local/bin/
+      - name: Install mdbook-mermaid
+        run: cargo install mdbook-mermaid
       - name: Build contributor book
         run: |
           mdbook build docs/contributor_book
