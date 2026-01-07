@@ -35,12 +35,16 @@ fn main() -> anyhow::Result<()> {
 
 ## 3) Run training (high level)
 ```rust,ignore
-use training::util::run_train;
+use clap::Parser;
+use training::util::{run_train, TrainArgs};
 
 fn main() -> anyhow::Result<()> {
-    // This assumes training::bin::train CLI wiring; run_train would set up dataset, model, loop.
-    // For illustration only; see training/bin for full args.
-    run_train()?;
+    let args = TrainArgs::parse();
+    run_train(args)?;
     Ok(())
 }
 ```
+
+## Links
+- Source: `training/src/dataset.rs`
+- Source: `training/src/util.rs`

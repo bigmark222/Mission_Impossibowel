@@ -12,6 +12,7 @@
 - [Release & Publishing](publishing.md)
 - [Data & Models](data_models.md)
 - [Troubleshooting](apps.md)
+- [Resolved Issues](resolved_issues.md)
 - [Roadmap](roadmap.md)
 - [Migration Notes](migration.md)
 - [Glossary & References](glossary.md)

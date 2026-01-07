@@ -14,3 +14,7 @@
 ## Design notes
 - Keeps contracts simple and portable (serde everywhere). If additional schema versions appear, extend `RunManifestSchemaVersion` and gate validation per version.
 - Validation is minimal; downstream loaders should still handle IO/shape errors.
+
+## Links
+- Source: `data_contracts/src/capture.rs`
+- Source: `data_contracts/src/manifest.rs`

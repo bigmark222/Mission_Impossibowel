@@ -3,8 +3,7 @@
 Forward-looking areas. Keep this short and actionable; link to issues/PRs when concrete.
 
 ## Near-term
-- Upstream `burn-core` fix: drop the vendored patch; update deps; republish v0.1.1 crates.
-- Publish flow: finish release checklist (fmt/clippy/tests/hakari/publish order), tag/push.
+- Publish flow: finish release checklist (fmt/clippy/tests/publish order), tag/push.
 - Docs: finish contributor book deep dives and add diagrams/examples; retire any lingering user-doc references.
 - Tools: clarify colon_sim_tools split plan (shared vs app-specific) and trim app-specific bins.
 

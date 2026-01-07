@@ -20,3 +20,6 @@
 ## Risks / notes
 - BatchIter buffers are reused; not `Send + Sync` safe to share the iterator across threads.
 - StreamingStore thread will stop on errors; callers should handle missing data if the channel closes prematurely.
+
+## Links
+- Source: `crates/burn_dataset/src/lib.rs`

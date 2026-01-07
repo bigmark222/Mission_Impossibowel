@@ -5,3 +5,6 @@
 - `lib.rs`: Re-exports common/seed modules.
 
 Cross-module dependencies: used by tooling/apps for consistent CLI parsing; optional Bevy resource features extend usage.
+
+## Links
+- Source: `crates/cli_support/src/lib.rs`

@@ -47,6 +47,9 @@ sequenceDiagram
 - No generic types in this crate; extensibility is via trait objects with `Send + Sync + 'static` to satisfy Bevy resource requirements.
 - Hooks require `&mut App` to register systems/plugins, keeping ownership straightforward and avoiding lifetime gymnastics.
 
+## Links
+- Source: `sim_core/src/hooks.rs`
+
 ## Design notes
 - Trait-object approach keeps app integration simple (no generics on `App`), at the cost of dynamic dispatch; fine for setup-time hooks.
 - If more metadata fields are needed, extend `RecorderMetadataProvider` instead of threading ad-hoc resources.

@@ -19,3 +19,6 @@
 ## Improvements
 - Remove/relax mutex if using per-thread detectors for higher throughput.
 - Cache/reuse input/output buffers if detecting many frames in a tight loop.
+
+## Links
+- Source: `inference/src/factory.rs`

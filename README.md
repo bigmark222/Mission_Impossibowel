@@ -25,7 +25,7 @@ Shared Rust crates for the CortenForge simulation substrate (capture, ETL, train
   - Tools (`colon_sim_tools`): `scheduler`, `tui`, `gpu_nvidia` (not published by default).
   - Vision/runtime crates are lean by default; enable only what you need.
 - MSRV: Rust 1.75+ across crates.
-- Note: `burn-core` is temporarily patched to a vendored 0.14.0; we’ll drop the patch once upstream releases a fixed version.
+- Note: `burn-core` is now on the fixed 0.14.1 release; no vendored patch is required.
 
 ## Commercial opportunities
 - Via Balaena™ is offering a 50% profit split on commercial deals you source and help close. Reach out if you have leads or want to collaborate on deployments.

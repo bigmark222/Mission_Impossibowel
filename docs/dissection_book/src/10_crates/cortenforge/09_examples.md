@@ -16,10 +16,13 @@ fn main() {
 ## 2) Compile with selected features
 ```toml
 [dependencies]
-cortenforge = { version = "0.1", features = ["sim-core", "vision-core", "vision-runtime", "data-contracts"] }
+cortenforge = { version = "0.1.1", features = ["sim-core", "vision-core", "vision-runtime", "data-contracts"] }
 ```
 
 ```rust,ignore
 // Now you can reference re-exported crates without separate deps.
 use cortenforge::vision_core::interfaces::Frame;
 ```
+
+## Links
+- Source: `crates/cortenforge/src/lib.rs`

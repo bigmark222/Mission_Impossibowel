@@ -33,7 +33,7 @@ fn main() -> anyhow::Result<()> {
 }
 ```
 
-## 3) Prune empty-label frames into a filtered copy
+## 3) Copy a run into a filtered root and report counts
 ```rust,ignore
 use std::path::Path;
 
@@ -46,3 +46,6 @@ fn main() -> std::io::Result<()> {
     Ok(())
 }
 ```
+
+## Links
+- Source: `capture_utils/src/lib.rs`

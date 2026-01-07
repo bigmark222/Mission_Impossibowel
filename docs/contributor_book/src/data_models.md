@@ -24,7 +24,7 @@ Schemas, artifact layout, and model checkpoints used by the substrate.
 
 ## Versioning/migration
 - Current target: `0.1.1` across crates.
-- `burn-core` temporarily patched to vendored 0.14.0 due to bincode API change; drop patch when upstream releases a fix.
+- `burn-core` 0.14.1 fixes the bincode publish break; no vendored patch required.
 - When changing schemas, document breaking vs non-breaking changes and update ETL/tools/tests accordingly.
 
 ## Quick references

@@ -11,3 +11,7 @@
 ## Design notes
 - Keeping everything concrete avoids trait-object noise in binaries; consumers convert `Args` → internal opts via `From`.
 - Feature-gated Bevy derive keeps default dependency surface minimal.
+
+## Links
+- Source: `crates/cli_support/src/common.rs`
+- Source: `crates/cli_support/src/seed.rs`

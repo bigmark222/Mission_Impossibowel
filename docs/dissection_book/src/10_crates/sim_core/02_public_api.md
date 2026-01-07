@@ -2,7 +2,7 @@
 
 | Item | Kind | Purpose |
 | ---- | ---- | ------- |
-| SimRunMode | enum | Runtime modes (Common/SimDatagen/Inference) |
+| SimRunMode | enum | Runtime modes (Sim/Datagen/Inference) |
 | SimConfig | struct | Configuration for building the sim app (run mode, options) |
 | ModeSet | enum | Bevy system sets corresponding to run modes |
 | SimPlugin | struct | Bevy plugin registering config/mode sets |
@@ -37,6 +37,10 @@
 | pov_toggle_system | fn | Bevy system to toggle POV |
 | register_runtime_systems | fn | Install runtime systems into App |
 | Modules (pub mod) | module | autopilot_types, camera, controls, hooks, probe_types, recorder_meta, recorder_types, runtime, prelude |
+
+## Links
+- Source: `sim_core/src/lib.rs`
+- Module: `sim_core/src/runtime.rs`
 
 ## Usage map (high level)
 

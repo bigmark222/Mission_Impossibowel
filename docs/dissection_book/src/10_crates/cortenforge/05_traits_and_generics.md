@@ -9,3 +9,6 @@
 ## Design notes
 - Keep feature names aligned with member crate names; adding/removing crates requires updating the feature list and re-exports.
 - This crate intentionally exposes no additional APIs or traits; consumers should depend on member crates directly if they need fine-grained control.
+
+## Links
+- Source: `crates/cortenforge/src/lib.rs`

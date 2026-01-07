@@ -18,3 +18,9 @@ Define and validate shared schemas for captures, manifests, and warehouse shards
 - Capture/recorder code (capture_utils/tools) writing manifests/labels.
 - ETL/training pipelines consuming warehouse manifests/shards.
 - Contributors updating schemas with strict validation.
+
+## Links
+- Source: `data_contracts/src/lib.rs`
+- Module: `data_contracts/src/capture.rs`
+- Module: `data_contracts/src/manifest.rs`
+- Docs.rs: https://docs.rs/cortenforge-data-contracts

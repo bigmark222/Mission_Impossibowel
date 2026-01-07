@@ -23,3 +23,7 @@
 | recorder_draw_rect | fn | Draw rect overlay into recorder output |
 | poll_inference_task | fn | Poll inference task completion |
 | Modules (pub mod) | module | prelude |
+
+## Links
+- Source: `vision_runtime/src/lib.rs`
+- Docs.rs: https://docs.rs/cortenforge-vision-runtime

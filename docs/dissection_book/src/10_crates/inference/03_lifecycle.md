@@ -3,9 +3,9 @@
 ## Typical usage
 1) Construct factory and thresholds:
    ```rust,ignore
-   let factory = InferenceFactory::default();
-   let detector = factory.load_from_checkpoint(path).unwrap_or_else(|| factory.heuristic());
+   let factory = InferenceFactory;
    let thresholds = InferenceThresholds { obj_thresh, iou_thresh };
+   let detector = factory.build(thresholds, weights.as_deref());
    ```
 2) Provide detector/thresholds to runtime/tools (e.g., insert into Bevy resources for vision_runtime, or use directly in single-image inference).
 
@@ -17,3 +17,7 @@
 ## Notes
 - Stateless beyond factory/detector instances; lifecycle managed by caller.
 - Feature flags determine backend/model variant selection.
+
+## Links
+- Source: `inference/src/factory.rs`
+- Source: `inference/src/plugin.rs`

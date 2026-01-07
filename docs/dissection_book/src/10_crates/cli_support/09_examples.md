@@ -51,3 +51,7 @@ fn main() {
     println!("seed = {}", seed);
 }
 ```
+
+## Links
+- Source: `crates/cli_support/src/common.rs`
+- Source: `crates/cli_support/src/seed.rs`

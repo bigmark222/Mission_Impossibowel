@@ -9,7 +9,7 @@ Key terms and pointers to design docs/repos.
 - **Recorder**: capture pipeline (meta + world state + sinks). Defaults to JSON sink in `capture_utils`.
 - **Warehouse**: tensor artifacts produced by ETL (`warehouse_etl`), consumed by training.
 - **TinyDet/BigDet**: model variants defined in `models`.
-- **Burn patch**: temporary vendored `burn-core 0.14.0` due to bincode API change; remove when upstream ships a fix.
+- **Burn patch**: previous workaround for `burn-core 0.14.0`; now fixed in `burn-core 0.14.1` (no patch required).
 
 ## References
 - Crate sources: see each crate’s `src/` directory.

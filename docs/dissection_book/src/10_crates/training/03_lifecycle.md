@@ -18,3 +18,6 @@
 ## Notes
 - Backends/features: `backend-ndarray` default, `backend-wgpu` opt-in; `tinydet`/`bigdet` variants.
 - Lifecycle is orchestrated by `run_train`; teardown handled via normal process exit.
+
+## Links
+- Source: `training/src/util.rs`

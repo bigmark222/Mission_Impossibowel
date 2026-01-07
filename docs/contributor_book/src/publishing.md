@@ -1,6 +1,6 @@
 # Release & publishing
 
-How we version, prep, and publish crates. Current target: `0.1.1`. Blocker: upstream `burn-core` bincode break (temporary vendored patch to 0.14.0; drop once Burn publishes a fix).
+How we version, prep, and publish crates. Current target: `0.1.1`. `burn-core 0.14.1` fixes the prior bincode publish break.
 
 ## Versioning policy
 - Pre-1.0 semver: bump patch for any published change (API or behavior). Keep crates aligned at the same minor/patch for now (`0.1.x`).
@@ -8,7 +8,7 @@ How we version, prep, and publish crates. Current target: `0.1.1`. Blocker: upst
 - Crates not published: `colon_sim_tools` (app-specific; publish = false).
 
 ## Release prep checklist
-1) Ensure repo points to crates.io deps (no path overrides) and drop `[patch.crates-io]` once Burn is fixed.
+1) Ensure repo points to crates.io deps (no path overrides).
 2) Refresh lockfile and run validations:
    ```bash
    cargo fmt --all
@@ -53,10 +53,9 @@ git push origin v0.1.1
 git push
 ```
 
-## Burn-core note (temporary)
-- `burn-core 0.14.0` on crates.io pulls `bincode 2.0.1`, missing `decode_borrowed_from_slice`, breaking publish/build without a lockfile.
-- Temporary workaround: vendor/patch `burn-core 0.14.0`. Drop the patch when Burn ships a fixed release (or we pin bincode exact upstream).
-- After the fix: remove `[patch.crates-io]` burn-core override, delete `vendor/burn-core-0.14.0`, `cargo update -p burn-core`, rerun the checklist above, then publish.
+## Burn-core note
+- `burn-core 0.14.1` resolves the bincode publish break; no vendor patch is required.
+- If you see `decode_borrowed_from_slice` errors, update burn-core and refresh the lockfile.
 
 ## Known non-published pieces
 - `colon_sim_tools`: keep app-specific bins out of crates.io; plan to split shared vs app-specific tooling and publish only the shared portion if needed later.

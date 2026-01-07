@@ -13,5 +13,5 @@
 - The umbrella exposes the member crates; lifecycle is managed by those crates. This crate is a facade only.
 
 ## Notes
-- Keep features aligned with member crates; drop burn-core patch once upstream is fixed.
+- Keep features aligned with member crates; burn-core 0.14.1 fixes the prior publish break.
 - Not intended for app-specific defaults; explicit feature selection recommended.

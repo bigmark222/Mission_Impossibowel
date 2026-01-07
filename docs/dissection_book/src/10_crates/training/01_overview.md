@@ -16,3 +16,9 @@ Provide Burn-based training and evaluation pipelines for TinyDet/BigDet models u
 ## Who should use it
 - Users training/evaluating TinyDet/BigDet models from captured data.
 - Contributors adding losses/augmentations/schedulers or adjusting CLI flags.
+
+## Links
+- Source: `training/src/lib.rs`
+- Module: `training/src/dataset.rs`
+- Module: `training/src/util.rs`
+- Docs.rs: https://docs.rs/cortenforge-training

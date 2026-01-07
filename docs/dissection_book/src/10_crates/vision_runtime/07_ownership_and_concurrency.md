@@ -21,3 +21,6 @@
 ## Risks / notes
 - If `DetectorHandle` is absent, systems early-return (safe). Swapping detector for heuristic during tasks avoids concurrent mutable access without locks.
 - Ensure detectors used here truly satisfy `Send + Sync` due to cross-thread execution.
+
+## Links
+- Source: `vision_runtime/src/lib.rs`

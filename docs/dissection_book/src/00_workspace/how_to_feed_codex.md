@@ -20,7 +20,7 @@ When asking Codex to update this book or analyze the workspace, paste inputs in 
 
 ## Publishing/versioning tasks
 - Latest tags/versions, lockfile diffs if relevant.
-- Notes about patches (e.g., burn-core pin) or `[patch]` sections.
+- Notes about patches or `[patch]` sections (e.g., local path overrides).
 
 ## General tips
 - Use repo-relative paths and line numbers when referencing code (see `linking_style.md`).

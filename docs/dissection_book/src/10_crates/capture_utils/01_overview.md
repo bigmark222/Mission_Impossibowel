@@ -17,3 +17,7 @@ Provide recorder sinks and capture helpers (overlay/prune) compatible with Corte
 - Runtime recorder pipelines (sim_core/apps) needing a default sink.
 - Tools performing overlay/prune on captures.
 - Contributors adding sinks while preserving schema compatibility.
+
+## Links
+- Source: `capture_utils/src/lib.rs`
+- Docs.rs: https://docs.rs/cortenforge-capture-utils

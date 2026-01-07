@@ -6,15 +6,15 @@
   #[derive(clap::Parser)]
   struct Args {
       #[clap(flatten)]
-      capture: CaptureOutputOpts,
+      capture: CaptureOutputArgs,
       #[clap(flatten)]
-      warehouse: WarehouseOutputOpts,
-      #[clap(flatten)]
-      weights: WeightsOpts,
-      #[clap(flatten)]
-      thresholds: ThresholdOpts,
+      warehouse: WarehouseOutputArgs,
+      #[clap(long)]
+      seed: Option<u64>,
   }
   let args = Args::parse();
+  let capture_opts: CaptureOutputOpts = (&args.capture).into();
+  let warehouse_opts: WarehouseOutputOpts = (&args.warehouse).into();
   ```
 - Resolve seeds:
   ```rust,ignore
@@ -29,3 +29,7 @@
 
 ## Notes
 - Stateless; lifecycle ends after parsing/using args. Features enable Bevy resource adapters if needed.
+
+## Links
+- Source: `crates/cli_support/src/common.rs`
+- Source: `crates/cli_support/src/seed.rs`

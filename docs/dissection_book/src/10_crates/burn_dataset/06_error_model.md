@@ -19,3 +19,6 @@
 - Structured error with path context aids debugging.
 - Some paths log and continue (permissive) vs. fail-fast; callers should choose mode based on use case.
 - Mixing env-driven behavior can be surprising; document/override in callers for deterministic CI.
+
+## Links
+- Source: `crates/burn_dataset/src/lib.rs`

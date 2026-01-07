@@ -14,3 +14,7 @@
 ## Ergonomics
 - `ValidationError` uses `thiserror` for display strings; suitable for user-facing logs.
 - Manifest validation returning `String` is less typed; consider moving to a typed error if extended.
+
+## Links
+- Source: `data_contracts/src/capture.rs`
+- Source: `data_contracts/src/manifest.rs`

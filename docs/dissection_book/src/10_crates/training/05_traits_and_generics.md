@@ -13,3 +13,6 @@
 - Backend generic keeps training usable on CPU/GPU without changing call sites; callers pick backend via features.
 - No trait objects; compile-time backend selection aligns with Burn patterns.
 - If adding new data sources, prefer composing on `RunSample`/`collate` instead of introducing new traits unless multiple loaders must coexist.
+
+## Links
+- Source: `training/src/dataset.rs`

@@ -90,3 +90,7 @@ flowchart LR
   World["RecorderWorldState"] --> Rec
   Rec --> Output["recorded frames"]
 ```
+
+## Links
+- Source: `sim_core/src/hooks.rs`
+- Source: `sim_core/src/recorder_meta.rs`

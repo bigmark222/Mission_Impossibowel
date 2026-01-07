@@ -22,3 +22,6 @@
 - Further buffer pooling or preallocation could reduce reallocs for large batches.
 - Consider SIMD-optimized aug if profiling shows jitter/blur as bottlenecks.
 - Tune Rayon thread pool or chunk sizes for specific workloads.
+
+## Links
+- Source: `crates/burn_dataset/src/lib.rs`

@@ -13,3 +13,6 @@
 - Generic over backend keeps CPU/GPU swap flexible without additional traits.
 - No trait objects; consumers choose backend type at compile time.
 - `forward_multibox` enforces box ordering/clamping procedurally—no trait/generic constraints there.
+
+## Links
+- Source: `models/src/lib.rs`

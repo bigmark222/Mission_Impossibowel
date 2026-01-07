@@ -14,3 +14,6 @@
 
 ## Improvements
 - None required; if serde overhead becomes an issue, consider borrowing-friendly variants, but current usage is fine for run-level metadata.
+
+## Links
+- Source: `data_contracts/src/lib.rs`

@@ -4,7 +4,7 @@
 | Item | Details |
 | --- | --- |
 | resolver | `2` |
-| Patch overrides | <ul><li>`burn-core = { path = "vendor/burn-core-0.14.0" }`</li><li>local paths for all cortenforge crates (temporary until burn-core is fixed upstream).</li></ul> |
+| Patch overrides | <ul><li>local paths for all cortenforge crates (workspace dev convenience).</li></ul> |
 | Publish status | <ul><li>most crates publishable</li><li>`colon_sim_tools` marked `publish = false`.</li></ul> |
 
 ## Notes
@@ -14,6 +14,6 @@
 
             - Under the old resolver, if one crate enabled a feature on a shared dependency, every other crate using that dependency inherited it automatically. That often resulted in unexpected behavior, larger binaries, and optional dependencies being pulled in without intent. With resolver 2, each crate resolves features independently, so only the features a crate explicitly opts into are activated.
 
-- Once Burn publishes a fixed burn-core, drop the vendored patch and recheck publishability.
+- Burn-core is fixed in 0.14.1; no vendored patch is required.
 
 - `colon_sim_tools` stays unpublished because it includes app-specific bins; plan is to split shared helpers from app-facing pieces.

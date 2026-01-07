@@ -12,3 +12,8 @@
 | SeedState | struct | Seed state container |
 | resolve_seed | fn | Resolve seed from CLI input |
 | Modules (pub mod) | module | common, seed |
+
+## Links
+- Source: `crates/cli_support/src/common.rs`
+- Source: `crates/cli_support/src/seed.rs`
+- Docs.rs: https://docs.rs/cortenforge-cli-support

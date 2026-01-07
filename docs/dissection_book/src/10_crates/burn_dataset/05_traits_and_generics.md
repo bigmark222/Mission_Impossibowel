@@ -17,3 +17,6 @@
 - Trait object for `WarehouseShardStore` keeps CLI/runtime selection simple (stream vs memory).
 - Backend-generic batch iteration mirrors training/inference expectations; consumers must align `max_boxes`/`target_size` configs with models.
 - If additional store types are added (e.g., remote), implement `WarehouseShardStore` to plug in without changing callers.
+
+## Links
+- Source: `crates/burn_dataset/src/lib.rs`

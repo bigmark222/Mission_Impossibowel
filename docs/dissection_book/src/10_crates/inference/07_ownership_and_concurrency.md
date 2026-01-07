@@ -18,3 +18,6 @@
 ## Risks / notes
 - Mutex poisoning would panic; consider handling if long-running use cases matter.
 - If high-throughput is needed, consider removing the mutex by using cloneable models or separate detectors per thread.
+
+## Links
+- Source: `inference/src/factory.rs`

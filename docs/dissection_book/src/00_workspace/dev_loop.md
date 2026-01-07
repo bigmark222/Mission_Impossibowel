@@ -11,5 +11,5 @@
 ## Keeping mdBook in sync
 - When APIs change: update crate pages (overview/API/examples) and dependency graph if edges shift.
 - When features change: update `feature_flags.md` and per-crate examples/snippets.
-- When releases happen: refresh version strings, burn-core patch note (drop when upstream fixed), and changelog.
+- When releases happen: refresh version strings, confirm burn-core note (0.14.1, no patch), and changelog.
 - Run `mdbook test` and `mdbook build` before merging.

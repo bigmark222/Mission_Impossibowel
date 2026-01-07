@@ -14,3 +14,6 @@
 - Introduce typed errors for data issues (missing files, shape mismatch) to allow better handling/reporting.
 - Add optional resize/pad strategy in collate for mixed-size datasets.
 - Add basic instrumentation (counts, timing) around collation to spot bottlenecks.
+
+## Links
+- Source: `training/src/dataset.rs`

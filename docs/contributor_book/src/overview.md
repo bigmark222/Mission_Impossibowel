@@ -12,7 +12,7 @@ Versions/features (current target `0.1.1`):
   - Inference: `tinydet` / `bigdet`.
   - Tools: `scheduler`, `tui`, `gpu_nvidia` (tools crate not published by default).
 - MSRV: Rust 1.75+.
-- Note: `burn-core` is temporarily patched to a vendored 0.14.0 due to a bincode publish break; drop the patch once upstream releases a fixed version.
+- Note: `burn-core` is on the fixed 0.14.1 release; no vendored patch is required.
 
 Who should read this:
 - New contributors ramping on architecture and conventions.

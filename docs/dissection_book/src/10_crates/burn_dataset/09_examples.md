@@ -13,6 +13,9 @@ fn main() -> burn_dataset::DatasetResult<()> {
 }
 ```
 
+## Links
+- Source: `crates/burn_dataset/src/lib.rs`
+
 ## 2) Load a run eagerly
 ```rust,ignore
 use burn_dataset::load_run_dataset;

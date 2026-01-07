@@ -12,3 +12,7 @@
 
 ## Ergonomics
 - Simplicity suits CLI args; add validation in callers if stricter invariants are needed (e.g., threshold ranges).
+
+## Links
+- Source: `crates/cli_support/src/common.rs`
+- Source: `crates/cli_support/src/seed.rs`

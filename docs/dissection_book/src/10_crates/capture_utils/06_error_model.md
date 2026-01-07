@@ -20,3 +20,6 @@
 ## Ergonomics
 - Mixed `anyhow` and `io::Error`; fine for tooling but consider consistent typed errors if this crate is reused in libraries.
 - Silent skips in `generate_overlays` are convenient but may hide data issues; add logging if stricter guarantees are needed.
+
+## Links
+- Source: `capture_utils/src/lib.rs`

@@ -3,8 +3,22 @@
 ## Typical usage
 - Use default recorder sink:
   ```rust,ignore
-  let recorder = JsonRecorder::new(run_dir)?;
-  recorder.write_label(&label)?;
+  use vision_core::prelude::{Frame, FrameRecord};
+  let mut recorder = JsonRecorder::new(run_dir);
+  let frame = Frame {
+      id: 1,
+      timestamp: 0.0,
+      rgba: None,
+      size: (640, 480),
+      path: Some("images/frame_00001.png".into()),
+  };
+  let record = FrameRecord {
+      frame,
+      labels: &[],
+      camera_active: true,
+      polyp_seed: 1,
+  };
+  recorder.record(&record)?;
   ```
 - Overlay/prune helpers in tools:
   ```rust,ignore
@@ -18,3 +32,6 @@
 
 ## Notes
 - Stateless helpers; lifecycle driven by callers (runtime/tools).
+
+## Links
+- Source: `capture_utils/src/lib.rs`

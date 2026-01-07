@@ -2,11 +2,12 @@
 
 Common pitfalls and fixes when building/publishing with the substrate.
 
+## Resolved issues
+- See [Resolved issues](resolved_issues.md) for historical fixes that are no longer active.
+
 ## Burn-core / bincode publish failure
-- Symptom: `cargo publish --dry-run -p burn-core` (or any dependent crate) fails with `cannot find function decode_borrowed_from_slice` in `bincode::serde`.
-- Cause: `burn-core 0.14.0` pulls `bincode 2.0.1` when there is no lockfile; that API was removed.
-- Fix (temporary): vendor/patch `burn-core 0.14.0`; drop the patch once Burn publishes a fixed release (or upstream pins bincode exact).
-- Repro to share upstream: `git checkout v0.14.0 && rm Cargo.lock && cargo publish --dry-run -p burn-core`.
+- Status: resolved in `burn-core 0.14.1`.
+- If you see this error: update to `burn-core 0.14.1` (or newer), refresh the lockfile, and retry publish.
 
 ## Cargo.lock masking issues
 - Libraries don’t ship lockfiles; `cargo publish` re-resolves deps. If a build works only with `Cargo.lock`, reproduce without it to mirror publish behavior.

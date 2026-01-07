@@ -15,3 +15,6 @@
 
 ## Improvements
 - If allocations in `DetectionResult` become hot, implementers can reuse buffers; interfaces permit that (caller-owned structs).
+
+## Links
+- Source: `vision_core/src/interfaces.rs`

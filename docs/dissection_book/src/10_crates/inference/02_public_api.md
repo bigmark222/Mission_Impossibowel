@@ -11,3 +11,9 @@
 | InferenceModelConfig | type | Model config alias |
 | Modules (pub mod) | module | factory, plugin, prelude |
 | Re-exports | re-export | InferenceFactory, InferenceThresholds, InferencePlugin |
+
+## Links
+- Source: `inference/src/lib.rs`
+- Module: `inference/src/factory.rs`
+- Module: `inference/src/plugin.rs`
+- Docs.rs: https://docs.rs/cortenforge-inference

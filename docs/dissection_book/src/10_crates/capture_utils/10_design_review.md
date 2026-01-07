@@ -14,3 +14,6 @@
 - Add logging/metrics for skipped overlays and errors to improve visibility.
 - Introduce optional parallel overlay/prune processing and buffer reuse for speed.
 - Consider pluggable recorder formats (e.g., msgpack) to reduce size or improve speed while keeping contract compatibility.
+
+## Links
+- Source: `capture_utils/src/lib.rs`

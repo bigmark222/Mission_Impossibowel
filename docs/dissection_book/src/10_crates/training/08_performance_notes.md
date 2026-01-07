@@ -18,3 +18,6 @@
 ## Improvements
 - Add buffer pooling or use `Vec::with_capacity` reuse between batches if integrating into a long-running trainer.
 - Parallelize image decode/loading across batches if IO becomes the bottleneck.
+
+## Links
+- Source: `training/src/dataset.rs`

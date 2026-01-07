@@ -23,4 +23,8 @@
 - Overlay helpers render bounding boxes to images.
 
 ## Notes
-- Pure Rust types/traits; no Bevy lifecycle. Initialization/teardown is managed by consumers.
+- Interfaces/overlay are runtime-agnostic; capture resources use Bevy types but have no lifecycle of their own. Initialization/teardown is managed by consumers.
+
+## Links
+- Source: `vision_core/src/interfaces.rs`
+- Source: `vision_core/src/overlay.rs`

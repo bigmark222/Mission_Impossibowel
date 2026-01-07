@@ -14,3 +14,6 @@
 - Add explicit configuration (struct) for permissive/logging/trace instead of env-only control, enabling code-driven behavior (and tests).
 - Provide an optional resize/padding strategy in collation to handle heterogeneous datasets gracefully.
 - Consider centralizing augmentation parameters and using SIMD/parallel image ops if profiling shows hotspots; add metrics hooks for skipped/errored samples.
+
+## Links
+- Source: `crates/burn_dataset/src/lib.rs`

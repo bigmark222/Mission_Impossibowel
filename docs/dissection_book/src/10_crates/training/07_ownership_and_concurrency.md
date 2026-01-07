@@ -18,3 +18,6 @@
 
 ## Risks / notes
 - Concurrent collation on shared inputs would require callers to avoid mutating the same samples concurrently.
+
+## Links
+- Source: `training/src/dataset.rs`

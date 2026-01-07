@@ -5,7 +5,7 @@ Guidance for working in the current layout and moving code where it belongs.
 ## Snapshot (current state)
 - Repo is library-only: shared crates (`sim_core`, `vision_core`/`vision_runtime`, `data_contracts`, `capture_utils`, `models`, `training`, `inference`, `colon_sim_tools`) intended for crates.io.
 - Apps (e.g., `colon_sim`, `hello_substrate`) live in their own repo: https://github.com/via-balaena/Deep-Poo.
-- Crates target: `0.1.1` (burn-core temporarily patched to vendored 0.14.0 until upstream fixes bincode).
+- Crates target: `0.1.1` (burn-core 0.14.1 fixed; no vendored patch).
 - Tools live in `colon_sim_tools`; bins reuse helpers via `cortenforge-cli-support` and `colon_sim_tools::services`. Plan to split app-specific bins into app repos.
 - Recorder defaults to `JsonRecorder`; apps supply metadata/world-state hooks and can inject sinks.
 - Branding: substrate = “CortenForge”; apps consume it.

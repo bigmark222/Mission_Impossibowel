@@ -54,3 +54,6 @@ flowchart LR
 
   prelude --> modules
 ```
+
+## Links
+- Source: `sim_core/src/lib.rs`

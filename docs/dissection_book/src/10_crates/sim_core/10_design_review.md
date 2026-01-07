@@ -14,3 +14,6 @@
 - Make `RecorderMetadataProvider` extensible (e.g., key/value map or versioned struct) to avoid frequent breaking changes.
 - Add optional idempotent registration helpers (e.g., sets to avoid double-adding systems).
 - Provide a small fan-out recorder combinator (e.g., `Vec<Box<Recorder>>`) for multi-sink use cases.
+
+## Links
+- Source: `sim_core/src/recorder_meta.rs`

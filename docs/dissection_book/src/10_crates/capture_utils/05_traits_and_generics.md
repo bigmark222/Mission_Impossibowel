@@ -13,3 +13,6 @@
 ## Design notes
 - Intentional lack of generics keeps recorder/overlay utilities straightforward and trait-object compatible.
 - If additional recorder types are added, implement `vision_core::Recorder` rather than introducing new traits to keep consumers unified.
+
+## Links
+- Source: `capture_utils/src/lib.rs`

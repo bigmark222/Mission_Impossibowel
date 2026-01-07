@@ -14,3 +14,6 @@
 - Return a structured result from factory load (e.g., enum with “LoadedBurn”/“Fallback”) to allow callers to act on failures.
 - Add configurable preprocessing pipeline to align with training data; consider using `capture_utils`/`burn_dataset` transforms.
 - Provide an option to create per-thread detectors to avoid mutex contention, or use a thread-safe queue of detectors.
+
+## Links
+- Source: `inference/src/factory.rs`

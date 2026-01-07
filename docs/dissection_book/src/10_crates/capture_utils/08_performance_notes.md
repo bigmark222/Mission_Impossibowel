@@ -19,3 +19,6 @@
 ## Improvements
 - Add buffer reuse/pooling for overlay images if processing large datasets.
 - Parallelize overlay generation/pruning per file for speedups (currently sequential).
+
+## Links
+- Source: `capture_utils/src/lib.rs`

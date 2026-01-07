@@ -11,3 +11,7 @@
 
 ## Assumptions
 - Overhead is negligible; performance driven by consumer binaries.
+
+## Links
+- Source: `crates/cli_support/src/common.rs`
+- Source: `crates/cli_support/src/seed.rs`

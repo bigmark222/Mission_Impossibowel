@@ -12,3 +12,6 @@
 - Feature-gated model/backend keeps the public API stable while allowing different compile-time choices.
 - Factory hides concrete detector types behind a trait object to allow heuristic fallback vs. Burn-backed detector without leaking types.
 - If additional detectors are added, extend the factory (or add a new trait) but keep the trait-object boundary for runtime swapping.
+
+## Links
+- Source: `inference/src/factory.rs`

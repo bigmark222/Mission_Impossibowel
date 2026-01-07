@@ -5,4 +5,9 @@
 - `prelude`: Convenience re-exports.
 - `lib.rs`: Re-exports factory/plugin/prelude and backend/model aliases.
 
-Cross-module dependencies: factory depends on models and burn; plugin integrates with sim_core/vision_runtime; consumers (runtime/tools) use factory and/or plugin.
+Cross-module dependencies: factory depends on models and burn; plugin integrates with sim_core mode sets; consumers (runtime/tools) use factory and/or plugin.
+
+## Links
+- Source: `inference/src/lib.rs`
+- Module: `inference/src/factory.rs`
+- Module: `inference/src/plugin.rs`

@@ -17,3 +17,6 @@
 ## Improvements
 - If using GPU, ensure backend feature is enabled to offload compute.
 - For CPU, consider reducing hidden/depth/max_boxes for faster demos, or fuse operations if profiling shows bottlenecks.
+
+## Links
+- Source: `models/src/lib.rs`

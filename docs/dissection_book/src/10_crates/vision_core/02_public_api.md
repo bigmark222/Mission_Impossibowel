@@ -18,3 +18,10 @@
 | normalize_box | fn | Normalize bbox coords to pixel space |
 | draw_rect | fn | Draw rectangle onto RGBA image |
 | Modules (pub mod) | module | capture, interfaces, overlay, prelude |
+
+## Links
+- Source: `vision_core/src/lib.rs`
+- Module: `vision_core/src/interfaces.rs`
+- Module: `vision_core/src/overlay.rs`
+- Module: `vision_core/src/capture.rs`
+- Docs.rs: https://docs.rs/cortenforge-vision-core

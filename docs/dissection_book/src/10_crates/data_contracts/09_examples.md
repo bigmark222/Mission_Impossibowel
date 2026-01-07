@@ -46,3 +46,7 @@ fn main() {
     manifest.validate().expect("manifest valid");
 }
 ```
+
+## Links
+- Source: `data_contracts/src/capture.rs`
+- Source: `data_contracts/src/manifest.rs`

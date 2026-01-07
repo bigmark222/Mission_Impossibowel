@@ -16,3 +16,6 @@
 
 ## Risks / notes
 - Lack of `Send + Sync` bounds keeps the core interfaces flexible but requires downstream crates to add bounds when used across threads (as they do).
+
+## Links
+- Source: `vision_core/src/interfaces.rs`

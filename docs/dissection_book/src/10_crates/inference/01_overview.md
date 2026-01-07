@@ -17,3 +17,9 @@ Provide a detector factory that loads model checkpoints (TinyDet/BigDet via mode
 - Runtime/inference plugins (vision_runtime) needing a detector handle.
 - Tools performing offline inference (e.g., single_infer) that need a factory.
 - Contributors adding backends or selection logic.
+
+## Links
+- Source: `inference/src/lib.rs`
+- Module: `inference/src/factory.rs`
+- Module: `inference/src/plugin.rs`
+- Docs.rs: https://docs.rs/cortenforge-inference

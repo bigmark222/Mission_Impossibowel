@@ -16,3 +16,7 @@ Provide Bevy-based scaffolding for CortenForge apps: building the runtime, confi
 ## Who should use it
 - App authors wiring the CortenForge substrate into their own Bevy app (e.g., colon_sim repo).
 - Contributors extending runtime hooks or recorder scaffolding while keeping the core domain-agnostic.
+
+## Links
+- Source: `sim_core/src/lib.rs`
+- Docs.rs: https://docs.rs/cortenforge-sim-core

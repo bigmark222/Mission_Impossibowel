@@ -17,3 +17,9 @@
 | build_greedy_targets | fn | Build targets for training |
 | Re-exports | re-export | TinyDet/BigDet configs and models from models crate |
 | Modules (pub mod) | module | dataset, util |
+
+## Links
+- Source: `training/src/lib.rs`
+- Module: `training/src/dataset.rs`
+- Module: `training/src/util.rs`
+- Docs.rs: https://docs.rs/cortenforge-training

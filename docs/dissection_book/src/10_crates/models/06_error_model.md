@@ -12,3 +12,6 @@
 
 ## Ergonomics
 - Simplicity suits small demo models. If expanding to larger models or dynamic loading, consider returning `Result` from builders when IO/shape validation is involved.
+
+## Links
+- Source: `models/src/lib.rs`

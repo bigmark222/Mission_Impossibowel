@@ -13,3 +13,7 @@
 - Introduce a typed manifest error enum for consistency with capture validation.
 - Plan versioning strategy (e.g., enum variants per version + conversion helpers) before adding new schema versions.
 - If performance becomes an issue, consider borrowed deserialization (serde `Cow`) to avoid cloning strings/paths.
+
+## Links
+- Source: `data_contracts/src/capture.rs`
+- Source: `data_contracts/src/manifest.rs`

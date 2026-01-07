@@ -172,10 +172,10 @@ let detector = factory.load_from_checkpoint("checkpoints/run1").unwrap_or_else(|
 - Prefer explicit plugin wiring and mode gating over hidden magic.
 - Gate heavy deps behind features; default to NdArray where possible for tests.
 - Preserve schema compatibility (data_contracts) so ETL/training/tools remain stable.
-- Note burn-core dependency: currently patched to vendored 0.14.0; drop when upstream publishes a fixed release.
+- Note burn-core dependency: use the fixed `burn-core 0.14.1` release; no vendor patch required.
 
 ## Current limitations / upcoming work
-- Burn dependency: burn-core 0.14.0 is patched locally; unblock publishes once upstream releases a fixed version.
+- Burn dependency: `burn-core 0.14.1` fixes the prior publish break; no local patch needed.
 - colon_sim_tools: contains app-specific bins; plan to split/trim so only shared tooling remains here.
 - GPU paths: WGPU/GPU smokes are opt-in; default pipeline is NdArray-only to keep CI fast.
 - Models: TinyDet/BigDet only; add guidance/checkpoints for new variants as they appear.

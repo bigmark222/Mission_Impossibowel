@@ -19,7 +19,7 @@
 - `--features <list>` to target specific stacks (e.g., `backend-wgpu`, `tui`).
 
 ## Troubleshooting (skeleton)
-- Build fails due to burn-core/bincode: ensure patch override present until upstream fix; publish may fail without lockfile.
+- Build fails due to burn-core/bincode: ensure burn-core is 0.14.1+ and refresh the lockfile; publish may fail without a lockfile.
 - GPU/WGPU issues: enable the right feature flags; skip on non-GPU hosts; check driver availability.
 - Tooling bins: ensure required features (`tui`, `scheduler`, `gpu_nvidia`) are enabled; keep inputs minimal for smokes.
 - Docs build: install mdBook; run `mdbook test` for doctests; mark non-runnable snippets with `ignore`.

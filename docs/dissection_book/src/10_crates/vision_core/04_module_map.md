@@ -6,3 +6,6 @@
 - `prelude`: Convenience re-exports for downstream users.
 
 Cross-module dependencies: interfaces define the shared contracts; capture provides resources used by runtime; overlay operates on data from interfaces; prelude re-exports common items.
+
+## Links
+- Source: `vision_core/src/lib.rs`

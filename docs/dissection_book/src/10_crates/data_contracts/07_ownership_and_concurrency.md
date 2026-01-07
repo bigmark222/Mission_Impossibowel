@@ -15,3 +15,7 @@
 
 ## Risks / notes
 - Safe to share across threads if caller needs (serde types are Send/Sync); concurrency behavior is entirely caller-controlled.
+
+## Links
+- Source: `data_contracts/src/capture.rs`
+- Source: `data_contracts/src/manifest.rs`

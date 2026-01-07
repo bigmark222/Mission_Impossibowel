@@ -19,3 +19,6 @@
 - Interface set is intentionally minimal to keep runtime embedding straightforward (Bevy plugins, CLI tools).
 - Trait-object friendliness allows swapping implementations at runtime (heuristic vs. Burn, file vs. camera source, JSON vs. binary recorder).
 - If adding async paths, consider separate async traits or adapters to keep current sync trait objects intact.
+
+## Links
+- Source: `vision_core/src/interfaces.rs`

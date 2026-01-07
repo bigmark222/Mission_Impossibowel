@@ -60,3 +60,7 @@ sequenceDiagram
   Hooks->>A: register(&mut App)
   App-->>Hooks: release mutable borrow
 ```
+
+## Links
+- Source: `sim_core/src/hooks.rs`
+- Module: `sim_core/src/runtime.rs`

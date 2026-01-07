@@ -15,3 +15,7 @@
 
 ## Risks / notes
 - None; concurrency concerns are entirely caller-managed.
+
+## Links
+- Source: `crates/cli_support/src/common.rs`
+- Source: `crates/cli_support/src/seed.rs`

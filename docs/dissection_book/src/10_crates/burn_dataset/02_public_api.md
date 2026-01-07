@@ -38,4 +38,7 @@
 | load_sample_for_etl | fn | Load a sample for ETL |
 | build_train_val_iters | fn | Build train/val iterators |
 | build_greedy_targets | fn | Build targets for training |
-| load_*from_checkpoint | fn | Load checkpoints (re-exported via training/util) |
+
+## Links
+- Source: `crates/burn_dataset/src/lib.rs`
+- Docs.rs: https://docs.rs/cortenforge-burn-dataset

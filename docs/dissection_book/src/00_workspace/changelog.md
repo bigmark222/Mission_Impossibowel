@@ -27,7 +27,7 @@ How to track workspace changes and keep the book current.
 ```
 
 ## 2026-01-07 (v0.1.1)
-- Changed: aligned workspace crates to `0.1.1`; refreshed docs/version references; prepped for burn-core upstream fix.
+- Changed: aligned workspace crates to `0.1.1`; refreshed docs/version references; removed burn-core vendor patch and updated to 0.14.1.
 - Impact: compatible; no API breaks expected beyond version alignment.
 - Actions taken: updated crate metadata/release checklist; staged publish order and notes.
 

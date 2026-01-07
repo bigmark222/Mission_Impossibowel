@@ -4,3 +4,6 @@
 - `prelude`: Convenience re-export of core model types.
 
 Cross-module dependencies: self-contained definitions; consumed by training and inference.
+
+## Links
+- Source: `models/src/lib.rs`

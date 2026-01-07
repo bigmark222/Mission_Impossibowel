@@ -34,3 +34,6 @@ flowchart LR
   Boxes --> Idle["No per frame allocations in sim_core"]
   Runtime["Runtime"] --> DownstreamAlloc["Allocations in downstream crates"]
 ```
+
+## Links
+- Source: `sim_core/src/lib.rs`

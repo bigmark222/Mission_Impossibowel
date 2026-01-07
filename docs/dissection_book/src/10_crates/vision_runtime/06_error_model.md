@@ -15,3 +15,6 @@
 ## Ergonomics
 - System-level code avoids panics but also avoids surfacing structured errors. Operational issues are signaled via state (`fallback` message) or logs.
 - If richer observability is needed (e.g., metrics/alerts), add events/resources to record failure counts instead of panicking.
+
+## Links
+- Source: `vision_runtime/src/lib.rs`

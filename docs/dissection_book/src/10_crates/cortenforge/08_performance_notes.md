@@ -11,3 +11,6 @@
 
 ## Assumptions
 - No performance impact; use member crates directly for fine-grained control.
+
+## Links
+- Source: `crates/cortenforge/src/lib.rs`

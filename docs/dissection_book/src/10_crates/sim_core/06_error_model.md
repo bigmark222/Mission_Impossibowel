@@ -33,3 +33,6 @@ flowchart TB
   Result --> Caller["Downstream caller"]
   Caller --> Handle["Handle or propagate"]
 ```
+
+## Links
+- Source: `sim_core/src/lib.rs`

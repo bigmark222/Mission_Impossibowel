@@ -18,3 +18,6 @@
 - Trait-object approach matches Bevy resource storage and allows runtime replacement of detectors (hotkeys, load/fallback).
 - No custom traits; extension is via providing different `Detector` implementations to `DetectorHandle`.
 - Future extensibility: could generalize inference scheduling via a trait, but current code is purposely concrete to keep Bevy wiring simple.
+
+## Links
+- Source: `vision_runtime/src/lib.rs`

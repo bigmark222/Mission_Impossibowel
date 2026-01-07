@@ -11,3 +11,6 @@
 ## Refactor ideas
 - Keep facade optional in docs; encourage direct crate deps for advanced users.
 - Add a CI check to ensure feature list matches workspace members.
+
+## Links
+- Source: `crates/cortenforge/src/lib.rs`

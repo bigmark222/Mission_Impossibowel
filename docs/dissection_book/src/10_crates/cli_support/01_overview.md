@@ -15,3 +15,8 @@ Provide shared CLI argument parsing and helper utilities for CortenForge tools/a
 ## Who should use it
 - Tooling crates (colon_sim_tools) and any app binaries needing consistent args.
 - Contributors adding/adjusting shared CLI options for the stack.
+
+## Links
+- Source: `crates/cli_support/src/common.rs`
+- Source: `crates/cli_support/src/seed.rs`
+- Docs.rs: https://docs.rs/cortenforge-cli-support

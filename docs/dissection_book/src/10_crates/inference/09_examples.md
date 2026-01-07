@@ -54,3 +54,6 @@ fn main() {
     let _ = detector;
 }
 ```
+
+## Links
+- Source: `inference/src/factory.rs`

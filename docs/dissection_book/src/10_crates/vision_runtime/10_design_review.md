@@ -14,3 +14,6 @@
 - Add buffer pooling for readback bytes and detection vectors.
 - Support multiple in-flight inference tasks or a small queue; allow batch processing for throughput.
 - Expose metrics/events for failures, fallback usage, inference latency distributions.
+
+## Links
+- Source: `vision_runtime/src/lib.rs`

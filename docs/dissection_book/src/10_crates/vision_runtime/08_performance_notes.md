@@ -20,3 +20,6 @@
 - Add buffer reuse/pooling for readback and detection vectors to cut allocations.
 - Allow multiple in-flight inference tasks or batch processing if throughput is needed.
 - Consider dropping heuristic detector logs/allocations when model loaded to reduce noise.
+
+## Links
+- Source: `vision_runtime/src/lib.rs`

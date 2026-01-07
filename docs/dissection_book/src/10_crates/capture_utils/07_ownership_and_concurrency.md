@@ -18,3 +18,6 @@
 
 ## Risks / notes
 - Concurrent writes to the same run directory from multiple recorders could collide; caller must coordinate if using in multithreaded scenarios.
+
+## Links
+- Source: `capture_utils/src/lib.rs`

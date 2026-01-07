@@ -61,3 +61,7 @@ sequenceDiagram
 
 ## Shutdown/cleanup
 - Standard Bevy app lifecycle; no special shutdown beyond Bevy teardown.
+
+## Links
+- Source: `sim_core/src/lib.rs`
+- Module: `sim_core/src/runtime.rs`

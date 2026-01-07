@@ -17,3 +17,7 @@ Define Burn-based model architectures/configs (TinyDet/BigDet) used across train
 - Training crate to construct models/checkpoints.
 - Inference crate to load checkpoints and build detectors.
 - Contributors adding model variants or adjusting configs.
+
+## Links
+- Source: `models/src/lib.rs`
+- Docs.rs: https://docs.rs/models

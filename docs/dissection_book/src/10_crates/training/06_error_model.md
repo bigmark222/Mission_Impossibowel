@@ -15,3 +15,7 @@
 ## Ergonomics
 - anyhow keeps signatures simple for binaries; for library use, a typed error might improve matchability.
 - Errors include context (file paths, reasons) in message form; sufficient for CLIs.
+
+## Links
+- Source: `training/src/dataset.rs`
+- Source: `training/src/util.rs`

@@ -3,9 +3,12 @@
 ## Typical usage
 1) Prepare detector and thresholds:
    ```rust,ignore
-   let detector = inference_factory.load_from_checkpoint(path).unwrap_or_else(|| inference_factory.heuristic());
-   app.insert_resource(DetectorHandle { detector, kind: DetectorKind::Burn });
-   app.insert_resource(InferenceThresholds { obj_thresh, iou_thresh });
+   let factory = inference::InferenceFactory;
+   let thresholds = InferenceThresholds { obj_thresh, iou_thresh };
+   let detector = factory.build(thresholds, weights.as_deref());
+   let kind = if weights.is_some() { DetectorKind::Burn } else { DetectorKind::Heuristic };
+   app.insert_resource(DetectorHandle { detector, kind });
+   app.insert_resource(thresholds);
    ```
 2) Add plugins:
    ```rust,ignore
@@ -27,3 +30,6 @@
 ## Notes
 - Runs as Bevy plugins; depends on sim_core-built app context.
 - Detectors are provided by the inference crate; this crate orchestrates capture/inference scheduling.
+
+## Links
+- Source: `vision_runtime/src/lib.rs`

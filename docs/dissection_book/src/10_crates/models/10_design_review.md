@@ -14,3 +14,6 @@
 - Add simple load/save helpers (aligned with Burn recorders) to reduce boilerplate in consumers.
 - Consider exposing configurable activations/heads for experimentation.
 - Add basic tests/benchmarks to track perf/regressions as models evolve.
+
+## Links
+- Source: `models/src/lib.rs`

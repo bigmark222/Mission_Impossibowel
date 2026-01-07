@@ -12,3 +12,7 @@
 | training | re-export | Training/eval pipeline |
 | burn_dataset | re-export | Burn dataset loader |
 | cli_support | re-export | Shared CLI helpers |
+
+## Links
+- Source: `crates/cortenforge/src/lib.rs`
+- Docs.rs: https://docs.rs/cortenforge
