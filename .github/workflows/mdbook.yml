@@ -18,9 +18,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - name: Install mdBook
         run: |
-          wget https://github.com/rust-lang/mdBook/releases/download/v0.4.40/mdbook-v0.4.40-x86_64-unknown-linux-gnu.tar.gz
-          tar -xzf mdbook-v0.4.40-x86_64-unknown-linux-gnu.tar.gz
-          sudo mv mdbook /usr/local/bin/
+          cargo install mdbook --version 0.5.2
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
       - name: Install mdbook-mermaid
         run: |
           cargo install mdbook-mermaid
