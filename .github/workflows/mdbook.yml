@@ -25,9 +25,16 @@ jobs:
         run: |
           cargo install mdbook-mermaid
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+      - name: Mermaid toolchain info
+        run: |
+          echo "PATH=$PATH"
+          which mdbook || true
+          which mdbook-mermaid || true
+          mdbook --version
+          mdbook-mermaid --version
       - name: Build contributor book
         run: |
-          mdbook build docs/contributor_book
+          RUST_LOG=mdbook_mermaid=debug RUST_BACKTRACE=1 mdbook build docs/contributor_book
           mkdir -p docs/site_build
           cp -r docs/contributor_book/book docs/site_build/contributor
       - name: Test contributor book
