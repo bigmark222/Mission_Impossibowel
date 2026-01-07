@@ -19,7 +19,7 @@ How to track workspace changes and keep the book current.
 3) Run `mdbook build` to ensure navigation/linking is valid.
 
 ## Template entry
-```
+```text
 ## 2024-XX-YY (v0.1.z)
 - Changed: <describe change and crates affected>
 - Impact: <breaking?/compatible?>; <any migration steps>
