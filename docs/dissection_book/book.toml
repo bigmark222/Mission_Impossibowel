@@ -9,6 +9,6 @@ command = "mdbook-mermaid"
 
 [output.html]
 additional-js = [
-  "theme/mermaid-init.js",
   "theme/mermaid.min.js",
+  "theme/mermaid-init.js",
 ]
