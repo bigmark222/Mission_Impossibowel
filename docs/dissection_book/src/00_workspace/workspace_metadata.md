@@ -1,6 +1,7 @@
 # Workspace Metadata
 
 ## Workspace metadata (root [Cargo.toml](https://github.com/via-balaena/CortenForge/blob/main/Cargo.toml))
+Quick reference for workspace-wide configuration and publish posture.
 | Item | Details |
 | --- | --- |
 | resolver | `2` |

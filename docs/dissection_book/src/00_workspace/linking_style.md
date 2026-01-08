@@ -3,6 +3,7 @@
 Standardize source links to keep references consistent and stable.
 
 ## Format
+How to format links so they stay stable and readable.
 - Use repo-relative paths with line anchors: ``crate/path/to/file.rs:L123``.
 - Examples:
   - `sim_core/src/hooks.rs:L10`
@@ -11,11 +12,13 @@ Standardize source links to keep references consistent and stable.
 - Avoid range anchors; link to the first relevant line.
 
 ## When to link
-- Point to source when explaining specific functions/types or design decisions.
-- Prefer linking to code over docs.rs when tying to this repo’s version.
-- For public API reference, optionally include a docs.rs link alongside the source link.
+Where links add clarity without duplicating docs.
+1) Point to source when explaining specific functions/types or design decisions.
+2) Prefer linking to code over docs.rs when tying to this repo’s version.
+3) For public API reference, optionally include a docs.rs link alongside the source link.
 
 ## Maintenance
-- When code moves, update links in the same PR as the code change.
-- Keep links in crate pages and flow docs current after refactors.
-- If line numbers are likely to drift, consider linking to the symbol in docs.rs as a secondary reference.
+How to keep links accurate as code evolves.
+1) When code moves, update links in the same PR as the code change.
+2) Keep links in crate pages and flow docs current after refactors.
+3) If line numbers are likely to drift, consider linking to the symbol in docs.rs as a secondary reference.

@@ -6,11 +6,11 @@ Below are the key end-to-end flows that stitch the crates together. Each diagram
 
 ```mermaid
 flowchart LR
-    A[sim_core\n(Bevy app, ModeSet)] --> B[vision_core\ninterfaces]
-    B --> C[vision_runtime\ncapture plugin]
+    A["sim_core<br/>(Bevy app, ModeSet)"] --> B["vision_core<br/>interfaces"]
+    B --> C["vision_runtime<br/>capture plugin"]
     C --> D[capture_utils::JsonRecorder]
-    D --> E[data_contracts\nCaptureMetadata/Label]
-    D --> F[capture_utils::generate_overlays\n(vision_core::overlay)]
+    D --> E["data_contracts<br/>CaptureMetadata/Label"]
+    D --> F["capture_utils::generate_overlays<br/>(vision_core::overlay)"]
 ```
 
 Steps:
@@ -27,10 +27,10 @@ Notes:
 
 ```mermaid
 flowchart LR
-    A[capture_utils\n(run dir)] --> B[burn_dataset\nindex_runs/validate]
-    B --> C[burn_dataset\nBatchIter/warehouse shards]
-    C --> D[training::collate\n+ models]
-    D --> E[training::run_train\n(backends via TrainBackend)]
+    A["capture_utils<br/>(run dir)"] --> B["burn_dataset<br/>index_runs/validate"]
+    B --> C["burn_dataset<br/>BatchIter/warehouse shards"]
+    C --> D["training::collate<br/>+ models"]
+    D --> E["training::run_train<br/>(backends via TrainBackend)"]
 ```
 
 Steps:
@@ -47,10 +47,10 @@ Notes:
 
 ```mermaid
 flowchart LR
-    A[burn_dataset\n+ training\n(checkpoint)] --> B[inference::InferenceFactory]
+    A["burn_dataset<br/>+ training<br/>(checkpoint)"] --> B[inference::InferenceFactory]
     B -->|Detector| C[vision_runtime::InferencePlugin]
     C --> D[vision_core::DetectionResult]
-    D --> E[overlay/logging\nDetectionOverlayState]
+    D --> E["overlay/logging<br/>DetectionOverlayState"]
 ```
 
 Steps:
@@ -67,9 +67,9 @@ Notes:
 
 ```mermaid
 flowchart LR
-    A[cli_support\nargs/helpers] --> B[colon_sim_tools::services]
-    B --> C[sim_view/train binaries\n(external)]
-    B --> D[colon_sim_tools::warehouse_commands\nenv/cmd builder]
+    A["cli_support<br/>args/helpers"] --> B[colon_sim_tools::services]
+    B --> C["sim_view/train binaries<br/>(external)"]
+    B --> D["colon_sim_tools::warehouse_commands<br/>env/cmd builder"]
 ```
 
 Steps:

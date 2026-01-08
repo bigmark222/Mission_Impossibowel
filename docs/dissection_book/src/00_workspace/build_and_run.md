@@ -1,27 +1,43 @@
 # Build & Run
 
 ## Commands
-- Format: `cargo fmt --all`
-- Lint: `cargo clippy --workspace --all-targets --all-features -D warnings`
-- Check: `cargo check --workspace`
-- Test: `cargo test --workspace --locked`
-- Docs: `cargo doc --workspace --no-deps`
-- mdBook: `mdbook build docs/contributor_book` and `mdbook build docs/dissection_book`
+Quick reference for common build and verification tasks.
+
+| Task | Command |
+| --- | --- |
+| Format | `cargo fmt --all` |
+| Lint | `cargo clippy --workspace --all-targets --all-features -D warnings` |
+| Check | `cargo check --workspace` |
+| Test | `cargo test --workspace --locked` |
+| Docs | `cargo doc --workspace --no-deps` |
+| mdBook | `mdbook build docs/contributor_book` and `mdbook build docs/dissection_book` |
 
 ## Feature flags
-- Defaults: NdArray backends; GPU/WGPU opt-in (`backend-wgpu` on training/inference/models; `gpu_nvidia` on tools).
-- Model variants: `tinydet` (default), `bigdet`.
-- Tools: `tui`, `scheduler`, `gpu_nvidia` gate app-specific bins.
+Default behavior and opt-in switches for common workflows.
+
+| Topic | Default | Notes |
+| --- | --- | --- |
+| Backends | NdArray | GPU/WGPU opt‑in via `backend-wgpu` (training/inference/models); `gpu_nvidia` on tools. |
+| Model variants | `tinydet` | `bigdet` optional. |
+| Tools | none | `tui`, `scheduler`, `gpu_nvidia` gate app‑specific bins. |
 
 ## Common flags
-- `--locked` to enforce lockfile resolution (useful before publish).
-- `--all-features` for full surface area (opt-in GPU/tooling paths).
-- `--features <list>` to target specific stacks (e.g., `backend-wgpu`, `tui`).
+Flags that change dependency resolution or feature surfaces.
+
+| Flag | Meaning |
+| --- | --- |
+| `--locked` | Enforce lockfile resolution (useful before publish). |
+| `--all-features` | Full surface area (opt-in GPU/tooling paths). |
+| `--features <list>` | Target specific stacks (e.g., `backend-wgpu`, `tui`). |
 
 ## Troubleshooting (skeleton)
-- Build fails due to burn-core/bincode: ensure burn-core is 0.14.1+ and refresh the lockfile; publish may fail without a lockfile.
-- GPU/WGPU issues: enable the right feature flags; skip on non-GPU hosts; check driver availability.
-- Tooling bins: ensure required features (`tui`, `scheduler`, `gpu_nvidia`) are enabled; keep inputs minimal for smokes.
-- Docs build: install mdBook; run `mdbook test` for doctests; mark non-runnable snippets with `ignore`.
-- Mermaid diagrams: install `mdbook-mermaid` (`cargo install mdbook-mermaid`) before building the dissection book.
-- Dependency policy: shared deps should use root `[workspace.dependencies]`, but `bevy` stays per-crate until feature/default-features are unified.
+Common failure modes and the fastest fix.
+
+| Issue | Guidance |
+| --- | --- |
+| Build fails due to burn-core/bincode | Ensure burn-core is 0.14.1+ and refresh the lockfile; publish may fail without a lockfile. |
+| GPU/WGPU issues | Enable the right feature flags; skip on non-GPU hosts; check driver availability. |
+| Tooling bins | Ensure required features (`tui`, `scheduler`, `gpu_nvidia`) are enabled; keep inputs minimal for smokes. |
+| Docs build | Install mdBook; run `mdbook test` for doctests; mark non-runnable snippets with `ignore`. |
+| Mermaid diagrams | Install `mdbook-mermaid` (`cargo install mdbook-mermaid`) before building the dissection book. |
+| Dependency policy | Shared deps should use root `[workspace.dependencies]`, but `bevy` stays per-crate until feature/default-features are unified. |

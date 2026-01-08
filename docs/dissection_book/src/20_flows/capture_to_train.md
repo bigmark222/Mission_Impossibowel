@@ -5,13 +5,13 @@ Traces how a captured run becomes training batches and a checkpoint. Emphasizes 
 ## Overview diagram
 ```mermaid
 flowchart LR
-    A[sim_core\nvision_runtime\ncapture] --> B[capture_utils::JsonRecorder]
-    B --> C[data_contracts\nCaptureMetadata/Label]
-    C --> D[burn_dataset\nindex/validate]
-    D --> E[burn_dataset\nBatchIter / WarehouseStore]
+    A["sim_core<br/>vision_runtime<br/>capture"] --> B[capture_utils::JsonRecorder]
+    B --> C["data_contracts<br/>CaptureMetadata/Label"]
+    C --> D["burn_dataset<br/>index/validate"]
+    D --> E["burn_dataset<br/>BatchIter / WarehouseStore"]
     E --> F[training::collate]
-    F --> G[models\nTinyDet/BigDet]
-    G --> H[training::run_train\n(TrainBackend)]
+    F --> G["models<br/>TinyDet/BigDet"]
+    G --> H["training::run_train<br/>(TrainBackend)"]
 ```
 
 ## Step-by-step
@@ -45,11 +45,14 @@ flowchart LR
    - Data: trained weights saved for downstream `inference::InferenceFactory` consumption.
 
 ## Failure points & handling
-- Recorder: IO/validation failure aborts that frame write; upstream should log/decide to retry/skip.
-- Validation: can fail the run if thresholds exceeded; adjust thresholds or fix data.
-- BatchIter: shape mismatches or persistent IO errors are fatal unless permissive skip is enabled.
-- Collate: mixed image sizes error out; requires preprocessing or `target_size` in dataset config.
-- Training: backend errors (e.g., GPU driver) bubble via anyhow; no retries built-in.
+Quick reference for where this flow can fail and how to respond.
+| Stage | Failure mode | Handling |
+| --- | --- | --- |
+| Recorder | IO/validation failure aborts that frame write. | Upstream should log and decide to retry or skip. |
+| Validation | Thresholds exceeded can fail the run. | Adjust thresholds or fix source data. |
+| BatchIter | Shape mismatches or persistent IO errors. | Fatal unless permissive skip is enabled. |
+| Collate | Mixed image sizes error out. | Preprocess or set `target_size` in dataset config. |
+| Training | Backend/runtime errors (e.g., GPU driver). | Bubble via anyhow; no retries built in. |
 
 ## Notes
 - Default pipeline is CPU (NdArray); enable `backend-wgpu` features for GPU in training and models.

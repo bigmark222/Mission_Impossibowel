@@ -69,6 +69,7 @@ flowchart LR
 <br> 
 
 ## Core crates (high centrality)
+Critical foundations for runtime, contracts, and model definitions.
 | Crate | Version | Path | Type | Edition | Notes |
 | ----- | ------- | ---- | ---- | ------- | ----- |
 | **cortenforge-sim-core** | 0.1.1 | sim_core | lib | 2021 | Bevy runtime scaffolding, hooks, recorder types |
@@ -86,6 +87,7 @@ Core crates sit on the critical path of runtime (sim_core/vision_core) and data 
 
 
 ## Mid-layer
+Crates that adapt core capabilities into training, inference, and tooling utilities.
 
 | Crate | Version | Path | Type | Edition | Notes |
 | ----- | ------- | ---- | ---- | ------- | ----- |
@@ -104,6 +106,7 @@ Mid-layer crates adapt core capabilities to specific tasks (detector factory, tr
 </details>
 
 ## Leaf/runtime tooling
+Runtime glue and app-facing tooling crates with fewer inward dependencies.
 
 | Crate | Version | Path | Type | Edition | Notes |
 | ----- | ------- | ---- | ---- | ------- | ----- |
@@ -119,6 +122,7 @@ Leaf/runtime tooling crates are consumers or runtime glue with fewer inward depe
 </details>
 
 ## Umbrella
+Single entry-point facade that re-exports the stack behind feature flags.
 
 | Crate | Version | Path | Type | Edition | Notes |
 | ----- | ------- | ---- | ---- | ------- | ----- |

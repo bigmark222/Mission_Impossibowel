@@ -15,7 +15,6 @@
   - [Linking Style](00_workspace/linking_style.md)
   - [Docs.rs Alignment](00_workspace/docsrs_alignment.md)
   - [Integration Contracts](00_workspace/integration_contracts.md)
-  - [How to Feed Codex](00_workspace/how_to_feed_codex.md)
   - [Maintenance Routine](00_workspace/maintenance_routine.md)
   - [Quality Gates](00_workspace/quality_gates.md)
   - [Open Questions](00_workspace/open_questions.md)
