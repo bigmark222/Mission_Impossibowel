@@ -1,6 +1,6 @@
 [package]
 name = "cortenforge-vision-runtime"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 license = "Apache-2.0"
 publish = true
@@ -19,8 +19,8 @@ name = "vision_runtime"
 [dependencies]
 bevy = { version = "0.17.3" }
 bevy_camera = { version = "0.17.3" }
-sim_core = { package = "cortenforge-sim-core", version = "0.1.1" }
-vision_core = { package = "cortenforge-vision-core", version = "0.1.1" }
+sim_core = { package = "cortenforge-sim-core", version = "0.1.2" }
+vision_core = { package = "cortenforge-vision-core", version = "0.1.2" }
 anyhow = { workspace = true }
 image = { workspace = true, features = ["png"] }
 futures-lite = { version = "2.3" }

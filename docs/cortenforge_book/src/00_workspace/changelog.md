@@ -34,6 +34,12 @@ Copy/paste scaffold for new release notes.
 - Actions taken: <pages updated, diagrams refreshed>
 ```
 
+### 2026-01-09 (v0.1.2)
+- Changed: consolidated docs into `cortenforge_book` and removed legacy books.
+- Changed: added a calm “Building Apps” path and simplified the crate overview/deep‑dive split.
+- Changed: renamed and refactored `cortenforge-tools` with config support and clearer defaults.
+- Changed: bumped workspace crate versions to `0.1.2`.
+
 ### 2026-01-07 (v0.1.1)
 Example entry showing the expected level of detail.
 - Changed: aligned workspace crates to `0.1.1`; refreshed docs/version references; removed burn-core vendor patch and updated to 0.14.1.
