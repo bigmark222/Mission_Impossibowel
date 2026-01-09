@@ -26,6 +26,7 @@ burn-runtime = ["inference", "training", "burn", "burn-ndarray", "bincode"]
 burn-wgpu = ["burn-runtime", "dep:burn-wgpu"]
 burn-dataset = ["burn_dataset"]
 cli-support = ["cli_support"]
+tools = ["dep:cortenforge_tools"]
 
 [dependencies]
 sim_core = { package = "cortenforge-sim-core", version = "0.1.2", optional = true }
@@ -38,6 +39,7 @@ inference = { package = "cortenforge-inference", version = "0.1.2", optional = t
 training = { package = "cortenforge-training", version = "0.1.2", optional = true }
 burn_dataset = { package = "cortenforge-burn-dataset", version = "0.1.2", optional = true }
 cli_support = { package = "cortenforge-cli-support", version = "0.1.2", optional = true }
+cortenforge_tools = { package = "cortenforge-tools", version = "0.1.2", optional = true }
 burn = { workspace = true, optional = true, features = ["autodiff", "std"] }
 burn-ndarray = { workspace = true, optional = true}
 burn-wgpu = { workspace = true, optional = true}
