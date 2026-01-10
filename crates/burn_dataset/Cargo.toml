@@ -17,6 +17,7 @@ name = "burn_dataset"
 
 [features]
 default = []
+# TODO(v0.3+): if we add a `burn-runtime` alias, drop `burn_runtime` in the next breaking release.
 burn_runtime = ["burn", "burn-ndarray", "crossbeam-channel", "memmap2", "rayon"]
 
 [dependencies]

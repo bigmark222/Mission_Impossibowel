@@ -25,7 +25,20 @@ Quick reference for feature toggles that matter most per crate.
 | cortenforge (umbrella) | Features map to member crates (sim-core, vision-core/runtime, models, training, inference, capture-utils, cli-support, burn-dataset); `burn-runtime`/`burn-wgpu` stacks wire burn deps. |
 | cortenforge-tools | `tui`, `scheduler`, `gpu_nvidia`; defaults are lean (no extra features). |
 | cli_support | Optional `bevy`/`bevy-resource` for resource integration. |
-| burn_dataset | `burn-runtime` wires burn + rayon/memmap2/crossbeam; `burn-ndarray`/`burn-wgpu` optional. |
+| burn_dataset | `burn_runtime` enables burn + rayon/memmap2/crossbeam; no defaults. |
+
+## Feature matrix (condensed)
+Single view of defaults vs opt-in flags across key crates.
+
+| Crate | Default features | Opt-in features |
+| --- | --- | --- |
+| cortenforge (umbrella) | `sim-core`, `vision-core` | `vision-runtime`, `capture-utils`, `data-contracts`, `models`, `inference`, `training`, `burn-runtime`, `burn-wgpu`, `burn-dataset`, `cli-support`, `tools` |
+| models | `tinydet` | `bigdet` |
+| training | `backend-ndarray`, `tinydet` | `backend-wgpu`, `bigdet` |
+| inference | `backend-ndarray`, `tinydet` | `backend-wgpu`, `bigdet` |
+| burn_dataset | (none) | `burn_runtime` |
+| cli_support | (none) | `bevy-resource` |
+| cortenforge-tools | (none) | `tui`, `scheduler`, `gpu_nvidia` |
 
 ## Hygiene guidance
 Rules of thumb for keeping features and builds predictable.

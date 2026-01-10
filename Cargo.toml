@@ -22,6 +22,7 @@ data-contracts = ["dep:data_contracts"]
 models = ["dep:models"]
 inference = ["vision-core", "sim-core", "models", "dep:inference"]
 training = ["sim-core", "vision-core", "models", "dep:training"]
+# TODO(v0.3+): if we add alias names, drop legacy aliases in the next breaking release.
 burn-runtime = ["inference", "training", "burn", "burn-ndarray", "bincode"]
 burn-wgpu = ["burn-runtime", "dep:burn-wgpu"]
 burn-dataset = ["burn_dataset"]
