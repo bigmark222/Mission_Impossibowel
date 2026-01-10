@@ -14,4 +14,4 @@ Quick read: Hot paths, tradeoffs, and perf boundaries.
 - No performance impact; use member crates directly for fine-grained control.
 
 ## Links
-- Source: `crates/cortenforge/src/lib.rs`
+- Source: `src/lib.rs`

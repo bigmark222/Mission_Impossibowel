@@ -14,4 +14,4 @@ Quick read: Ownership, threading, and async expectations.
 - Users should consult member crates for concurrency details. Facade use does not change ownership semantics.
 
 ## Links
-- Source: `crates/cortenforge/src/lib.rs`
+- Source: `src/lib.rs`

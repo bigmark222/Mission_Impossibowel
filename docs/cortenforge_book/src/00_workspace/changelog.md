@@ -34,6 +34,12 @@ Copy/paste scaffold for new release notes.
 - Actions taken: <pages updated, diagrams refreshed>
 ```
 
+### 2026-01-09 (v0.1.5)
+- Changed: moved the `cortenforge` umbrella crate to the repo root (`Cargo.toml` + `src/`).
+- Changed: updated workspace members and source-link paths to point at root `src/lib.rs`.
+- Impact: compatible; no API surface changes expected beyond layout/navigation.
+- Actions taken: updated book paths and README layout notes.
+
 ### 2026-01-09 (v0.1.4)
 - Changed: moved core crates under `crates/` and updated workspace members/patches to match.
 - Changed: unified Bevy version usage and refreshed source-link paths in the book.

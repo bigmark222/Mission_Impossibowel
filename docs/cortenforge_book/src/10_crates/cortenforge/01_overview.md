@@ -17,5 +17,5 @@ Provide a facade/umbrella crate that re-exports the CortenForge stack with featu
 - Contributors maintaining feature mappings and keeping versions aligned across the stack.
 
 ## Links
-- Source: `crates/cortenforge/src/lib.rs`
+- Source: `src/lib.rs`
 - Docs.rs: https://docs.rs/cortenforge

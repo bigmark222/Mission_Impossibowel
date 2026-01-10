@@ -1,3 +1,50 @@
+[package]
+name = "cortenforge"
+version = "0.1.5"
+edition = "2024"
+license = "Apache-2.0"
+description = "Umbrella crate for the CortenForge stack; re-exports app-agnostic crates with feature wiring."
+repository = "https://github.com/via-balaena/CortenForge"
+homepage = "https://github.com/via-balaena/CortenForge"
+documentation = "https://docs.rs/cortenforge"
+readme = "README.md"
+keywords = ["vision", "simulation", "training", "inference", "bevy"]
+categories = ["science", "computer-vision", "game-engines"]
+rust-version = "1.85"
+
+[features]
+default = ["sim-core", "vision-core"]
+sim-core = ["sim_core"]
+vision-core = ["vision_core"]
+vision-runtime = ["vision_core", "vision_runtime"]
+capture-utils = ["dep:capture_utils", "vision-core", "data-contracts"]
+data-contracts = ["dep:data_contracts"]
+models = ["dep:models"]
+inference = ["vision-core", "sim-core", "models", "dep:inference"]
+training = ["sim-core", "vision-core", "models", "dep:training"]
+burn-runtime = ["inference", "training", "burn", "burn-ndarray", "bincode"]
+burn-wgpu = ["burn-runtime", "dep:burn-wgpu"]
+burn-dataset = ["burn_dataset"]
+cli-support = ["cli_support"]
+tools = ["dep:cortenforge_tools"]
+
+[dependencies]
+sim_core = { package = "cortenforge-sim-core", version = "0.1.5", optional = true }
+vision_core = { package = "cortenforge-vision-core", version = "0.1.5", optional = true }
+vision_runtime = { package = "cortenforge-vision-runtime", version = "0.1.5", optional = true }
+capture_utils = { package = "cortenforge-capture-utils", version = "0.1.5", optional = true }
+data_contracts = { package = "cortenforge-data-contracts", version = "0.1.5", optional = true }
+models = { package = "cortenforge-models", version = "0.1.5", optional = true }
+inference = { package = "cortenforge-inference", version = "0.1.5", optional = true }
+training = { package = "cortenforge-training", version = "0.1.5", optional = true }
+burn_dataset = { package = "cortenforge-burn-dataset", version = "0.1.5", optional = true }
+cli_support = { package = "cortenforge-cli-support", version = "0.1.5", optional = true }
+cortenforge_tools = { package = "cortenforge-tools", version = "0.1.5", optional = true }
+burn = { workspace = true, optional = true, features = ["autodiff", "std"] }
+burn-ndarray = { workspace = true, optional = true }
+burn-wgpu = { workspace = true, optional = true }
+bincode = { workspace = true, optional = true, features = ["alloc", "serde"] }
+
 [workspace]
 members = [
     "crates/cli_support",
@@ -11,7 +58,6 @@ members = [
     "crates/training",
     "crates/inference",
     "tools",
-    "crates/cortenforge",
 ]
 resolver = "2"
 
@@ -44,4 +90,3 @@ cortenforge-capture-utils = { path = "crates/capture_utils" }
 cortenforge-vision-runtime = { path = "crates/vision_runtime" }
 cortenforge-inference = { path = "crates/inference" }
 cortenforge-training = { path = "crates/training" }
-cortenforge = { path = "crates/cortenforge" }
