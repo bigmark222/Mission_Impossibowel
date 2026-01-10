@@ -37,6 +37,7 @@ Copy/paste scaffold for new release notes.
 ### 2026-01-09 (v0.1.4)
 - Changed: moved core crates under `crates/` and updated workspace members/patches to match.
 - Changed: unified Bevy version usage and refreshed source-link paths in the book.
+- Changed: pinned CI toolchain, split heavy tests to scheduled runs, and refreshed cargo-deny config.
 - Impact: compatible; no API surface changes expected beyond the path/layout refactor.
 - Actions taken: updated crate layout docs and ignored generated mdBook output.
 

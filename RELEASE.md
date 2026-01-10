@@ -12,6 +12,11 @@ Follow these steps to publish the `cortenforge-*` crates and tag a release. Adju
 - Confirm versions: currently `0.1.x` across all crates.
 - Release notes: update the changelog entry in `docs/cortenforge_book/src/00_workspace/changelog.md`.
 
+## Release notes (v0.1.4)
+- Workspace layout now centralizes crates under `crates/` with updated workspace members.
+- Bevy dependency versions are unified; source links and docs reflect the new paths.
+- CI pinned to Rust 1.89.0, heavy tests moved to scheduled runs, cargo-deny config updated.
+
 ## Crate order (publish)
 1. `cortenforge-data-contracts`
 2. `cortenforge-models`
