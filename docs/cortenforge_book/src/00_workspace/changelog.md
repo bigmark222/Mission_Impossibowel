@@ -34,6 +34,11 @@ Copy/paste scaffold for new release notes.
 - Actions taken: <pages updated, diagrams refreshed>
 ```
 
+### 2026-01-10 (v0.2.1)
+- Changed: added `gpu_probe` bin with stable JSON schema and `--format=json` flag.
+- Impact: compatible; `gpu_macos_helper` remains as a deprecated alias (planned removal in v0.3+).
+- Actions taken: updated tools crate docs to prefer `gpu_probe` and note alias/deprecation.
+
 ### 2026-01-10 (v0.2.0)
 - Changed: bumped workspace dependencies to latest stable (Burn 0.19.1, bincode 2.0.1, Arrow/Parquet 57.1.0, sysinfo 0.37.2, ratatui 0.30.0).
 - Impact: potentially breaking (Burn API changes); bincode 3.x deferred because crates.io 3.0.0 is a stub.
