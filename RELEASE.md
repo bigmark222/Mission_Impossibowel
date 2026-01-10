@@ -1,8 +1,8 @@
 # Release checklist (CortenForge crates)
 
-Target version: `0.1.5`
+Target version: `0.2.0`
 
-Note: Keep all workspace crates on a single shared version for simplicity (e.g., 0.1.5 across the board).
+Note: Keep all workspace crates on a single shared version for simplicity (e.g., 0.2.0 across the board).
 
 Follow these steps to publish the `cortenforge-*` crates and tag a release. Adjust the crate list if new crates are added.
 
@@ -12,7 +12,7 @@ Follow these steps to publish the `cortenforge-*` crates and tag a release. Adju
 - Confirm versions: currently `0.1.x` across all crates.
 - Release notes: update the changelog entry in `docs/cortenforge_book/src/00_workspace/changelog.md`.
 
-## Release notes (v0.1.5)
+## Release notes (v0.2.0)
 - Umbrella crate moved to repo root (`Cargo.toml` + `src/`) to make the hierarchy explicit.
 - Workspace members updated; docs/source links now point at root `src/lib.rs`.
 - No API changes expected; layout-only refactor for clarity.
@@ -41,7 +41,7 @@ Follow these steps to publish the `cortenforge-*` crates and tag a release. Adju
    - `cargo publish -p <crate>`
    - Wait for crates.io indexing (a few minutes) before publishing dependents.
 6) Regenerate lockfile: `cargo generate-lockfile` (optional, keeps root in sync).
-7) Tag the repo: `git tag -a v0.1.5 -m "Release v0.1.5"` and push tags: `git push --tags`.
+7) Tag the repo: `git tag -a v0.2.0 -m "Release v0.2.0"` and push tags: `git push --tags`.
 8) Update docs/README with the release notes and any feature/backends notes.
 
 ## Notes
