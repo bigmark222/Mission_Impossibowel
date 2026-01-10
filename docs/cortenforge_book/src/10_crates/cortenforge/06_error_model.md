@@ -11,4 +11,4 @@ Quick read: How errors are surfaced and handled.
 - Consumers should consult member crates’ error models. Using this facade does not change error surfaces.
 
 ## Links
-- Source: `crates/cortenforge/src/lib.rs`
+- Source: `src/lib.rs`

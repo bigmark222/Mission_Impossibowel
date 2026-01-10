@@ -14,4 +14,4 @@ Quick read: Strengths, risks, and refactor ideas.
 - Add a CI check to ensure feature list matches workspace members.
 
 ## Links
-- Source: `crates/cortenforge/src/lib.rs`
+- Source: `src/lib.rs`

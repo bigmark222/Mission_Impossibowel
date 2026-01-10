@@ -12,4 +12,4 @@ Quick read: Extension points and the constraints they impose.
 - This crate intentionally exposes no additional APIs or traits; consumers should depend on member crates directly if they need fine-grained control.
 
 ## Links
-- Source: `crates/cortenforge/src/lib.rs`
+- Source: `src/lib.rs`

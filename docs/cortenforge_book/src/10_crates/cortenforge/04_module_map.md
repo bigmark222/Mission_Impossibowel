@@ -9,4 +9,4 @@ Cross-module dependencies:
 - this crate is purely a facade delegating to underlying crates.
 
 ## Links
-- Source: `crates/cortenforge/src/lib.rs`
+- Source: `src/lib.rs`

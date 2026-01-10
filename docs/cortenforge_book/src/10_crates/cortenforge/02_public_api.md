@@ -15,5 +15,5 @@ Quick read: The public surface; use docs.rs for exact signatures.
 | cli_support | re-export | Shared CLI helpers |
 
 ## Links
-- Source: `crates/cortenforge/src/lib.rs`
+- Source: `src/lib.rs`
 - Docs.rs: https://docs.rs/cortenforge
