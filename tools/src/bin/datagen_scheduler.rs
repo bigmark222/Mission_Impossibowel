@@ -81,7 +81,10 @@ fn main() -> anyhow::Result<()> {
     let cfg = ToolConfig::load();
     let mut launched = 0usize;
     let mut running: Vec<Running> = Vec::new();
-    let output_root = args.output_root.clone().unwrap_or_else(|| cfg.captures_root.clone());
+    let output_root = args
+        .output_root
+        .clone()
+        .unwrap_or_else(|| cfg.captures_root.clone());
     let prune_root = args
         .prune_output_root
         .clone()

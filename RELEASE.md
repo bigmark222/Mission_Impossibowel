@@ -1,8 +1,8 @@
 # Release checklist (CortenForge crates)
 
-Target version: `0.1.3`
+Target version: `0.1.4`
 
-Note: For the next releases (1.4), you can bump all workspace crates to a single shared version (e.g., 0.1.4) for simplicity. (currently each individual crate is at 0.1.2 and umbrella is at 0.1.3)
+Note: Keep all workspace crates on a single shared version for simplicity (e.g., 0.1.4 across the board).
 
 Follow these steps to publish the `cortenforge-*` crates and tag a release. Adjust the crate list if new crates are added.
 
@@ -24,7 +24,7 @@ Follow these steps to publish the `cortenforge-*` crates and tag a release. Adju
 9. `cortenforge-vision-runtime`
 10. `cortenforge-training`
 11. `cortenforge` (umbrella)
-12. `cortenforge-tools` (publish if desired; currently publish = false)
+12. `cortenforge-tools` (publishable; `publish = true`)
 
 ## Steps
 1) Bump versions (aligned `0.1.x`) and update changelog/release notes if applicable.
@@ -36,7 +36,7 @@ Follow these steps to publish the `cortenforge-*` crates and tag a release. Adju
    - `cargo publish -p <crate>`
    - Wait for crates.io indexing (a few minutes) before publishing dependents.
 6) Regenerate lockfile: `cargo generate-lockfile` (optional, keeps root in sync).
-7) Tag the repo: `git tag -a v0.1.x -m "Release v0.1.x"` and push tags: `git push --tags`.
+7) Tag the repo: `git tag -a v0.1.4 -m "Release v0.1.4"` and push tags: `git push --tags`.
 8) Update docs/README with the release notes and any feature/backends notes.
 
 ## Notes

@@ -3,15 +3,15 @@ members = [
     "crates/cli_support",
     "crates/cortenforge",
     "crates/burn_dataset",
+    "crates/sim_core",
+    "crates/vision_core",
+    "crates/vision_runtime",
+    "crates/data_contracts",
+    "crates/capture_utils",
+    "crates/models",
+    "crates/training",
+    "crates/inference",
     "tools",
-    "capture_utils",
-    "sim_core",
-    "vision_core",
-    "vision_runtime",
-    "data_contracts",
-    "training",
-    "inference",
-    "models",
 ]
 resolver = "2"
 
@@ -34,14 +34,14 @@ tempfile = "3.10"
 thiserror = "1.0"
 
 [patch.crates-io]
-cortenforge-models = { path = "models" }
-cortenforge-data-contracts = { path = "data_contracts" }
+cortenforge-models = { path = "crates/models" }
+cortenforge-data-contracts = { path = "crates/data_contracts" }
 cortenforge-burn-dataset = { path = "crates/burn_dataset" }
 cortenforge-cli-support = { path = "crates/cli_support" }
-cortenforge-vision-core = { path = "vision_core" }
-cortenforge-sim-core = { path = "sim_core" }
-cortenforge-capture-utils = { path = "capture_utils" }
-cortenforge-vision-runtime = { path = "vision_runtime" }
-cortenforge-inference = { path = "inference" }
-cortenforge-training = { path = "training" }
+cortenforge-vision-core = { path = "crates/vision_core" }
+cortenforge-sim-core = { path = "crates/sim_core" }
+cortenforge-capture-utils = { path = "crates/capture_utils" }
+cortenforge-vision-runtime = { path = "crates/vision_runtime" }
+cortenforge-inference = { path = "crates/inference" }
+cortenforge-training = { path = "crates/training" }
 cortenforge = { path = "crates/cortenforge" }
