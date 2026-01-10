@@ -12,6 +12,6 @@ Quick read: Strengths, risks, and refactor ideas.
 - No clear publishing story; keeping `publish = false` is intentional but needs ongoing discipline.
 
 ## Refactor ideas
-- Execute the split/trim plan: move app-specific bins to the app repo, keep only shared helpers here.
+- Split/trim plan complete: tools bins are config-driven and app-agnostic; app repos own app-specific logic.
 - Add clearer logging/metrics for service operations to surface failures.
 - Document and enforce ownership boundaries (what stays here vs. moves) to avoid future drift.
