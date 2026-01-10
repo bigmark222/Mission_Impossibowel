@@ -186,6 +186,7 @@ fn train_bigdet(
     let mut model = BigDet::<ADBackend>::new(
         BigDetConfig {
             input_dim: Some(4 + 8), // first box (4) + features (8)
+            max_boxes: args.max_boxes,
             ..Default::default()
         },
         &device,

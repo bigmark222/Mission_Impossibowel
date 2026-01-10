@@ -34,6 +34,11 @@ Copy/paste scaffold for new release notes.
 - Actions taken: <pages updated, diagrams refreshed>
 ```
 
+### 2026-01-10 (v0.2.0)
+- Changed: bumped workspace dependencies to latest stable (Burn 0.19.1, bincode 2.0.1, Arrow/Parquet 57.1.0, sysinfo 0.37.2, ratatui 0.30.0).
+- Impact: potentially breaking (Burn API changes); bincode 3.x deferred because crates.io 3.0.0 is a stub.
+- Actions taken: updated docs to reflect new dependency versions and compatibility notes.
+
 ### 2026-01-09 (v0.1.5)
 - Changed: moved the `cortenforge` umbrella crate to the repo root (`Cargo.toml` + `src/`).
 - Changed: updated workspace members and source-link paths to point at root `src/lib.rs`.
