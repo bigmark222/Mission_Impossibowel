@@ -25,6 +25,13 @@ jobs:
       - name: Cache cargo
         uses: Swatinem/rust-cache@v2
 
+      - name: Verify publishable manifests (no path deps)
+        run: |
+          if rg -n "path\\s*=\\s*\"" Cargo.toml crates/**/Cargo.toml tools/Cargo.toml; then
+            echo "Error: publishable manifests contain path deps."
+            exit 1
+          fi
+
       - name: fmt
         run: cargo fmt --all -- --check
 
