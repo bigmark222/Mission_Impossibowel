@@ -14,7 +14,7 @@ Shared Rust crates for the CortenForge simulation substrate (capture, ETL, train
 ## Repository layout
 - `Cargo.toml`: workspace root + umbrella crate (`cortenforge`).
 - `crates/`: core and mid‑layer libraries (`sim_core`, `vision_*`, `data_contracts`, `models`, `training`, `inference`, `capture_utils`, `burn_dataset`, `cli_support`).
-- `tools/`: `cortenforge-tools` crate (app‑agnostic tooling bins and helpers).
+- `tools/`: `cortenforge-tools` crate (app‑agnostic tooling bins and helpers; not bundled by the umbrella crate).
 - `docs/`: books and release material (`docs/cortenforge_book` is the primary book).
 - `todo/`: local planning (gitignored).
 
@@ -25,8 +25,8 @@ Shared Rust crates for the CortenForge simulation substrate (capture, ETL, train
 - Tools config: create `cortenforge-tools.toml` at repo root (or set `CORTENFORGE_TOOLS_CONFIG`) to customize paths/commands.
 
 ## Using the crates from crates.io
-- Add deps with `version = "0.3.0"` (examples: `cortenforge-sim-core`, `cortenforge-vision-core`, `cortenforge-vision-runtime`, `cortenforge-data-contracts`, `cortenforge-capture-utils`, `cortenforge-models`, `cortenforge-training`, `cortenforge-inference`, `cortenforge-cli-support`, `cortenforge-burn-dataset`, `cortenforge-tools`).
-- Umbrella crate: `cortenforge` is at `0.3.0` (includes an optional `tools` feature).
+- Add deps with `version = "0.3.1"` (examples: `cortenforge-sim-core`, `cortenforge-vision-core`, `cortenforge-vision-runtime`, `cortenforge-data-contracts`, `cortenforge-capture-utils`, `cortenforge-models`, `cortenforge-training`, `cortenforge-inference`, `cortenforge-cli-support`, `cortenforge-burn-dataset`, `cortenforge-tools`).
+- Umbrella crate: `cortenforge` is at `0.3.1` (core stacks only; add `cortenforge-cli-support` and `cortenforge-tools` directly if needed).
 - Feature flags:
   - `cortenforge-training`: `backend-wgpu` (optional GPU); defaults to NdArray.
   - `cortenforge-inference`: `backend-wgpu` (optional GPU); defaults to NdArray; `tinydet`/`bigdet` feature gates.
