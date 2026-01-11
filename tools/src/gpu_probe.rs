@@ -57,7 +57,7 @@ impl GpuProbe for MacGpuProbe {
 
         #[cfg(not(target_os = "macos"))]
         {
-            return GpuStatus::unavailable();
+            GpuStatus::unavailable()
         }
     }
 }
@@ -162,10 +162,14 @@ pub fn platform_probe() -> Box<dyn GpuProbe> {
 
     #[cfg(target_os = "linux")]
     {
-        return Box::new(LinuxGpuProbe);
+        Box::new(LinuxGpuProbe)
     }
 
-    #[cfg(all(feature = "gpu_nvidia", not(target_os = "windows"), not(target_os = "linux")))]
+    #[cfg(all(
+        feature = "gpu_nvidia",
+        not(target_os = "windows"),
+        not(target_os = "linux")
+    ))]
     {
         return Box::new(NvidiaGpuProbe);
     }
@@ -396,7 +400,7 @@ fn intel_mem_text(text: &str) -> Option<u64> {
 }
 
 pub fn to_json_value(status: &GpuStatus) -> serde_json::Value {
-    serde_json::to_value(status).unwrap_or_else(|_| serde_json::Value::Null)
+    serde_json::to_value(status).unwrap_or(serde_json::Value::Null)
 }
 
 pub fn write_status_json(status: &GpuStatus) -> Result<(), serde_json::Error> {
@@ -422,7 +426,13 @@ mod tests {
         let status = GpuStatus::unavailable();
         let value = to_json_value(&status);
         let obj = value.as_object().expect("status must be a JSON object");
-        for key in ["available", "utilization", "mem_used_mb", "vendor", "device_name"] {
+        for key in [
+            "available",
+            "utilization",
+            "mem_used_mb",
+            "vendor",
+            "device_name",
+        ] {
             assert!(obj.contains_key(key), "missing key: {key}");
         }
     }
@@ -450,18 +460,9 @@ mod tests {
         let value = to_json_value(&probe.status());
         let obj = value.as_object().expect("status must be a JSON object");
         assert_eq!(obj.get("available").and_then(|v| v.as_bool()), Some(true));
-        assert_eq!(
-            obj.get("utilization").and_then(|v| v.as_f64()),
-            Some(55.5)
-        );
-        assert_eq!(
-            obj.get("mem_used_mb").and_then(|v| v.as_u64()),
-            Some(2048)
-        );
-        assert_eq!(
-            obj.get("vendor").and_then(|v| v.as_str()),
-            Some("MockGPU")
-        );
+        assert_eq!(obj.get("utilization").and_then(|v| v.as_f64()), Some(55.5));
+        assert_eq!(obj.get("mem_used_mb").and_then(|v| v.as_u64()), Some(2048));
+        assert_eq!(obj.get("vendor").and_then(|v| v.as_str()), Some("MockGPU"));
         assert_eq!(
             obj.get("device_name").and_then(|v| v.as_str()),
             Some("MockDevice")
