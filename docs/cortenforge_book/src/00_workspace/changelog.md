@@ -39,6 +39,7 @@ Copy/paste scaffold for new release notes.
 - Changed: removed legacy crate-name deprecation notices from crate README/Cargo descriptions.
 - Impact: breaking; update scripts to use `gpu-windows` and ensure warehouse templates are non-empty.
 - Actions taken: updated feature flag docs and README to remove legacy alias guidance.
+- Actions taken: feature flags page now omits legacy alias notes; changelog is the canonical record.
 
 ### 2026-01-10 (v0.2.1)
 - Changed: added `gpu_probe` bin with stable JSON schema and `--format=json` flag.

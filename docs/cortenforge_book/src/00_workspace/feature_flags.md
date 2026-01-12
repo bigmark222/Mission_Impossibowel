@@ -3,7 +3,6 @@
 **How it fits**: Feature gates shape build size, runtime backends, and tooling.
 **Learn more**: See [Build & Run](build_and_run.md) for command patterns.
 
-Note: legacy feature aliases are removed; use `gpu-windows` for Windows GPU probing.
 
 ## Workspace-wide themes
 High-level defaults and stack-wide feature expectations.
