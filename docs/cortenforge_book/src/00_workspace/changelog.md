@@ -49,6 +49,11 @@ Copy/paste scaffold for new release notes.
 - Impact: breaking; add `cortenforge-cli-support` and/or `cortenforge-tools` explicitly in downstream `Cargo.toml`.
 - Actions taken: updated umbrella feature wiring and docs/README to match.
 
+### 2026-01-11 (v0.4.1)
+- Changed: added `gpu-windows` feature alias and a Windows WMI/DirectX stub hook for GPU probing.
+- Impact: compatible; Windows probe still reports unavailable until a real backend is added.
+- Actions taken: updated tools overview and feature flags docs to mention the stub.
+
 ### 2026-01-10 (v0.3.0)
 - Changed: removed legacy feature aliases (`burn_runtime`, `gpu_nvidia`) and standardized on `burn-runtime`/`gpu-nvidia`.
 - Impact: breaking; update feature flags in downstream crates and docs to match new names.

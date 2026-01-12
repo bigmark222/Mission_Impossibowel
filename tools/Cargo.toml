@@ -10,7 +10,7 @@ gpu_amd_windows = []
 
 [package]
 name = "cortenforge-tools"
-version = "0.4.0"
+version = "0.4.1"
 edition = "2021"
 license = "Apache-2.0"
 description = "Tooling crate for CortenForge: shared CLI helpers and app-agnostic bins."
