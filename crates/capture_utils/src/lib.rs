@@ -56,7 +56,7 @@ pub fn build_capture_metadata(
         image,
         image_present: record.frame.path.is_some(),
         camera_active: record.camera_active,
-        label_seed: record.polyp_seed,
+        label_seed: record.label_seed,
         labels: record.labels.iter().map(label_to_detection).collect(),
     }
 }
@@ -78,7 +78,7 @@ pub fn build_inference_metadata(
         frame,
         labels,
         camera_active,
-        polyp_seed: label_seed,
+        label_seed,
     };
     build_capture_metadata(&record, unix_time, image)
 }
@@ -260,7 +260,7 @@ mod tests {
             frame,
             labels: &[],
             camera_active: true,
-            polyp_seed: 42,
+            label_seed: 42,
         };
         recorder.record(&record).expect("write label");
         let label_path = run_dir.join("labels/frame_00001.json");

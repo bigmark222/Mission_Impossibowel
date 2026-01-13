@@ -27,7 +27,7 @@ pub struct DetectionResult {
     pub scores: Vec<f32>,
 }
 
-/// Polyp label metadata for a frame.
+/// Label source metadata for detections.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum LabelSource {
@@ -36,7 +36,7 @@ pub enum LabelSource {
     Model,
 }
 
-/// Polyp label metadata for a frame.
+/// Detection label metadata for a frame.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Label {
     pub center_world: [f32; 3],
@@ -52,7 +52,7 @@ pub struct FrameRecord<'a> {
     pub frame: Frame,
     pub labels: &'a [Label],
     pub camera_active: bool,
-    pub polyp_seed: u64,
+    pub label_seed: u64,
 }
 
 /// Pulls frames from some source (capture camera, file, test generator).

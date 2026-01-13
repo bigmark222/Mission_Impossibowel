@@ -27,7 +27,7 @@ fn json_recorder_writes_label_file() {
         frame,
         labels: &labels,
         camera_active: true,
-        polyp_seed: 42,
+        label_seed: 42,
     };
 
     recorder.record(&record).expect("record");

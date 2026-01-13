@@ -9,12 +9,12 @@ pub struct SeedState {
     pub value: u64,
 }
 
-/// Resolve seed from CLI, then env (`POLYP_SEED`), else time.
+/// Resolve seed from CLI, then env (`LABEL_SEED`), else time.
 pub fn resolve_seed(cli_seed: Option<u64>) -> u64 {
     if let Some(s) = cli_seed {
         return s;
     }
-    if let Ok(env_seed) = std::env::var("POLYP_SEED") {
+    if let Ok(env_seed) = std::env::var("LABEL_SEED") {
         if let Ok(parsed) = env_seed.parse::<u64>() {
             return parsed;
         }
