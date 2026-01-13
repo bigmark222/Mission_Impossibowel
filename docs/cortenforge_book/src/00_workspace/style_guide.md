@@ -138,6 +138,45 @@ CortenForge uses feature flags to enable optional functionality and select backe
 - `inference` and `training` enable corresponding `models` features transitively.
 - This ensures type aliases (`InferenceModel`, `InferenceModelConfig`) resolve consistently.
 
+### Module Naming Conventions
+
+Module file names use `snake_case` and follow these patterns:
+
+**Domain modules** (singular nouns):
+
+- Name describes primary concept: `capture`, `overlay`, `recorder`, `camera`, `runtime`.
+- Contains related types and functions for that domain.
+
+**Type collection modules** (plural nouns with `_types` suffix):
+
+- Groups related type definitions: `articulated_types`, `autopilot_types`.
+- Use when a module primarily exports structs/enums without much behavior.
+
+**Utility modules** (descriptive names):
+
+- `common`: Shared utilities used across the crate.
+- `util`: Helper functions for the crate's primary purpose.
+- `factory`: Builder/factory patterns for complex construction.
+- `hooks`: Extension points or callback systems.
+
+**Data modules**:
+
+- `splits`: Data partitioning logic.
+- `validation`: Validation logic for data structures.
+- `batch`: Batching/collation for ML pipelines.
+- `aug`: Augmentation pipelines.
+
+**Integration modules** (external system name):
+
+- `warehouse`: Shard-based storage integration.
+- `preprocess`: Data preprocessing for external systems.
+
+**Avoid**:
+
+- Generic names like `core`, `base`, `main` (too vague).
+- Redundant prefixes matching the crate name (e.g., don't name a module `sim_camera` in `sim_core`).
+- Abbreviations unless domain-standard (e.g., `aug` for augmentation is acceptable in ML contexts).
+
 ## Cross-link style
 Linking rules to keep references stable and readable.
 | Pattern | Example |
