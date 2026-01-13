@@ -32,6 +32,34 @@ jobs:
             exit 1
           fi
 
+      - name: Check version consistency
+        run: |
+          # Extract workspace version from root Cargo.toml
+          WORKSPACE_VERSION=$(grep '^version = ' Cargo.toml | head -1 | sed -E 's/version = "(.*)"/\1/')
+          echo "Workspace version: $WORKSPACE_VERSION"
+
+          # Check all crate package versions match workspace version
+          echo "Checking crate package versions..."
+          MISMATCHED_CRATES=$(rg '^version = "' crates/*/Cargo.toml tools/Cargo.toml | grep -v "version = \"$WORKSPACE_VERSION\"" || true)
+          if [[ -n "$MISMATCHED_CRATES" ]]; then
+            echo "Error: Some crates have mismatched versions:"
+            echo "$MISMATCHED_CRATES"
+            exit 1
+          fi
+
+          # Check all internal cortenforge-* dependencies use workspace version
+          echo "Checking internal dependency versions..."
+          MISMATCHED_DEPS=$(rg 'cortenforge-[a-z-]+", version = "[0-9]+\.[0-9]+\.[0-9]+"' Cargo.toml crates/*/Cargo.toml tools/Cargo.toml | grep -v "version = \"$WORKSPACE_VERSION\"" || true)
+          if [[ -n "$MISMATCHED_DEPS" ]]; then
+            echo "Error: Some internal dependencies have mismatched versions:"
+            echo "$MISMATCHED_DEPS"
+            echo ""
+            echo "Run './scripts/sync_versions.sh --apply' to fix this."
+            exit 1
+          fi
+
+          echo "✓ All versions synchronized to $WORKSPACE_VERSION"
+
       - name: Legacy feature alias lint (non-blocking)
         run: |
           if rg -n "burn_runtime|gpu_nvidia" README.md docs/cortenforge_book/src crates/**/README.md tools/README.md; then
