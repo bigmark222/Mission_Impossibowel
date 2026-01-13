@@ -1,10 +1,10 @@
-use data_contracts::capture::{CaptureMetadata, DetectionLabel, LabelSource as CaptureLabelSource};
+use data_contracts::capture::CaptureMetadata;
 use image::Rgba;
 use std::fs;
 use std::io::{BufWriter, Write};
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
-use vision_core::prelude::{FrameRecord, Label, LabelSource as CoreLabelSource, Recorder};
+use vision_core::prelude::{FrameRecord, Label, Recorder};
 
 /// Default file-based recorder: writes frame metadata/labels to `run_dir/labels/frame_XXXXX.json`.
 pub struct JsonRecorder {
@@ -57,7 +57,7 @@ pub fn build_capture_metadata(
         image_present: record.frame.path.is_some(),
         camera_active: record.camera_active,
         label_seed: record.label_seed,
-        labels: record.labels.iter().map(label_to_detection).collect(),
+        labels: record.labels.to_vec(),
     }
 }
 
@@ -81,25 +81,6 @@ pub fn build_inference_metadata(
         label_seed,
     };
     build_capture_metadata(&record, unix_time, image)
-}
-
-fn label_to_detection(label: &Label) -> DetectionLabel {
-    DetectionLabel {
-        center_world: label.center_world,
-        bbox_px: label.bbox_px,
-        bbox_norm: label.bbox_norm,
-        source: map_label_source(label.source),
-        source_confidence: label.source_confidence,
-    }
-}
-
-fn map_label_source(source: Option<CoreLabelSource>) -> Option<CaptureLabelSource> {
-    match source {
-        Some(CoreLabelSource::SimAuto) => Some(CaptureLabelSource::SimAuto),
-        Some(CoreLabelSource::Human) => Some(CaptureLabelSource::Human),
-        Some(CoreLabelSource::Model) => Some(CaptureLabelSource::Model),
-        None => None,
-    }
 }
 
 /// Generate overlay PNGs from label JSONs in a run directory.

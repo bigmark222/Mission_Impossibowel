@@ -2476,7 +2476,6 @@ name = "cortenforge-inference"
 version = "0.5.1"
 dependencies = [
  "anyhow",
- "bevy",
  "bincode",
  "burn",
  "burn-ndarray",
@@ -2616,6 +2615,7 @@ version = "0.5.1"
 dependencies = [
  "anyhow",
  "bevy",
+ "cortenforge-data-contracts 0.5.1",
  "image",
  "serde",
 ]
@@ -2639,6 +2639,7 @@ dependencies = [
  "anyhow",
  "bevy",
  "bevy_camera",
+ "cortenforge-inference 0.5.1",
  "cortenforge-sim-core 0.5.1",
  "cortenforge-vision-core 0.5.1",
  "futures-lite",

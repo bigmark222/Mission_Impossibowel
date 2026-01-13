@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
+// Re-export label types from data_contracts (canonical source)
+pub use data_contracts::{DetectionLabel as Label, LabelSource};
+
 /// A frame of image data and associated metadata.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Frame {
@@ -25,25 +28,6 @@ pub struct DetectionResult {
     pub boxes: Vec<[f32; 4]>,
     /// Per-box scores aligned with `boxes`.
     pub scores: Vec<f32>,
-}
-
-/// Label source metadata for detections.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
-pub enum LabelSource {
-    SimAuto,
-    Human,
-    Model,
-}
-
-/// Detection label metadata for a frame.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Label {
-    pub center_world: [f32; 3],
-    pub bbox_px: Option<[f32; 4]>,
-    pub bbox_norm: Option<[f32; 4]>,
-    pub source: Option<LabelSource>,
-    pub source_confidence: Option<f32>,
 }
 
 /// Data passed to a recorder sink.
