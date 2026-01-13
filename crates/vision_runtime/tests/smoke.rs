@@ -5,7 +5,7 @@ use inference::InferenceThresholds;
 use vision_core::interfaces::{self, DetectionResult, Detector, Frame};
 use vision_runtime::prelude::{
     AsyncInferenceState, CapturePlugin, DetectionOverlayState, DetectorHandle, DetectorKind,
-    InferencePlugin, InferenceThresholdsResource,
+    InferenceRuntimePlugin, InferenceThresholdsResource,
 };
 
 struct DummyDetector;
@@ -36,7 +36,7 @@ fn inference_plugin_smoke_updates_overlay() {
             iou_thresh: 0.5,
         }))
         .add_plugins(CapturePlugin)
-        .add_plugins(InferencePlugin)
+        .add_plugins(InferenceRuntimePlugin)
         .insert_resource(Assets::<Image>::default())
         .insert_resource(sim_core::SimRunMode::Inference)
         .insert_resource(ButtonInput::<KeyCode>::default());

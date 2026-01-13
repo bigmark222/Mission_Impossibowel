@@ -14,7 +14,7 @@ Quick read: The public surface; use docs.rs for exact signatures.
 | AsyncInferenceState | struct | Tracks async inference task state |
 | DetectorHandle | struct | Resource holding the active detector |
 | CapturePlugin | struct | Bevy plugin to set up capture pipeline |
-| InferencePlugin | struct | Bevy plugin to set up inference pipeline |
+| InferenceRuntimePlugin | struct | Bevy plugin for runtime inference coordination |
 | setup_front_capture | fn | Configure capture target/readback |
 | track_front_camera_state | fn | Track camera state resource |
 | capture_front_camera_frame | fn | Capture a frame into buffer |

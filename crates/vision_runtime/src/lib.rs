@@ -360,9 +360,14 @@ pub fn threshold_hotkeys(
     }
 }
 
-pub struct InferencePlugin;
+/// Bevy plugin managing runtime inference coordination.
+///
+/// Handles async inference scheduling, model state tracking, detection overlays,
+/// and threshold adjustment hotkeys. This is the runtime/visualization layer;
+/// for core inference logic, see the `inference` crate.
+pub struct InferenceRuntimePlugin;
 
-impl Plugin for InferencePlugin {
+impl Plugin for InferenceRuntimePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<AsyncInferenceState>()
             .init_resource::<ModelLoadState>()
@@ -393,7 +398,7 @@ pub fn recorder_draw_rect(
 pub mod prelude {
     pub use super::{
         AsyncInferenceState, CapturePlugin, DetectionOverlayState, DetectorHandle, DetectorKind,
-        InferencePlugin, InferenceThresholdsResource, ModelLoadState, PrimaryCameraFrame,
+        InferenceRuntimePlugin, InferenceThresholdsResource, ModelLoadState, PrimaryCameraFrame,
         PrimaryCameraFrameBuffer, PrimaryCameraState, RuntimeDetectionResult,
     };
 }

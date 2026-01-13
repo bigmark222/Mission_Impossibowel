@@ -7,7 +7,7 @@ Implements Bevy systems/plugins for capture and inference built on vision_core. 
 - Capture state: `PrimaryCameraFrame`, `PrimaryCameraState`, `PrimaryCameraFrameBuffer`, `PrimaryCaptureTarget`, `PrimaryCaptureReadback`.
 - Inference state: `DetectorHandle` (boxed Detector + kind), `InferenceThresholdsResource`, `ModelLoadState` (flag), `AsyncInferenceState` (pending task, last result, debounce timer), `DetectionOverlayState` (boxes/scores/size/fallback/inference_ms).
 - Detector types: `DetectorKind` (Burn/Heuristic), `RuntimeDetectionResult`.
-- Plugins: `CapturePlugin`, `InferencePlugin`.
+- Plugins: `CapturePlugin`, `InferenceRuntimePlugin`.
 
 ## Important systems/functions
 - Capture setup/readback:
@@ -34,4 +34,4 @@ Implements Bevy systems/plugins for capture and inference built on vision_core. 
 - Depends on vision_core (capture interfaces/overlay helpers), sim_core (SimRunMode/ModeSet), inference crate for detectors (provided via DetectorHandle), and Bevy render/task APIs.
 
 ## Suggested usage
-- Apps insert DetectorHandle/InferenceThresholds, add CapturePlugin + InferencePlugin, and run under sim_core-built App. Ensure ModeSet sets are configured.
+- Apps insert DetectorHandle/InferenceThresholds, add CapturePlugin + InferenceRuntimePlugin, and run under sim_core-built App. Ensure ModeSet sets are configured.
