@@ -1,6 +1,8 @@
 use crate::{InferenceBackend, InferenceModel, InferenceModelConfig};
 use burn::module::Module;
 use burn::tensor::TensorData;
+#[cfg(feature = "bigdet")]
+use data_contracts::preprocess::{stats_from_rgba_u8, ImageStats};
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 use vision_core::interfaces::{DetectionResult, Detector, Frame};
@@ -49,23 +51,30 @@ struct BurnTinyDetDetector {
 impl BurnTinyDetDetector {
     fn frame_to_tensor(&self, frame: &Frame) -> TensorData {
         let (w, h) = frame.size;
-        if let Some(rgba) = &frame.rgba {
-            let mut mean = [0f32; 3];
-            let mut count = 0usize;
-            for chunk in rgba.chunks_exact(4) {
-                mean[0] += chunk[0] as f32;
-                mean[1] += chunk[1] as f32;
-                mean[2] += chunk[2] as f32;
-                count += 1;
-            }
-            if count > 0 {
-                mean[0] /= count as f32 * 255.0;
-                mean[1] /= count as f32 * 255.0;
-                mean[2] /= count as f32 * 255.0;
-            }
-            TensorData::new(vec![mean[0], mean[1], mean[2], w as f32 / h as f32], [1, 4])
-        } else {
-            TensorData::new(vec![0.0, 0.0, 0.0, w as f32 / h as f32], [1, 4])
+        #[cfg(feature = "bigdet")]
+        {
+            let stats = if let Some(rgba) = &frame.rgba {
+                stats_from_rgba_u8(w, h, rgba).unwrap_or_else(|_| ImageStats {
+                    mean: [0.0; 3],
+                    std: [0.0; 3],
+                    aspect: w as f32 / h as f32,
+                })
+            } else {
+                ImageStats {
+                    mean: [0.0; 3],
+                    std: [0.0; 3],
+                    aspect: w as f32 / h as f32,
+                }
+            };
+
+            let mut input = Vec::with_capacity(12);
+            input.extend_from_slice(&[0.0, 0.0, 1.0, 1.0]);
+            input.extend_from_slice(&stats.feature_vector(0.0));
+            TensorData::new(input, [1, 12])
+        }
+        #[cfg(not(feature = "bigdet"))]
+        {
+            TensorData::new(vec![0.0, 0.0, 1.0, 1.0], [1, 4])
         }
     }
 }
@@ -119,7 +128,15 @@ impl InferenceFactory {
         }
         let device = <InferenceBackend as burn::tensor::backend::Backend>::Device::default();
         let recorder = burn::record::BinFileRecorder::<burn::record::FullPrecisionSettings>::new();
-        match InferenceModel::<InferenceBackend>::new(InferenceModelConfig::default(), &device)
+        #[cfg(feature = "bigdet")]
+        let config = InferenceModelConfig {
+            input_dim: Some(4 + 8),
+            ..Default::default()
+        };
+        #[cfg(not(feature = "bigdet"))]
+        let config = InferenceModelConfig::default();
+
+        match InferenceModel::<InferenceBackend>::new(config, &device)
             .load_file(path, &recorder, &device)
         {
             Ok(model) => Some(Box::new(BurnTinyDetDetector {
