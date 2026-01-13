@@ -12,6 +12,10 @@ keywords = ["vision", "simulation", "training", "inference", "bevy"]
 categories = ["science", "computer-vision", "game-engines"]
 rust-version = "1.85"
 
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
 [features]
 default = ["sim-core", "vision-core"]
 sim-core = ["sim_core"]

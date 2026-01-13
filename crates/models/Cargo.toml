@@ -7,11 +7,15 @@ publish = true
 description = "Burn-based model definitions (LinearDetector/ConvolutionalDetector) for the CortenForge stack."
 repository = "https://github.com/via-balaena/CortenForge"
 homepage = "https://github.com/via-balaena/CortenForge"
-documentation = "https://docs.rs/models"
+documentation = "https://docs.rs/cortenforge-models"
 readme = "README.md"
 keywords = ["burn", "models", "detector", "ml"]
 categories = ["science", "computer-vision", "data-structures"]
 rust-version = "1.75"
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [lib]
 name = "models"

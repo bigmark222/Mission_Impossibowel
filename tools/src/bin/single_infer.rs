@@ -18,7 +18,7 @@ struct Args {
     /// Input image path (any format supported by the `image` crate).
     #[arg(long)]
     image: PathBuf,
-    /// Output path for the boxed image (defaults to <stem>_boxed.png alongside the input).
+    /// Output path for the boxed image (defaults to `<stem>_boxed.png` alongside the input).
     #[arg(long)]
     out: Option<PathBuf>,
     /// Objectness threshold.

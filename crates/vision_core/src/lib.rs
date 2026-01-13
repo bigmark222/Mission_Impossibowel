@@ -10,6 +10,12 @@
 //! `vision_core` is intentionally framework-agnostic. It has no Bevy dependencies and can be
 //! used in CLI tools, web services, or any Rust application. The `vision_runtime` crate
 //! provides Bevy-specific integration on top of these interfaces.
+//!
+//! ## Stability
+//!
+//! The core interfaces (`Detector`, `Recorder`, `FrameSource`) and data types (`Frame`, `Label`,
+//! `DetectionResult`) are **stable** and follow semantic versioning. Breaking changes to these
+//! types will result in a major version bump.
 
 pub mod capture;
 pub mod interfaces;

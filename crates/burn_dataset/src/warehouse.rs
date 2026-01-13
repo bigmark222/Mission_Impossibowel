@@ -1,4 +1,9 @@
 //! Warehouse manifest and shard storage backends.
+//!
+//! # Stability
+//!
+//! This module is **experimental** and may undergo breaking changes in future versions.
+//! The warehouse format and APIs are still evolving as we refine the data pipeline.
 
 #[cfg(feature = "burn-runtime")]
 use crate::batch::BurnBatch;

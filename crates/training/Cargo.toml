@@ -20,6 +20,10 @@ keywords = ["burn", "training", "computer-vision", "detection"]
 categories = ["science", "computer-vision"]
 rust-version = "1.75"
 
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
 [lib]
 name = "training"
 path = "src/lib.rs"

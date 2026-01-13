@@ -13,6 +13,10 @@ keywords = ["inference", "burn", "detector", "computer-vision"]
 categories = ["science", "computer-vision"]
 rust-version = "1.75"
 
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
 [features]
 default = ["backend-ndarray", "linear_detector"]
 backend-ndarray = ["burn-ndarray", "burn/ndarray"]

@@ -10,6 +10,12 @@
 //! ## Backend Selection
 //! - `backend-wgpu`: Uses WGPU for GPU-accelerated training.
 //! - Default: Falls back to NdArray CPU backend.
+//!
+//! ## Stability
+//!
+//! Training APIs are **experimental** and may change as the training pipeline evolves.
+//! Core model types (`TinyDet`, `BigDet`) are stable, but training utilities and loss functions
+//! are subject to refinement.
 
 #![recursion_limit = "256"]
 

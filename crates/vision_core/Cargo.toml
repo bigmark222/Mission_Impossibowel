@@ -13,6 +13,10 @@ keywords = ["vision", "graphics", "capture", "overlay", "serde"]
 categories = ["graphics", "computer-vision", "game-engines"]
 rust-version = "1.75"
 
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
 [lib]
 name = "vision_core"
 

@@ -10,6 +10,12 @@
 //! ## Design Note
 //! Model types use descriptive names (Classifier, Model) rather than "Detector" suffix,
 //! as they are architectural components, not full detector implementations.
+//!
+//! ## Stability
+//!
+//! Model architectures (`LinearClassifier`, `MultiboxModel`) and their config types are **stable**.
+//! The forward pass signatures and checkpoint format will not change in a backwards-incompatible
+//! way without a major version bump.
 
 use burn::module::Module;
 use burn::nn;

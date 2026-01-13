@@ -13,6 +13,10 @@ keywords = ["bevy", "simulation", "runtime"]
 categories = ["game-engines", "simulation", "graphics"]
 rust-version = "1.75"
 
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
 [lib]
 name = "sim_core"
 

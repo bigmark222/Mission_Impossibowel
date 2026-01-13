@@ -36,5 +36,20 @@ Shared Rust crates for the CortenForge simulation substrate (capture, ETL, train
 - MSRV: Rust 1.85+ across crates (CI uses 1.89.0 for toolchain compatibility).
 - Note: `burn-core` is now on the fixed 0.19.1 release; no vendored patch is required.
 
+## Versioning
+
+CortenForge follows [Semantic Versioning](https://semver.org/) with coordinated releases across all workspace crates:
+
+- **Major version** (X.0.0): Breaking API changes to stable interfaces (`Detector`, `Recorder`, core model types).
+- **Minor version** (0.X.0): New features, non-breaking API additions, experimental API changes.
+- **Patch version** (0.0.X): Bug fixes, documentation updates, internal refactoring.
+
+All crates in the workspace are released together with synchronized version numbers. When upgrading between minor versions, check the CHANGELOG.md for any experimental API changes that may affect your code.
+
+**Stability guarantees:**
+
+- Stable APIs (marked in docs): Follow strict SemVer. Breaking changes require major version bump.
+- Experimental APIs (marked as "experimental" in docs): May change in minor versions. Use with caution in production.
+
 ## Contributing
 See `docs/cortenforge_book` for architecture, guided app building, and crate deep dives.
