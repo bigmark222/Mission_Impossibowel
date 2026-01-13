@@ -1,7 +1,7 @@
 use crate::{InferenceBackend, InferenceModel, InferenceModelConfig};
 use burn::module::Module;
 use burn::tensor::TensorData;
-#[cfg(feature = "bigdet")]
+#[cfg(feature = "convolutional_detector")]
 use data_contracts::preprocess::{stats_from_rgba_u8, ImageStats};
 use std::path::Path;
 use std::sync::{Arc, Mutex};
@@ -41,16 +41,16 @@ impl Detector for HeuristicDetector {
     }
 }
 
-struct BurnTinyDetDetector {
+struct BurnDetector {
     model: Arc<Mutex<InferenceModel<InferenceBackend>>>,
     obj_thresh: f32,
     #[allow(dead_code)]
     iou_thresh: f32,
 }
 
-impl BurnTinyDetDetector {
+impl BurnDetector {
     fn frame_to_tensor(&self, _frame: &Frame) -> TensorData {
-        #[cfg(feature = "bigdet")]
+        #[cfg(feature = "convolutional_detector")]
         {
             let (w, h) = _frame.size;
             let stats = if let Some(rgba) = &_frame.rgba {
@@ -72,14 +72,14 @@ impl BurnTinyDetDetector {
             input.extend_from_slice(&stats.feature_vector(0.0));
             TensorData::new(input, [1, 12])
         }
-        #[cfg(not(feature = "bigdet"))]
+        #[cfg(not(feature = "convolutional_detector"))]
         {
             TensorData::new(vec![0.0, 0.0, 1.0, 1.0], [1, 4])
         }
     }
 }
 
-impl Detector for BurnTinyDetDetector {
+impl Detector for BurnDetector {
     fn detect(&mut self, frame: &Frame) -> DetectionResult {
         let input = self.frame_to_tensor(frame);
         let device = <InferenceBackend as burn::tensor::backend::Backend>::Device::default();
@@ -128,18 +128,18 @@ impl InferenceFactory {
         }
         let device = <InferenceBackend as burn::tensor::backend::Backend>::Device::default();
         let recorder = burn::record::BinFileRecorder::<burn::record::FullPrecisionSettings>::new();
-        #[cfg(feature = "bigdet")]
+        #[cfg(feature = "convolutional_detector")]
         let config = InferenceModelConfig {
             input_dim: Some(4 + 8),
             ..Default::default()
         };
-        #[cfg(not(feature = "bigdet"))]
+        #[cfg(not(feature = "convolutional_detector"))]
         let config = InferenceModelConfig::default();
 
         match InferenceModel::<InferenceBackend>::new(config, &device)
             .load_file(path, &recorder, &device)
         {
-            Ok(model) => Some(Box::new(BurnTinyDetDetector {
+            Ok(model) => Some(Box::new(BurnDetector {
                 model: Arc::new(Mutex::new(model)),
                 obj_thresh: thresh.obj_thresh,
                 iou_thresh: thresh.iou_thresh,

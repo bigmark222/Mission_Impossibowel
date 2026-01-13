@@ -1,9 +1,12 @@
 [features]
-default = ["backend-ndarray", "tinydet"]
+default = ["backend-ndarray", "linear_detector"]
 backend-ndarray = ["burn-ndarray", "burn/ndarray"]
 backend-wgpu = ["burn-wgpu", "burn/wgpu"]
-tinydet = ["models/tinydet"]
-bigdet = ["models/bigdet"]
+linear_detector = ["models/linear_detector"]
+convolutional_detector = ["models/convolutional_detector"]
+# Legacy feature aliases for backwards compatibility
+tinydet = ["linear_detector"]
+bigdet = ["convolutional_detector"]
 
 [package]
 name = "cortenforge-training"
@@ -11,7 +14,7 @@ version = "0.5.1"
 edition = "2021"
 license = "Apache-2.0"
 publish = true
-description = "Burn-based training and eval for TinyDet/BigDet models in the CortenForge stack."
+description = "Burn-based training and eval for LinearDetector/ConvolutionalDetector models in the CortenForge stack."
 repository = "https://github.com/via-balaena/CortenForge"
 homepage = "https://github.com/via-balaena/CortenForge"
 documentation = "https://docs.rs/cortenforge-training"
@@ -42,7 +45,7 @@ burn-wgpu = { workspace = true, optional = true}
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 image = { workspace = true, features = ["png"] }
-models = { package = "cortenforge-models", version = "0.5.1" }
+models = { package = "cortenforge-models", path = "../models", version = "0.5.1" }
 bincode = { workspace = true }
 
 [dev-dependencies]

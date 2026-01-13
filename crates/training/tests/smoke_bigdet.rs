@@ -6,7 +6,7 @@ use data_contracts::capture::{CaptureMetadata, DetectionLabel};
 use std::fs;
 use std::path::PathBuf;
 use training::dataset::{collate, DatasetConfig};
-use training::{BigDet, BigDetConfig};
+use training::{ConvolutionalDetector, ConvolutionalDetectorConfig};
 
 type ADBackend = Autodiff<NdArray<f32>>;
 
@@ -54,8 +54,8 @@ fn smoke_train_step_bigdet() {
     let batch = collate::<ADBackend>(&samples, 4).unwrap();
     let device = <ADBackend as burn::tensor::backend::Backend>::Device::default();
 
-    let mut model = BigDet::<ADBackend>::new(
-        BigDetConfig {
+    let mut model = ConvolutionalDetector::<ADBackend>::new(
+        ConvolutionalDetectorConfig {
             max_boxes: 4,
             input_dim: Some(4 + 8),
             ..Default::default()
@@ -135,8 +135,8 @@ fn smoke_train_step_bigdet() {
         .clone()
         .save_file(&ckpt, &recorder)
         .expect("save checkpoint");
-    let _loaded = BigDet::<ADBackend>::new(
-        BigDetConfig {
+    let _loaded = ConvolutionalDetector::<ADBackend>::new(
+        ConvolutionalDetectorConfig {
             max_boxes: 4,
             input_dim: Some(4 + 8),
             ..Default::default()

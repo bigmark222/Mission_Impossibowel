@@ -14,11 +14,14 @@ categories = ["science", "computer-vision", "game-engines"]
 rust-version = "1.75"
 
 [features]
-default = ["backend-ndarray", "tinydet"]
+default = ["backend-ndarray", "linear_detector"]
 backend-ndarray = ["burn-ndarray", "burn/ndarray"]
 backend-wgpu = ["burn-wgpu", "burn/wgpu"]
-tinydet = ["models/tinydet"]
-bigdet = ["models/bigdet"]
+linear_detector = ["models/linear_detector"]
+convolutional_detector = ["models/convolutional_detector"]
+# Legacy feature aliases for backwards compatibility
+tinydet = ["linear_detector"]
+bigdet = ["convolutional_detector"]
 
 [lib]
 name = "inference"
@@ -32,6 +35,6 @@ bevy = { workspace = true }
 burn = { workspace = true, features = ["autodiff"] }
 burn-ndarray = { workspace = true, optional = true }
 burn-wgpu = { workspace = true, optional = true}
-models = { package = "cortenforge-models", version = "0.5.1" }
+models = { package = "cortenforge-models", path = "../models", version = "0.5.1" }
 data_contracts = { package = "cortenforge-data-contracts", version = "0.5.1" }
 bincode = { workspace = true }

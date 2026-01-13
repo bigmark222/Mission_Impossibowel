@@ -7,16 +7,16 @@ use burn::tensor::{Tensor, TensorData};
 use burn_dataset::WarehouseLoaders;
 use std::path::Path;
 
-use crate::{BigDet, BigDetConfig, DatasetConfig, TinyDet, TinyDetConfig, TrainBackend};
+use crate::{ConvolutionalDetector, ConvolutionalDetectorConfig, DatasetConfig, LinearDetector, LinearDetectorConfig, TrainBackend};
 use clap::{Parser, ValueEnum};
 use std::fs;
 
-pub fn load_tinydet_from_checkpoint<P: AsRef<Path>>(
+pub fn load_linear_detector_from_checkpoint<P: AsRef<Path>>(
     path: P,
     device: &<TrainBackend as burn::tensor::backend::Backend>::Device,
-) -> Result<TinyDet<TrainBackend>, RecorderError> {
+) -> Result<LinearDetector<TrainBackend>, RecorderError> {
     let recorder = BinFileRecorder::<FullPrecisionSettings>::new();
-    TinyDet::<TrainBackend>::new(TinyDetConfig::default(), device).load_file(
+    LinearDetector::<TrainBackend>::new(LinearDetectorConfig::default(), device).load_file(
         path.as_ref(),
         &recorder,
         device,
@@ -42,7 +42,7 @@ pub enum TrainingInputSource {
 }
 
 #[derive(Parser, Debug)]
-#[command(name = "train", about = "Train TinyDet/BigDet (warehouse-first)")]
+#[command(name = "train", about = "Train LinearDetector/ConvolutionalDetector (warehouse-first)")]
 pub struct TrainArgs {
     /// Model to train.
     #[arg(long, value_enum, default_value_t = ModelKind::Tiny)]
@@ -101,8 +101,8 @@ pub fn run_train(args: TrainArgs) -> anyhow::Result<()> {
         .checkpoint_out
         .clone()
         .unwrap_or_else(|| match args.model {
-            ModelKind::Tiny => "checkpoints/tinydet.bin".to_string(),
-            ModelKind::Big => "checkpoints/bigdet.bin".to_string(),
+            ModelKind::Tiny => "checkpoints/linear_detector.bin".to_string(),
+            ModelKind::Big => "checkpoints/convolutional_detector.bin".to_string(),
         });
 
     if let Some(parent) = Path::new(&ckpt_path).parent() {
@@ -126,8 +126,8 @@ pub fn run_train(args: TrainArgs) -> anyhow::Result<()> {
                 );
             }
             match args.model {
-                ModelKind::Tiny => train_tinydet_warehouse(&args, &loaders, &ckpt_path)?,
-                ModelKind::Big => train_bigdet_warehouse(&args, &loaders, &ckpt_path)?,
+                ModelKind::Tiny => train_linear_detector_warehouse(&args, &loaders, &ckpt_path)?,
+                ModelKind::Big => train_convolutional_detector_warehouse(&args, &loaders, &ckpt_path)?,
             }
         }
         TrainingInputSource::CaptureLogs => {
@@ -143,8 +143,8 @@ pub fn run_train(args: TrainArgs) -> anyhow::Result<()> {
                 return Ok(());
             }
             match args.model {
-                ModelKind::Tiny => train_tinydet(&args, &samples, &ckpt_path)?,
-                ModelKind::Big => train_bigdet(&args, &samples, &ckpt_path)?,
+                ModelKind::Tiny => train_linear_detector(&args, &samples, &ckpt_path)?,
+                ModelKind::Big => train_convolutional_detector(&args, &samples, &ckpt_path)?,
             }
         }
     }
@@ -155,13 +155,13 @@ pub fn run_train(args: TrainArgs) -> anyhow::Result<()> {
 
 type ADBackend = Autodiff<TrainBackend>;
 
-fn train_tinydet(
+fn train_linear_detector(
     args: &TrainArgs,
     samples: &[crate::RunSample],
     ckpt_path: &str,
 ) -> anyhow::Result<()> {
     let device = <ADBackend as burn::tensor::backend::Backend>::Device::default();
-    let mut model = TinyDet::<ADBackend>::new(TinyDetConfig::default(), &device);
+    let mut model = LinearDetector::<ADBackend>::new(LinearDetectorConfig::default(), &device);
     let mut optim = AdamConfig::new().init();
 
     let batch_size = args.batch_size.max(1);
@@ -214,13 +214,13 @@ fn train_tinydet(
     Ok(())
 }
 
-fn train_tinydet_warehouse(
+fn train_linear_detector_warehouse(
     args: &TrainArgs,
     loaders: &WarehouseLoaders,
     ckpt_path: &str,
 ) -> anyhow::Result<()> {
     let device = <ADBackend as burn::tensor::backend::Backend>::Device::default();
-    let mut model = TinyDet::<ADBackend>::new(TinyDetConfig::default(), &device);
+    let mut model = LinearDetector::<ADBackend>::new(LinearDetectorConfig::default(), &device);
     let mut optim = AdamConfig::new().init();
 
     let batch_size = args.batch_size.max(1);
@@ -278,14 +278,14 @@ fn train_tinydet_warehouse(
     Ok(())
 }
 
-fn train_bigdet(
+fn train_convolutional_detector(
     args: &TrainArgs,
     samples: &[crate::RunSample],
     ckpt_path: &str,
 ) -> anyhow::Result<()> {
     let device = <ADBackend as burn::tensor::backend::Backend>::Device::default();
-    let mut model = BigDet::<ADBackend>::new(
-        BigDetConfig {
+    let mut model = ConvolutionalDetector::<ADBackend>::new(
+        ConvolutionalDetectorConfig {
             input_dim: Some(4 + 8), // first box (4) + features (8)
             max_boxes: args.max_boxes,
             ..Default::default()
@@ -388,14 +388,14 @@ fn train_bigdet(
     Ok(())
 }
 
-fn train_bigdet_warehouse(
+fn train_convolutional_detector_warehouse(
     args: &TrainArgs,
     loaders: &WarehouseLoaders,
     ckpt_path: &str,
 ) -> anyhow::Result<()> {
     let device = <ADBackend as burn::tensor::backend::Backend>::Device::default();
-    let mut model = BigDet::<ADBackend>::new(
-        BigDetConfig {
+    let mut model = ConvolutionalDetector::<ADBackend>::new(
+        ConvolutionalDetectorConfig {
             input_dim: Some(4 + 8), // first box (4) + features (8)
             max_boxes: args.max_boxes,
             ..Default::default()
@@ -538,14 +538,14 @@ fn iou_xyxy(a: [f32; 4], b: [f32; 4]) -> f32 {
         inter_area / denom
     }
 }
-pub fn load_bigdet_from_checkpoint<P: AsRef<Path>>(
+pub fn load_convolutional_detector_from_checkpoint<P: AsRef<Path>>(
     path: P,
     device: &<TrainBackend as burn::tensor::backend::Backend>::Device,
     max_boxes: usize,
-) -> Result<BigDet<TrainBackend>, RecorderError> {
+) -> Result<ConvolutionalDetector<TrainBackend>, RecorderError> {
     let recorder = BinFileRecorder::<FullPrecisionSettings>::new();
-    BigDet::<TrainBackend>::new(
-        BigDetConfig {
+    ConvolutionalDetector::<TrainBackend>::new(
+        ConvolutionalDetectorConfig {
             max_boxes,
             input_dim: Some(4 + 8),
             ..Default::default()

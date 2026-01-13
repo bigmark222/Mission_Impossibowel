@@ -1,14 +1,14 @@
 use clap::Parser;
 use training::dataset::{collate, DatasetConfig};
 use training::util::{
-    load_bigdet_from_checkpoint, load_tinydet_from_checkpoint, BackendKind, ModelKind,
+    load_convolutional_detector_from_checkpoint, load_linear_detector_from_checkpoint, BackendKind, ModelKind,
 };
-use training::{BigDet, BigDetConfig, TinyDet, TinyDetConfig, TrainBackend};
+use training::{ConvolutionalDetector, ConvolutionalDetectorConfig, LinearDetector, LinearDetectorConfig, TrainBackend};
 
 #[derive(Parser, Debug)]
 #[command(
     name = "eval",
-    about = "Evaluate TinyDet/BigDet checkpoint on a dataset (precision/recall by IoU)"
+    about = "Evaluate LinearDetector/ConvolutionalDetector checkpoint on a dataset (precision/recall by IoU)"
 )]
 struct Args {
     /// Model to evaluate.
@@ -64,13 +64,13 @@ fn main() -> anyhow::Result<()> {
     match args.model {
         ModelKind::Tiny => {
             let model = match ckpt {
-                Some(ref p) => load_tinydet_from_checkpoint(p, &device).unwrap_or_else(|e| {
+                Some(ref p) => load_linear_detector_from_checkpoint(p, &device).unwrap_or_else(|e| {
                     println!("Failed to load checkpoint {p}; using fresh model ({e})");
-                    TinyDet::<TrainBackend>::new(TinyDetConfig::default(), &device)
+                    LinearDetector::<TrainBackend>::new(LinearDetectorConfig::default(), &device)
                 }),
                 None => {
-                    println!("No checkpoint provided; using fresh TinyDet");
-                    TinyDet::<TrainBackend>::new(TinyDetConfig::default(), &device)
+                    println!("No checkpoint provided; using fresh LinearDetector");
+                    LinearDetector::<TrainBackend>::new(LinearDetectorConfig::default(), &device)
                 }
             };
             for chunk in samples.chunks(batch_size) {
@@ -102,11 +102,11 @@ fn main() -> anyhow::Result<()> {
         }
         ModelKind::Big => {
             let model = match ckpt {
-                Some(ref p) => load_bigdet_from_checkpoint(p, &device, args.max_boxes)
+                Some(ref p) => load_convolutional_detector_from_checkpoint(p, &device, args.max_boxes)
                     .unwrap_or_else(|e| {
                         println!("Failed to load checkpoint {p}; using fresh model ({e})");
-                        BigDet::<TrainBackend>::new(
-                            BigDetConfig {
+                        ConvolutionalDetector::<TrainBackend>::new(
+                            ConvolutionalDetectorConfig {
                                 input_dim: Some(4 + 8),
                                 max_boxes: args.max_boxes,
                                 ..Default::default()
@@ -115,9 +115,9 @@ fn main() -> anyhow::Result<()> {
                         )
                     }),
                 None => {
-                    println!("No checkpoint provided; using fresh BigDet");
-                    BigDet::<TrainBackend>::new(
-                        BigDetConfig {
+                    println!("No checkpoint provided; using fresh ConvolutionalDetector");
+                    ConvolutionalDetector::<TrainBackend>::new(
+                        ConvolutionalDetectorConfig {
                             input_dim: Some(4 + 8),
                             max_boxes: args.max_boxes,
                             ..Default::default()

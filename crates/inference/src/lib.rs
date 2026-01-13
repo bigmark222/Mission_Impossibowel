@@ -8,14 +8,14 @@ pub type InferenceBackend = burn_wgpu::Wgpu<f32>;
 #[cfg(not(feature = "backend-wgpu"))]
 pub type InferenceBackend = burn_ndarray::NdArray<f32>;
 
-#[cfg(feature = "bigdet")]
-pub type InferenceModel<B> = models::BigDet<B>;
-#[cfg(feature = "bigdet")]
-pub type InferenceModelConfig = models::BigDetConfig;
-#[cfg(not(feature = "bigdet"))]
-pub type InferenceModel<B> = models::TinyDet<B>;
-#[cfg(not(feature = "bigdet"))]
-pub type InferenceModelConfig = models::TinyDetConfig;
+#[cfg(feature = "convolutional_detector")]
+pub type InferenceModel<B> = models::ConvolutionalDetector<B>;
+#[cfg(feature = "convolutional_detector")]
+pub type InferenceModelConfig = models::ConvolutionalDetectorConfig;
+#[cfg(not(feature = "convolutional_detector"))]
+pub type InferenceModel<B> = models::LinearDetector<B>;
+#[cfg(not(feature = "convolutional_detector"))]
+pub type InferenceModelConfig = models::LinearDetectorConfig;
 
 pub use factory::{InferenceFactory, InferenceThresholds};
 pub use plugin::InferencePlugin;

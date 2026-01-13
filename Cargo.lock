@@ -2482,7 +2482,7 @@ dependencies = [
  "burn-ndarray",
  "burn-wgpu",
  "cortenforge-data-contracts 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cortenforge-models 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cortenforge-models 0.5.1",
  "cortenforge-sim-core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "cortenforge-vision-core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -2584,7 +2584,7 @@ dependencies = [
  "clap",
  "cortenforge-burn-dataset 0.5.1",
  "cortenforge-data-contracts 0.5.1",
- "cortenforge-models 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cortenforge-models 0.5.1",
  "image",
  "serde",
  "serde_json",
