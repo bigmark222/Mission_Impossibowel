@@ -12,6 +12,33 @@ use vision_core::capture::{PrimaryCaptureCamera, PrimaryCaptureReadback, Primary
 use vision_core::interfaces::{self, Frame};
 use vision_core::overlay::draw_rect;
 
+/// Bevy resource wrapper for inference thresholds.
+///
+/// This bridges the framework-agnostic `inference` crate with Bevy ECS.
+/// The inner `InferenceThresholds` type can be used in non-Bevy contexts
+/// (CLI tools, web services, etc.) without pulling in Bevy dependencies.
+#[derive(Resource, Debug, Clone, Copy)]
+pub struct InferenceThresholdsResource(pub InferenceThresholds);
+
+impl Default for InferenceThresholdsResource {
+    fn default() -> Self {
+        Self(InferenceThresholds::default())
+    }
+}
+
+impl std::ops::Deref for InferenceThresholdsResource {
+    type Target = InferenceThresholds;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for InferenceThresholdsResource {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
 type InferenceJobResult = (
     Box<dyn interfaces::Detector + Send + Sync>,
     DetectorKind,
@@ -278,7 +305,7 @@ pub fn schedule_burn_inference(
 pub fn threshold_hotkeys(
     mode: Res<SimRunMode>,
     keys: Res<ButtonInput<KeyCode>>,
-    thresh: Option<ResMut<InferenceThresholds>>,
+    thresh: Option<ResMut<InferenceThresholdsResource>>,
     handle: Option<ResMut<DetectorHandle>>,
     burn_loaded: Option<ResMut<BurnDetector>>,
 ) {
@@ -358,9 +385,11 @@ pub fn recorder_draw_rect(
 pub mod prelude {
     pub use super::{
         BurnDetectionResult, BurnDetector, BurnInferenceState, CapturePlugin,
-        DetectionOverlayState, DetectorHandle, DetectorKind, InferencePlugin, PrimaryCameraFrame,
+        DetectionOverlayState, DetectorHandle, DetectorKind, InferencePlugin,
+        InferenceThresholdsResource, PrimaryCameraFrame,
         PrimaryCameraFrameBuffer, PrimaryCameraState,
     };
+    // Re-export the core type for convenience in non-Bevy contexts
     pub use inference::InferenceThresholds;
 }
 pub fn poll_inference_task(

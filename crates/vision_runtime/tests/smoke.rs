@@ -4,7 +4,7 @@ use bevy::tasks::AsyncComputeTaskPool;
 use vision_core::interfaces::{self, DetectionResult, Detector, Frame};
 use vision_runtime::prelude::{
     BurnInferenceState, CapturePlugin, DetectionOverlayState, DetectorHandle, DetectorKind,
-    InferencePlugin, InferenceThresholds,
+    InferencePlugin, InferenceThresholds, InferenceThresholdsResource,
 };
 
 struct DummyDetector;
@@ -30,10 +30,10 @@ fn inference_plugin_smoke_updates_overlay() {
             detector: Box::new(DummyDetector),
             kind: DetectorKind::Heuristic,
         })
-        .insert_resource(InferenceThresholds {
+        .insert_resource(InferenceThresholdsResource(InferenceThresholds {
             obj_thresh: 0.3,
             iou_thresh: 0.5,
-        })
+        }))
         .add_plugins(CapturePlugin)
         .add_plugins(InferencePlugin)
         .insert_resource(Assets::<Image>::default())
