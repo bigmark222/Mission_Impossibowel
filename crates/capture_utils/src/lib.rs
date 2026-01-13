@@ -1,10 +1,10 @@
-use data_contracts::capture::{CaptureMetadata, PolypLabel};
+use data_contracts::capture::{CaptureMetadata, LabelSource as CaptureLabelSource, PolypLabel};
 use image::Rgba;
 use std::fs;
 use std::io::{BufWriter, Write};
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
-use vision_core::prelude::{FrameRecord, Label, Recorder};
+use vision_core::prelude::{FrameRecord, Label, LabelSource as CoreLabelSource, Recorder};
 
 /// Default file-based recorder: writes frame metadata/labels to `run_dir/labels/frame_XXXXX.json`.
 pub struct JsonRecorder {
@@ -33,16 +33,7 @@ impl Recorder for JsonRecorder {
             .duration_since(UNIX_EPOCH)
             .map(|d| d.as_secs_f64())
             .unwrap_or(0.0);
-        let meta = CaptureMetadata {
-            frame_id: record.frame.id,
-            sim_time: record.frame.timestamp,
-            unix_time,
-            image,
-            image_present: record.frame.path.is_some(),
-            camera_active: record.camera_active,
-            polyp_seed: record.polyp_seed,
-            polyp_labels: record.labels.iter().map(label_to_polyp).collect(),
-        };
+        let meta = build_capture_metadata(record, unix_time, image);
         meta.validate()
             .map_err(|e| std::io::Error::other(format!("validation failed: {e}")))?;
         let out = labels_dir.join(format!("frame_{:05}.json", record.frame.id));
@@ -53,11 +44,61 @@ impl Recorder for JsonRecorder {
     }
 }
 
+pub fn build_capture_metadata(
+    record: &FrameRecord,
+    unix_time: f64,
+    image: String,
+) -> CaptureMetadata {
+    CaptureMetadata {
+        frame_id: record.frame.id,
+        sim_time: record.frame.timestamp,
+        unix_time,
+        image,
+        image_present: record.frame.path.is_some(),
+        camera_active: record.camera_active,
+        polyp_seed: record.polyp_seed,
+        polyp_labels: record.labels.iter().map(label_to_polyp).collect(),
+    }
+}
+
+/// Helper for inference outputs: callers set label provenance on `Label` before recording.
+pub fn build_inference_metadata(
+    frame: vision_core::prelude::Frame,
+    labels: &[Label],
+    camera_active: bool,
+    polyp_seed: u64,
+    unix_time: f64,
+) -> CaptureMetadata {
+    let image = frame
+        .path
+        .as_ref()
+        .map(|p| p.to_string_lossy().into_owned())
+        .unwrap_or_else(|| format!("frame_{:05}.png", frame.id));
+    let record = FrameRecord {
+        frame,
+        labels,
+        camera_active,
+        polyp_seed,
+    };
+    build_capture_metadata(&record, unix_time, image)
+}
+
 fn label_to_polyp(label: &Label) -> PolypLabel {
     PolypLabel {
         center_world: label.center_world,
         bbox_px: label.bbox_px,
         bbox_norm: label.bbox_norm,
+        source: map_label_source(label.source),
+        source_confidence: label.source_confidence,
+    }
+}
+
+fn map_label_source(source: Option<CoreLabelSource>) -> Option<CaptureLabelSource> {
+    match source {
+        Some(CoreLabelSource::SimAuto) => Some(CaptureLabelSource::SimAuto),
+        Some(CoreLabelSource::Human) => Some(CaptureLabelSource::Human),
+        Some(CoreLabelSource::Model) => Some(CaptureLabelSource::Model),
+        None => None,
     }
 }
 

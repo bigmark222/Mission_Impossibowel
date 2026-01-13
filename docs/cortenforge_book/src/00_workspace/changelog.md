@@ -41,6 +41,11 @@ Copy/paste scaffold for new release notes.
 - Actions taken: updated feature flag docs and README to remove legacy alias guidance.
 - Actions taken: feature flags page now omits legacy alias notes; changelog is the canonical record.
 
+### 2026-01-12 (v0.5.1)
+- Changed: added label provenance + source confidence fields to capture metadata and labels.
+- Impact: compatible; ETL tolerates additional fields.
+- Actions taken: audit notes record ETL tolerance and promotion plan.
+
 ### 2026-01-10 (v0.2.1)
 - Changed: added `gpu_probe` bin with stable JSON schema and `--format=json` flag.
 - Impact: compatible; `gpu_macos_helper` alias removed in v0.3+ (use `gpu_probe`).

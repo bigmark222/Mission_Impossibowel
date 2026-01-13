@@ -1,6 +1,8 @@
 use burn::tensor::TensorData;
 use burn::tensor::{backend::Backend, Tensor};
+use burn_dataset::BurnBatch;
 use data_contracts::capture::CaptureMetadata;
+use data_contracts::preprocess::{stats_from_chw_f32, stats_from_rgb_u8};
 use serde::Deserialize;
 use std::fs;
 use std::path::PathBuf;
@@ -70,7 +72,7 @@ pub fn collate<B: Backend>(
     let batch = samples.len();
     let num_pixels = (width * height) as usize;
     let mut image_buf: Vec<f32> = Vec::with_capacity(batch * num_pixels * 3);
-    let mut features: Vec<f32> = Vec::with_capacity(batch * 6); // mean/std RGB, aspect, box_count
+    let mut features: Vec<f32> = Vec::with_capacity(batch * 8); // mean/std RGB, aspect, box_count
 
     // Gather normalized boxes, truncated to max_boxes.
     let mut all_boxes: Vec<Vec<[f32; 4]>> = Vec::with_capacity(batch);
@@ -96,27 +98,19 @@ pub fn collate<B: Backend>(
             rgb
         };
 
+        let stats = stats_from_rgb_u8(width, height, img.as_raw())
+            .map_err(|e| anyhow::anyhow!("failed to compute image stats: {e}"))?;
+
         // Push normalized pixel data in CHW order.
-        let mut sum = [0f32; 3];
-        let mut sumsq = [0f32; 3];
         for c in 0..3 {
             for y in 0..height {
                 for x in 0..width {
                     let p = img.get_pixel(x, y);
                     let v = p[c] as f32 / 255.0;
                     image_buf.push(v);
-                    sum[c] += v;
-                    sumsq[c] += v * v;
                 }
             }
         }
-        let pix_count = (width * height) as f32;
-        let mean = [sum[0] / pix_count, sum[1] / pix_count, sum[2] / pix_count];
-        let std = [
-            (sumsq[0] / pix_count - mean[0] * mean[0]).max(0.0).sqrt(),
-            (sumsq[1] / pix_count - mean[1] * mean[1]).max(0.0).sqrt(),
-            (sumsq[2] / pix_count - mean[2] * mean[2]).max(0.0).sqrt(),
-        ];
 
         let mut boxes = Vec::new();
         for label in &sample.metadata.polyp_labels {
@@ -138,16 +132,7 @@ pub fn collate<B: Backend>(
             }
         }
         let box_count = boxes.len() as f32;
-        features.extend_from_slice(&[
-            mean[0],
-            mean[1],
-            mean[2],
-            std[0],
-            std[1],
-            std[2],
-            width as f32 / height as f32,
-            box_count,
-        ]);
+        features.extend_from_slice(&stats.feature_vector(box_count));
         all_boxes.push(boxes);
     }
 
@@ -176,6 +161,75 @@ pub fn collate<B: Backend>(
         images,
         boxes,
         box_mask,
+        features,
+    })
+}
+
+pub fn collate_from_burn_batch<B: Backend>(
+    batch: BurnBatch<B>,
+    max_boxes: usize,
+) -> anyhow::Result<CollatedBatch<B>> {
+    let dims = batch.images.dims();
+    let batch_size = dims[0];
+    let channels = dims[1];
+    let height = dims[2];
+    let width = dims[3];
+    let max_boxes = max_boxes.max(1);
+
+    if channels != 3 {
+        anyhow::bail!("expected 3-channel images, got {channels}");
+    }
+    let box_dims = batch.boxes.dims();
+    if box_dims[1] != max_boxes {
+        anyhow::bail!(
+            "warehouse batch max_boxes {actual} does not match requested {expected}",
+            actual = box_dims[1],
+            expected = max_boxes
+        );
+    }
+
+    let image_data = batch
+        .images
+        .clone()
+        .into_data()
+        .to_vec::<f32>()
+        .unwrap_or_default();
+    let mask_data = batch
+        .box_mask
+        .clone()
+        .into_data()
+        .to_vec::<f32>()
+        .unwrap_or_default();
+    let pixels_per_channel = height * width;
+
+    if image_data.len() != batch_size * channels * pixels_per_channel {
+        anyhow::bail!("unexpected image buffer size in warehouse batch");
+    }
+    if mask_data.len() != batch_size * max_boxes {
+        anyhow::bail!("unexpected box mask size in warehouse batch");
+    }
+
+    let mut features: Vec<f32> = Vec::with_capacity(batch_size * 8);
+    for b in 0..batch_size {
+        let start = b * channels * pixels_per_channel;
+        let slice = &image_data[start..start + channels * pixels_per_channel];
+        let stats = stats_from_chw_f32(width, height, slice)
+            .map_err(|e| anyhow::anyhow!("failed to compute image stats: {e}"))?;
+        let mask_start = b * max_boxes;
+        let box_count = mask_data[mask_start..mask_start + max_boxes]
+            .iter()
+            .filter(|v| **v > 0.0)
+            .count() as f32;
+        features.extend_from_slice(&stats.feature_vector(box_count));
+    }
+
+    let device = batch.images.device();
+    let features = Tensor::<B, 2>::from_data(TensorData::new(features, [batch_size, 8]), &device);
+
+    Ok(CollatedBatch {
+        images: batch.images,
+        boxes: batch.boxes,
+        box_mask: batch.box_mask,
         features,
     })
 }

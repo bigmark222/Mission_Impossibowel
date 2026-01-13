@@ -20,6 +20,8 @@ fn json_recorder_writes_label_file() {
         center_world: [0.0, 0.0, 0.0],
         bbox_px: Some([0.0, 0.0, 1.0, 1.0]),
         bbox_norm: Some([0.0, 0.0, 1.0, 1.0]),
+        source: None,
+        source_confidence: None,
     }];
     let record = FrameRecord {
         frame,

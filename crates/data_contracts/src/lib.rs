@@ -2,6 +2,8 @@
 
 pub mod capture;
 pub mod manifest;
+pub mod preprocess;
 
 pub use capture::{CaptureMetadata, PolypLabel, ValidationError};
 pub use manifest::{RunManifest, RunManifestSchemaVersion};
+pub use preprocess::{ImageStats, ImageStatsError};

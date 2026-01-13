@@ -6,9 +6,9 @@ Burn-based training and evaluation for TinyDet and BigDet.
 
 Contents
 - `models`: TinyDet (single-logit) + BigDet (multibox) configs/constructors.
-- `dataset`: DatasetConfig, RunSample loader; `collate` pads boxes to `max_boxes`, emits `gt_boxes`, `gt_mask`, and global features (mean/std RGB, aspect, box count).
-- `util`: TrainArgs (model/backend/max-boxes/loss weights), run_train, eval helpers, checkpoint load helpers for TinyDet/BigDet, greedy IoU matcher, backend validation.
-- `bin/train`: CLI for training with `--model {tiny,big}` (default tiny), `--max-boxes`, `--lambda-box`, `--lambda-obj`, `--backend {ndarray,wgpu}`.
+- `dataset`: DatasetConfig, RunSample loader; `collate` pads boxes to `max_boxes`, emits `gt_boxes`, `gt_mask`, and global features (mean/std RGB, aspect, box count). `collate_from_burn_batch` does the same for warehouse batches.
+- `util`: TrainArgs (model/backend/max-boxes/loss weights/input source), run_train, eval helpers, checkpoint load helpers for TinyDet/BigDet, greedy IoU matcher, backend validation.
+- `bin/train`: CLI for training with `--model {tiny,big}` (default tiny), `--max-boxes`, `--lambda-box`, `--lambda-obj`, `--backend {ndarray,wgpu}`, `--input-source {warehouse,capture-logs}`.
 - `bin/eval`: CLI to load a checkpoint (TinyDet/BigDet) and compute precision/recall at an IoU threshold.
 
 Models
@@ -24,7 +24,8 @@ Loss/matching
 
 Backends/features
 - Backends: NdArray by default; WGPU with `--features backend-wgpu`.
-- CLI flags: `--backend`, `--model`, `--max-boxes`, `--lambda-box`, `--lambda-obj`, `--seed`, dataset roots.
+- Input source: warehouse manifests by default; capture-log loading is a legacy dev path (`--input-source capture-logs`).
+- CLI flags: `--backend`, `--model`, `--max-boxes`, `--lambda-box`, `--lambda-obj`, `--input-source`, `--warehouse-manifest`, dataset roots.
 
 Tests
 - Collate test (padding/mask/features).

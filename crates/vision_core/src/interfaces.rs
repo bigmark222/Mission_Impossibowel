@@ -28,11 +28,22 @@ pub struct DetectionResult {
 }
 
 /// Polyp label metadata for a frame.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum LabelSource {
+    SimAuto,
+    Human,
+    Model,
+}
+
+/// Polyp label metadata for a frame.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Label {
     pub center_world: [f32; 3],
     pub bbox_px: Option<[f32; 4]>,
     pub bbox_norm: Option<[f32; 4]>,
+    pub source: Option<LabelSource>,
+    pub source_confidence: Option<f32>,
 }
 
 /// Data passed to a recorder sink.

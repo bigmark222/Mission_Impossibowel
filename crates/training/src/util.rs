@@ -4,6 +4,7 @@ use burn::nn::loss::{MseLoss, Reduction};
 use burn::optim::{AdamConfig, GradientsParams, Optimizer};
 use burn::record::{BinFileRecorder, FullPrecisionSettings, RecorderError};
 use burn::tensor::{Tensor, TensorData};
+use burn_dataset::WarehouseLoaders;
 use std::path::Path;
 
 use crate::{BigDet, BigDetConfig, DatasetConfig, TinyDet, TinyDetConfig, TrainBackend};
@@ -34,8 +35,14 @@ pub enum BackendKind {
     Wgpu,
 }
 
+#[derive(ValueEnum, Debug, Clone, Copy)]
+pub enum TrainingInputSource {
+    Warehouse,
+    CaptureLogs,
+}
+
 #[derive(Parser, Debug)]
-#[command(name = "train", about = "Train TinyDet/BigDet on capture metadata")]
+#[command(name = "train", about = "Train TinyDet/BigDet (warehouse-first)")]
 pub struct TrainArgs {
     /// Model to train.
     #[arg(long, value_enum, default_value_t = ModelKind::Tiny)]
@@ -52,13 +59,19 @@ pub struct TrainArgs {
     /// Loss weight for objectness.
     #[arg(long, default_value_t = 1.0)]
     pub lambda_obj: f32,
-    /// Dataset root containing labels/ and images/ (uses data_contracts schemas).
+    /// Training input source (warehouse by default).
+    #[arg(long, value_enum, default_value_t = TrainingInputSource::Warehouse)]
+    pub input_source: TrainingInputSource,
+    /// Warehouse manifest path (used with --input-source warehouse).
+    #[arg(long, default_value = "assets/warehouse/manifest.json")]
+    pub warehouse_manifest: String,
+    /// Capture-log dataset root containing labels/ and images/.
     #[arg(long, default_value = "assets/datasets/captures_filtered")]
     pub dataset_root: String,
-    /// Labels subdirectory relative to dataset root.
+    /// Labels subdirectory relative to dataset root (capture-logs only).
     #[arg(long, default_value = "labels")]
     pub labels_subdir: String,
-    /// Images subdirectory relative to dataset root.
+    /// Images subdirectory relative to dataset root (capture-logs only).
     #[arg(long, default_value = ".")]
     pub images_subdir: String,
     /// Number of epochs.
@@ -84,17 +97,6 @@ pub struct TrainArgs {
 pub fn run_train(args: TrainArgs) -> anyhow::Result<()> {
     validate_backend_choice(args.backend)?;
 
-    let cfg = DatasetConfig {
-        root: args.dataset_root.clone().into(),
-        labels_subdir: args.labels_subdir.clone(),
-        images_subdir: args.images_subdir.clone(),
-    };
-    let samples = cfg.load()?;
-    if samples.is_empty() {
-        println!("No samples found under {}", cfg.root.display());
-        return Ok(());
-    }
-
     let ckpt_path = args
         .checkpoint_out
         .clone()
@@ -107,9 +109,44 @@ pub fn run_train(args: TrainArgs) -> anyhow::Result<()> {
         fs::create_dir_all(parent)?;
     }
 
-    match args.model {
-        ModelKind::Tiny => train_tinydet(&args, &samples, &ckpt_path)?,
-        ModelKind::Big => train_bigdet(&args, &samples, &ckpt_path)?,
+    match args.input_source {
+        TrainingInputSource::Warehouse => {
+            let manifest_path = Path::new(&args.warehouse_manifest);
+            let loaders = WarehouseLoaders::from_manifest_path(manifest_path, 0.0, None, false)
+                .map_err(|e| {
+                    anyhow::anyhow!(
+                        "failed to load warehouse manifest at {}: {e}",
+                        manifest_path.display()
+                    )
+                })?;
+            if loaders.train_len() == 0 {
+                anyhow::bail!(
+                    "warehouse manifest {} contains no training shards",
+                    manifest_path.display()
+                );
+            }
+            match args.model {
+                ModelKind::Tiny => train_tinydet_warehouse(&args, &loaders, &ckpt_path)?,
+                ModelKind::Big => train_bigdet_warehouse(&args, &loaders, &ckpt_path)?,
+            }
+        }
+        TrainingInputSource::CaptureLogs => {
+            println!("training from capture logs (legacy path); prefer warehouse manifests");
+            let cfg = DatasetConfig {
+                root: args.dataset_root.clone().into(),
+                labels_subdir: args.labels_subdir.clone(),
+                images_subdir: args.images_subdir.clone(),
+            };
+            let samples = cfg.load()?;
+            if samples.is_empty() {
+                println!("No samples found under {}", cfg.root.display());
+                return Ok(());
+            }
+            match args.model {
+                ModelKind::Tiny => train_tinydet(&args, &samples, &ckpt_path)?,
+                ModelKind::Big => train_bigdet(&args, &samples, &ckpt_path)?,
+            }
+        }
     }
 
     println!("Saved checkpoint to {}", ckpt_path);
@@ -133,6 +170,70 @@ fn train_tinydet(
         let mut losses = Vec::new();
         for batch in data.chunks(batch_size) {
             let batch = crate::collate::<ADBackend>(batch, args.max_boxes)?;
+            // Feature: take the first box (or zeros) as the input vector.
+            let boxes = batch.boxes.clone();
+            let first_box = boxes
+                .clone()
+                .slice([0..boxes.dims()[0], 0..1, 0..4])
+                .reshape([boxes.dims()[0], 4]);
+
+            // Target: 1.0 if any box present, else 0.0.
+            let mask = batch.box_mask.clone();
+            let has_box = mask.clone().sum_dim(1).reshape([mask.dims()[0], 1]);
+
+            let preds = model.forward(first_box);
+            let mse = MseLoss::new();
+            let loss = mse.forward(preds, has_box, Reduction::Mean);
+            let loss_detached = loss.clone().detach();
+            let grads = GradientsParams::from_grads(loss.backward(), &model);
+            model = optim.step(args.lr as f64, model, grads);
+
+            let loss_val: f32 = loss_detached
+                .into_data()
+                .to_vec::<f32>()
+                .unwrap_or_default()
+                .into_iter()
+                .next()
+                .unwrap_or(0.0);
+            losses.push(loss_val);
+        }
+        let avg_loss: f32 = if losses.is_empty() {
+            0.0
+        } else {
+            losses.iter().sum::<f32>() / losses.len() as f32
+        };
+        println!("epoch {epoch}: avg loss {avg_loss:.4}");
+    }
+
+    let recorder = BinFileRecorder::<FullPrecisionSettings>::new();
+    model
+        .clone()
+        .save_file(Path::new(ckpt_path), &recorder)
+        .map_err(|e| anyhow::anyhow!("failed to save checkpoint: {e}"))?;
+
+    Ok(())
+}
+
+fn train_tinydet_warehouse(
+    args: &TrainArgs,
+    loaders: &WarehouseLoaders,
+    ckpt_path: &str,
+) -> anyhow::Result<()> {
+    let device = <ADBackend as burn::tensor::backend::Backend>::Device::default();
+    let mut model = TinyDet::<ADBackend>::new(TinyDetConfig::default(), &device);
+    let mut optim = AdamConfig::new().init();
+
+    let batch_size = args.batch_size.max(1);
+    for epoch in 0..args.epochs {
+        let mut losses = Vec::new();
+        let mut iter = loaders.train_iter();
+        loop {
+            let batch = match iter.next_batch::<ADBackend>(batch_size, &device)? {
+                Some(batch) => batch,
+                None => break,
+            };
+            let batch = crate::collate_from_burn_batch::<ADBackend>(batch, args.max_boxes)?;
+
             // Feature: take the first box (or zeros) as the input vector.
             let boxes = batch.boxes.clone();
             let first_box = boxes
@@ -249,6 +350,114 @@ fn train_bigdet(
                 box_err.sum().div_scalar(matched_scalar)
             } else {
                 // Return a zero scalar in the same tensor rank as div output (rank 1).
+                let zeros = vec![0.0f32; 1];
+                Tensor::<ADBackend, 1>::from_data(
+                    TensorData::new(zeros, [1]),
+                    &box_weights.device(),
+                )
+            };
+
+            let loss = box_loss * args.lambda_box + obj_loss * args.lambda_obj;
+            let loss_detached = loss.clone().detach();
+            let grads = GradientsParams::from_grads(loss.backward(), &model);
+            model = optim.step(args.lr as f64, model, grads);
+
+            let loss_val: f32 = loss_detached
+                .into_data()
+                .to_vec::<f32>()
+                .unwrap_or_default()
+                .into_iter()
+                .next()
+                .unwrap_or(0.0);
+            losses.push(loss_val);
+        }
+        let avg_loss: f32 = if losses.is_empty() {
+            0.0
+        } else {
+            losses.iter().sum::<f32>() / losses.len() as f32
+        };
+        println!("epoch {epoch}: avg loss {avg_loss:.4}");
+    }
+
+    let recorder = BinFileRecorder::<FullPrecisionSettings>::new();
+    model
+        .clone()
+        .save_file(Path::new(ckpt_path), &recorder)
+        .map_err(|e| anyhow::anyhow!("failed to save checkpoint: {e}"))?;
+
+    Ok(())
+}
+
+fn train_bigdet_warehouse(
+    args: &TrainArgs,
+    loaders: &WarehouseLoaders,
+    ckpt_path: &str,
+) -> anyhow::Result<()> {
+    let device = <ADBackend as burn::tensor::backend::Backend>::Device::default();
+    let mut model = BigDet::<ADBackend>::new(
+        BigDetConfig {
+            input_dim: Some(4 + 8), // first box (4) + features (8)
+            max_boxes: args.max_boxes,
+            ..Default::default()
+        },
+        &device,
+    );
+    let mut optim = AdamConfig::new().init();
+
+    let batch_size = args.batch_size.max(1);
+    for epoch in 0..args.epochs {
+        let mut losses = Vec::new();
+        let mut iter = loaders.train_iter();
+        loop {
+            let batch = match iter.next_batch::<ADBackend>(batch_size, &device)? {
+                Some(batch) => batch,
+                None => break,
+            };
+            let batch = crate::collate_from_burn_batch::<ADBackend>(batch, args.max_boxes)?;
+
+            let boxes = batch.boxes.clone();
+            let first_box = boxes
+                .clone()
+                .slice([0..boxes.dims()[0], 0..1, 0..4])
+                .reshape([boxes.dims()[0], 4]);
+            let features = batch.features.clone();
+            let input = burn::tensor::Tensor::cat(vec![first_box, features], 1);
+
+            let (pred_boxes, pred_scores) = model.forward_multibox(input);
+
+            let gt_boxes = batch.boxes.clone();
+            let gt_mask = batch.box_mask.clone();
+
+            let (obj_targets, box_targets, box_weights) =
+                build_greedy_targets(pred_boxes.clone(), gt_boxes.clone(), gt_mask.clone());
+
+            let eps = 1e-6;
+            let pred_scores_clamped = pred_scores.clamp(eps, 1.0 - eps);
+            let obj_targets_inv =
+                Tensor::<ADBackend, 2>::ones(obj_targets.dims(), &obj_targets.device())
+                    - obj_targets.clone();
+            let obj_loss = -((obj_targets.clone() * pred_scores_clamped.clone().log())
+                + (obj_targets_inv
+                    * (Tensor::<ADBackend, 2>::ones(
+                        pred_scores_clamped.dims(),
+                        &pred_scores_clamped.device(),
+                    ) - pred_scores_clamped)
+                        .log()))
+            .sum()
+            .div_scalar((obj_targets.dims()[0] * obj_targets.dims()[1]) as f32);
+
+            let box_err = (pred_boxes - box_targets.clone()).abs() * box_weights.clone();
+            let matched = box_weights.clone().sum().div_scalar(4.0);
+            let matched_scalar = matched
+                .into_data()
+                .to_vec::<f32>()
+                .unwrap_or_default()
+                .first()
+                .copied()
+                .unwrap_or(0.0);
+            let box_loss = if matched_scalar > 0.0 {
+                box_err.sum().div_scalar(matched_scalar)
+            } else {
                 let zeros = vec![0.0f32; 1];
                 Tensor::<ADBackend, 1>::from_data(
                     TensorData::new(zeros, [1]),
