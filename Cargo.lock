@@ -2488,6 +2488,7 @@ dependencies = [
  "burn-ndarray",
  "burn-wgpu",
  "clap",
+ "cortenforge-burn-dataset",
  "cortenforge-data-contracts",
  "cortenforge-models",
  "image",
