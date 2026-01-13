@@ -177,6 +177,44 @@ Module file names use `snake_case` and follow these patterns:
 - Redundant prefixes matching the crate name (e.g., don't name a module `sim_camera` in `sim_core`).
 - Abbreviations unless domain-standard (e.g., `aug` for augmentation is acceptable in ML contexts).
 
+### Trait Naming
+
+Trait names use these patterns to signal their purpose:
+
+**Capability traits** (verb/noun describing what implementors do):
+
+- `Detector`: Types that detect objects in frames.
+- `Recorder`: Types that persist frame records.
+- `MetadataProvider`: Types that provide metadata.
+
+**Source traits** (*Source suffix):
+
+- `FrameSource`: Types that produce frames.
+- Indicates producer/generator semantics.
+
+**Hook traits** (*Hook suffix):
+
+- `ControlsHook`: Extension point for control behavior.
+- `AutopilotHook`: Extension point for autopilot behavior.
+- Indicates callback/observer pattern.
+
+**Factory traits** (*Factory suffix):
+
+- `BurnDetectorFactory`: Types that construct detectors.
+- Indicates builder/factory pattern.
+
+**Store traits** (*Store suffix):
+
+- `WarehouseShardStore`: Types that store shard data.
+- Indicates storage/persistence layer.
+
+**General rules**:
+
+- Use noun or verb-noun phrases (not adjectives).
+- Avoid `Trait` suffix (redundant; `DetectorTrait` is just `Detector`).
+- Be specific: `Detector` is clearer than `Detectable` or `CanDetect`.
+- Match suffix to architectural role (Hook, Source, Factory, Store, Provider).
+
 ## Cross-link style
 Linking rules to keep references stable and readable.
 | Pattern | Example |
