@@ -1,12 +1,14 @@
 //! Loading and indexing capture dataset files.
 
 use crate::aug::{DatasetConfig, TransformPipeline};
-use crate::types::{BurnDatasetError, DatasetResult, DatasetSample, LabelEntry, PolypLabel, ResizeMode, RunSummary, DatasetSummary, SampleIndex};
+use crate::types::{
+    BurnDatasetError, DatasetResult, DatasetSample, DatasetSummary, LabelEntry, ResizeMode,
+    RunSummary, SampleIndex,
+};
 use image;
 use serde_json;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::Once;
 
 fn validate_label_entry(meta: &LabelEntry, path: &Path) -> DatasetResult<()> {
     if meta.image.trim().is_empty() {

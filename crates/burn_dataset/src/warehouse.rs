@@ -3,7 +3,7 @@
 #[cfg(feature = "burn-runtime")]
 use crate::types::{BurnDatasetError, DatasetResult};
 use crate::types::{
-    CacheableTransformConfig, DatasetSummary, Endianness, ResizeMode, ShardDType, ShardMetadata,
+    CacheableTransformConfig, DatasetSummary, ResizeMode, ShardDType, ShardMetadata,
     ValidationThresholds, WarehouseStoreMode,
 };
 #[cfg(feature = "burn-runtime")]
@@ -25,11 +25,9 @@ use std::fs::File;
 #[cfg(feature = "burn-runtime")]
 use std::io::{BufReader, Read, Seek, SeekFrom};
 #[cfg(feature = "burn-runtime")]
-use std::sync::Arc;
-#[cfg(feature = "burn-runtime")]
 use std::thread;
 #[cfg(feature = "burn-runtime")]
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WarehouseManifest {
@@ -528,7 +526,6 @@ impl WarehouseShardStore for StreamingStore {
 }
 
 #[cfg(feature = "burn-runtime")]
-
 pub trait WarehouseShardStore: Send + Sync {
     fn train_iter(&self) -> WarehouseBatchIter;
     fn val_iter(&self) -> WarehouseBatchIter;

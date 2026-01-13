@@ -3,9 +3,7 @@
 use crate::aug::{DatasetConfig, TransformPipeline};
 use crate::capture::index_runs;
 use crate::splits::split_runs;
-use crate::types::{BurnDatasetError, DatasetResult, DatasetSample, SampleIndex};
-use rand::{seq::SliceRandom, SeedableRng};
-use std::fs;
+use crate::types::{BurnDatasetError, DatasetResult, SampleIndex};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};

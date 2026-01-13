@@ -1,16 +1,11 @@
 //! Image augmentation and transformation pipeline.
 
 use crate::types::{
-    BurnDatasetError, CacheableTransformConfig, DatasetResult, DatasetSample,
-    LabelEntry, PolypLabel, ResizeMode,
+    CacheableTransformConfig, DatasetResult, DatasetSample, LabelEntry, PolypLabel, ResizeMode,
 };
 use image::imageops::FilterType;
-use image::{DynamicImage, RgbImage};
 use rand::{Rng, SeedableRng};
 use std::cmp::max;
-use std::fs;
-use std::path::Path;
-use std::sync::Once;
 
 #[derive(Debug, Clone)]
 pub struct DatasetConfig {

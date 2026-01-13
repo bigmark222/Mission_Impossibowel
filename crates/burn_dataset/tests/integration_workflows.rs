@@ -5,19 +5,20 @@
 //! 2. Warehouse → Training batch iteration
 //! 3. Capture → Validation → Stratified splits
 
-use burn_dataset::{
-    index_runs, load_sample_for_etl, split_runs_stratified, summarize_with_thresholds,
-    CacheableTransformConfig, DatasetSummary, Endianness, ResizeMode, ShardDType, ShardMetadata,
-    TransformPipelineBuilder, ValidationThresholds,
-};
+use burn_dataset::{index_runs, split_runs_stratified, summarize_with_thresholds, ValidationThresholds};
 
 #[cfg(feature = "burn-runtime")]
-use burn_dataset::WarehouseManifest;
+use burn_dataset::{
+    load_sample_for_etl, CacheableTransformConfig, DatasetSummary, Endianness, ResizeMode,
+    ShardDType, ShardMetadata, TransformPipelineBuilder, WarehouseManifest,
+};
 use data_contracts::capture::{CaptureMetadata, PolypLabel};
 use image::{Rgb, RgbImage};
 use std::fs;
-use std::io::Write;
 use std::path::{Path, PathBuf};
+
+#[cfg(feature = "burn-runtime")]
+use std::io::Write;
 
 /// Helper to create a synthetic capture run with N frames.
 /// Note: boxes_per_frame must be > 0 because validation requires at least bbox_norm or bbox_px.
@@ -153,8 +154,8 @@ fn workflow_capture_to_warehouse_etl() -> anyhow::Result<()> {
         all_boxes.extend_from_slice(&boxes);
 
         let mut mask = vec![0.0f32; max_boxes];
-        for i in 0..box_count.min(max_boxes) {
-            mask[i] = 1.0;
+        for mask_val in mask.iter_mut().take(box_count.min(max_boxes)) {
+            *mask_val = 1.0;
         }
         all_masks.extend_from_slice(&mask);
     }
@@ -444,7 +445,7 @@ fn workflow_capture_validation_and_stratified_split() -> anyhow::Result<()> {
 
     // With 37 samples across 3 runs and good stratification, we should get representation
     assert!(train_has_single || train_has_multi || train_has_sparse, "Training set should have representation");
-    assert!(val_indices.len() > 0, "Validation set should exist");
+    assert!(!val_indices.is_empty(), "Validation set should exist");
 
     Ok(())
 }
