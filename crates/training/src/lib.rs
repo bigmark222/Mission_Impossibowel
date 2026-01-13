@@ -1,3 +1,16 @@
+//! Burn-based training and evaluation for CortenForge detection models.
+//!
+//! This crate provides:
+//! - Dataset loading and collation (`collate`, `collate_from_burn_batch`).
+//! - Training loop utilities (`run_train`, `TrainArgs`).
+//! - Model checkpoint loading/saving helpers.
+//!
+//! Supports both `LinearClassifier` and `MultiboxModel` from the `models` crate.
+//!
+//! ## Backend Selection
+//! - `backend-wgpu`: Uses WGPU for GPU-accelerated training.
+//! - Default: Falls back to NdArray CPU backend.
+
 #![recursion_limit = "256"]
 
 pub mod dataset;

@@ -1,3 +1,19 @@
+//! Detector factory and runtime configuration for CortenForge inference.
+//!
+//! This crate bridges the `models` crate (Burn Modules) and the `vision_core::interfaces::Detector`
+//! trait. The `InferenceFactory` loads weights and constructs detector implementations that can be
+//! used in vision pipelines.
+//!
+//! ## Backend Selection
+//! - `backend-wgpu`: Uses WGPU for GPU acceleration (recommended for production).
+//! - Default: Falls back to NdArray CPU backend.
+//!
+//! ## Model Selection
+//! - `convolutional_detector`: Uses `MultiboxModel` for multi-box detection.
+//! - Default: Uses `LinearClassifier` for binary classification.
+//!
+//! Type aliases `InferenceModel` and `InferenceModelConfig` adapt to the selected features.
+
 #![recursion_limit = "256"]
 
 pub mod factory;

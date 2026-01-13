@@ -1,3 +1,17 @@
+//! Bevy-integrated vision runtime: camera capture, async inference, and detection overlays.
+//!
+//! This crate provides Bevy plugins and systems for:
+//! - Off-screen camera capture with GPU readback (`CapturePlugin`).
+//! - Async inference scheduling and result polling (`InferenceRuntimePlugin`).
+//! - Detection overlay rendering and threshold hotkeys.
+//!
+//! It bridges the framework-agnostic `vision_core` interfaces with Bevy ECS resources and
+//! systems, enabling real-time detector integration in Bevy apps.
+//!
+//! ## Architecture Note
+//! This is the *runtime* layer. Core detector interfaces live in `vision_core`, while
+//! detector implementations are in `inference`. See the architecture docs for the full split.
+
 use bevy::asset::RenderAssetUsages;
 use bevy::prelude::*;
 use bevy::render::gpu_readback::{Readback, ReadbackComplete};

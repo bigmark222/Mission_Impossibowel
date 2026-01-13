@@ -1,3 +1,16 @@
+//! Burn ML models for object detection in the CortenForge stack.
+//!
+//! This crate defines the neural network architectures used for detection:
+//! - `LinearClassifier`: Simple feedforward network for binary classification.
+//! - `MultiboxModel`: Multi-box detection model with spatial output heads.
+//!
+//! These are pure Burn Modules with no awareness of the Detector trait. The `inference`
+//! crate wraps them into Detector implementations for runtime use.
+//!
+//! ## Design Note
+//! Model types use descriptive names (Classifier, Model) rather than "Detector" suffix,
+//! as they are architectural components, not full detector implementations.
+
 use burn::module::Module;
 use burn::nn;
 use burn::tensor::activation::{relu, sigmoid};

@@ -1,3 +1,12 @@
+//! Filesystem-based recorder implementations and dataset management utilities.
+//!
+//! This crate provides:
+//! - `JsonRecorder`: Default recorder that writes frame metadata to JSON files.
+//! - Overlay generation from label JSON files (draws bounding boxes on images).
+//! - Dataset pruning utilities for filtering and copying runs.
+//!
+//! Integrates with `vision_core::interfaces::Recorder` trait and `data_contracts` schemas.
+
 use data_contracts::capture::CaptureMetadata;
 use image::Rgba;
 use std::fs;

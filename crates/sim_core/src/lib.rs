@@ -1,3 +1,15 @@
+//! Core simulation types, plugins, and systems for CortenForge Bevy apps.
+//!
+//! This crate provides:
+//! - Run mode management (`SimRunMode`: Sim, Datagen, Inference).
+//! - Camera systems (flycam, instrument POV, camera toggling).
+//! - Autopilot and controls abstractions.
+//! - Capture recording and metadata generation.
+//! - Articulated segment/spring types for entity rigging.
+//!
+//! Designed to be detector-agnostic: detector wiring happens in higher-level binaries or
+//! the `vision_runtime` crate.
+
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{NoUserData, RapierPhysicsPlugin};
 use std::path::PathBuf;
