@@ -4,9 +4,6 @@ backend-ndarray = ["burn-ndarray", "burn/ndarray"]
 backend-wgpu = ["burn-wgpu", "burn/wgpu"]
 linear_detector = ["models/linear_detector"]
 convolutional_detector = ["models/convolutional_detector"]
-# Legacy feature aliases for backwards compatibility
-tinydet = ["linear_detector"]
-bigdet = ["convolutional_detector"]
 
 [package]
 name = "cortenforge-training"

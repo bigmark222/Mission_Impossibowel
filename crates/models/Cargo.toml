@@ -24,6 +24,3 @@ bincode = { workspace = true }
 default = ["linear_detector"]
 linear_detector = []
 convolutional_detector = []
-# Legacy feature aliases for backwards compatibility
-tinydet = ["linear_detector"]
-bigdet = ["convolutional_detector"]
