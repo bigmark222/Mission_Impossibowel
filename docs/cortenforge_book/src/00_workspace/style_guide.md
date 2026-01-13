@@ -67,6 +67,41 @@ A key architectural pattern in CortenForge:
 - Allows reuse of detector implementations across Bevy apps, CLI tools, and services.
 - Follows dependency inversion: high-level Bevy code depends on stable abstractions.
 
+### Function Verb Usage
+
+Consistent function naming conventions across the workspace:
+
+**Action verbs** (imperative):
+
+- `build_*`: Construct complex objects from inputs (e.g., `build_app`, `build_train_val_iters`).
+- `setup_*`: Initialize resources or Bevy entities once (e.g., `setup_camera`).
+- `register_*`: Add systems/plugins to an app (e.g., `register_runtime_systems`).
+- `load_*`: Read from filesystem or deserialize (e.g., `load_run_dataset`, `load_linear_classifier_from_checkpoint`).
+- `resolve_*`: Apply precedence rules or compute from multiple sources (e.g., `resolve_seed`).
+- `validate_*`: Check invariants and return errors (e.g., `validate_summary`, `validate_backend_choice`).
+
+**Query verbs** (return information):
+
+- `index_*`: Scan filesystem and build index structures (e.g., `index_runs`).
+- `summarize_*`: Aggregate stats from datasets (e.g., `summarize_runs`, `summarize_with_thresholds`).
+- `count_*`: Return count metrics (e.g., `count_boxes`).
+
+**Mutation verbs** (modify state):
+
+- `draw_*`: Render visuals onto images (e.g., `draw_rect`).
+- `split_*`: Partition data (e.g., `split_runs`, `split_runs_stratified`).
+
+**Bevy system naming**:
+
+- Systems that modify state: descriptive nouns with `_system` suffix (e.g., `pov_toggle_system`, `camera_controller`).
+- Systems that setup/initialize: `setup_*` prefix (e.g., `setup_camera`).
+
+**Consistency rules**:
+
+- Use `build` for complex construction with configuration; `new` for simple struct constructors.
+- Use `load` for I/O operations; `from_*` for pure conversions.
+- Avoid generic verbs like `process` or `handle`; be specific about what the function does.
+
 ## Cross-link style
 Linking rules to keep references stable and readable.
 | Pattern | Example |
