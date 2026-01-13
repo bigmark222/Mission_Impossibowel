@@ -49,11 +49,11 @@ struct BurnTinyDetDetector {
 }
 
 impl BurnTinyDetDetector {
-    fn frame_to_tensor(&self, frame: &Frame) -> TensorData {
-        let (w, h) = frame.size;
+    fn frame_to_tensor(&self, _frame: &Frame) -> TensorData {
         #[cfg(feature = "bigdet")]
         {
-            let stats = if let Some(rgba) = &frame.rgba {
+            let (w, h) = _frame.size;
+            let stats = if let Some(rgba) = &_frame.rgba {
                 stats_from_rgba_u8(w, h, rgba).unwrap_or_else(|_| ImageStats {
                     mean: [0.0; 3],
                     std: [0.0; 3],

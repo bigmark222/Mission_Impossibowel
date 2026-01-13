@@ -2426,6 +2426,7 @@ dependencies = [
  "burn",
  "burn-ndarray",
  "burn-wgpu",
+ "cortenforge-data-contracts",
  "cortenforge-models",
  "cortenforge-sim-core",
  "cortenforge-vision-core",

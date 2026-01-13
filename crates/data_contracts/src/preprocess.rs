@@ -140,15 +140,9 @@ fn stats_from_sums(
     let pix_count = (width * height) as f32;
     let mean = [sum[0] / pix_count, sum[1] / pix_count, sum[2] / pix_count];
     let std = [
-        (sumsq[0] / pix_count - mean[0] * mean[0])
-            .max(0.0)
-            .sqrt(),
-        (sumsq[1] / pix_count - mean[1] * mean[1])
-            .max(0.0)
-            .sqrt(),
-        (sumsq[2] / pix_count - mean[2] * mean[2])
-            .max(0.0)
-            .sqrt(),
+        (sumsq[0] / pix_count - mean[0] * mean[0]).max(0.0).sqrt(),
+        (sumsq[1] / pix_count - mean[1] * mean[1]).max(0.0).sqrt(),
+        (sumsq[2] / pix_count - mean[2] * mean[2]).max(0.0).sqrt(),
     ];
     Ok(ImageStats {
         mean,
