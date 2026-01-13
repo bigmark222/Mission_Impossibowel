@@ -10,7 +10,7 @@ Quick read: The public surface; use docs.rs for exact signatures.
 | WarehouseOutputArgs | struct | CLI args for warehouse outputs |
 | WarehouseOutputOpts | struct | Output options for warehouse |
 | WgpuEnvHints | struct | Hints for WGPU environment setup |
-| SeedState | struct | Seed state container |
+| RunSeed | struct | Seed state container |
 | resolve_seed | fn | Resolve seed from CLI input |
 | Modules (pub mod) | module | common, seed |
 

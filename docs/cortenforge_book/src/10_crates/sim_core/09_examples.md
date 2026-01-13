@@ -63,9 +63,9 @@ fn setup_recorder(mut commands: Commands) {
 ## 3) Wire world state for recorder triggers
 ```rust,ignore
 use bevy::prelude::*;
-use sim_core::recorder::WorldState;
+use sim_core::recorder::RecorderWorldSnapshot;
 
-fn update_world_state(mut state: ResMut<WorldState>) {
+fn update_world_state(mut state: ResMut<RecorderWorldSnapshot>) {
     state.head_z = Some(1.2);
     if state.head_z.unwrap() > 2.0 {
         state.stop_flag = true; // could be read by recorder triggers
@@ -81,14 +81,14 @@ flowchart TB
   Hooks["ControlsHook + AutopilotHook"] --> App["Bevy App setup"]
   App --> Runtime["SimRuntimePlugin systems"]
   Recorder["RecorderMetaProvider + RecorderSink"] --> Runtime
-  World["RecorderWorldState"] --> Runtime
+  World["RecorderRecorderWorldSnapshot"] --> Runtime
 ```
 
 ### Recorder pipeline
 ```mermaid
 flowchart LR
   Meta["RecorderMetaProvider"] --> Rec["RecorderSink"]
-  World["RecorderWorldState"] --> Rec
+  World["RecorderRecorderWorldSnapshot"] --> Rec
   Rec --> Output["recorded frames"]
 ```
 

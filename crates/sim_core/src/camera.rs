@@ -13,7 +13,7 @@ pub struct Flycam {
 pub struct InstrumentPovCamera;
 
 #[derive(Resource, Default)]
-pub struct PovState {
+pub struct ActiveCameraMode {
     pub use_instrument: bool,
 }
 
@@ -110,7 +110,7 @@ pub fn camera_controller(
 
 pub fn pov_toggle_system(
     keys: Res<ButtonInput<KeyCode>>,
-    mut state: ResMut<PovState>,
+    mut state: ResMut<ActiveCameraMode>,
     mut free_cams: Query<&mut Camera, (With<Flycam>, Without<InstrumentPovCamera>)>,
     mut instrument_cams: Query<&mut Camera, With<InstrumentPovCamera>>,
 ) {

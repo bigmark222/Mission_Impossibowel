@@ -62,14 +62,15 @@ pub mod prelude {
     pub use crate::articulated_types::{ArticulatedSegment, SegmentSpring};
     pub use crate::autopilot_types::{AutoDir, AutoDrive, AutoStage, DataRun, DatagenInit};
     pub use crate::camera::{
-        camera_controller, pov_toggle_system, setup_camera, Flycam, InstrumentPovCamera, PovState,
-        UiOverlayCamera,
+        camera_controller, pov_toggle_system, setup_camera, ActiveCameraMode, Flycam,
+        InstrumentPovCamera, UiOverlayCamera,
     };
     pub use crate::controls::ControlConfig;
     pub use crate::hooks::{AutopilotHook, ControlsHook, SimHooks};
     pub use crate::recorder::{
         AutoRecordTimer, BasicMeta, Config as RecorderConfig, MetaProvider, MetadataProvider,
-        Motion as RecorderMotion, Sink as RecorderSink, State as RecorderState, WorldState,
+        Motion as RecorderMotion, RecorderWorldSnapshot, Sink as RecorderSink,
+        State as RecorderState,
     };
     pub use crate::runtime::{register_runtime_systems, SimRuntimePlugin};
 }

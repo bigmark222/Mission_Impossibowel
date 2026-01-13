@@ -68,7 +68,7 @@ pub struct PrimaryCameraFrameBuffer {
 
 /// Resource tracking whether a model detector is loaded (vs. heuristic fallback).
 #[derive(Resource, Default)]
-pub struct ModelLoadState {
+pub struct ModelLoadedFlag {
     pub model_loaded: bool,
 }
 
@@ -315,7 +315,7 @@ pub fn threshold_hotkeys(
     keys: Res<ButtonInput<KeyCode>>,
     thresh: Option<ResMut<InferenceThresholdsResource>>,
     handle: Option<ResMut<DetectorHandle>>,
-    burn_loaded: Option<ResMut<ModelLoadState>>,
+    burn_loaded: Option<ResMut<ModelLoadedFlag>>,
 ) {
     if !matches!(*mode, SimRunMode::Inference) {
         return;
@@ -370,7 +370,7 @@ pub struct InferenceRuntimePlugin;
 impl Plugin for InferenceRuntimePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<AsyncInferenceState>()
-            .init_resource::<ModelLoadState>()
+            .init_resource::<ModelLoadedFlag>()
             .init_resource::<DetectionOverlayState>()
             .add_systems(
                 Update,
@@ -398,7 +398,7 @@ pub fn recorder_draw_rect(
 pub mod prelude {
     pub use super::{
         AsyncInferenceState, CapturePlugin, DetectionOverlayState, DetectorHandle, DetectorKind,
-        InferenceRuntimePlugin, InferenceThresholdsResource, ModelLoadState, PrimaryCameraFrame,
+        InferenceRuntimePlugin, InferenceThresholdsResource, ModelLoadedFlag, PrimaryCameraFrame,
         PrimaryCameraFrameBuffer, PrimaryCameraState, RuntimeDetectionResult,
     };
 }
@@ -406,7 +406,7 @@ pub fn poll_inference_task(
     mut jobs: ResMut<AsyncInferenceState>,
     mut overlay: ResMut<DetectionOverlayState>,
     handle: Option<ResMut<DetectorHandle>>,
-    mut burn_detector: ResMut<ModelLoadState>,
+    mut burn_detector: ResMut<ModelLoadedFlag>,
 ) {
     let Some(mut task) = jobs.pending.take() else {
         return;

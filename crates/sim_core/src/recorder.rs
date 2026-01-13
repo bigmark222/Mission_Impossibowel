@@ -121,7 +121,7 @@ pub struct Sink {
 
 /// App-provided world state for recorder triggers (head position, stop flag).
 #[derive(Resource, Default)]
-pub struct WorldState {
+pub struct RecorderWorldSnapshot {
     pub head_z: Option<f32>,
     pub stop_flag: bool,
 }

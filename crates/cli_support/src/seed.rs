@@ -5,7 +5,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 /// Stored run seed for deterministic layouts.
 #[cfg_attr(feature = "bevy-resource", derive(Resource))]
 #[derive(Clone, Copy, Debug)]
-pub struct SeedState {
+pub struct RunSeed {
     pub value: u64,
 }
 
