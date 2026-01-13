@@ -113,7 +113,7 @@ pub fn collate<B: Backend>(
         }
 
         let mut boxes = Vec::new();
-        for label in &sample.metadata.polyp_labels {
+        for label in &sample.metadata.labels {
             let bbox = if let Some(norm) = label.bbox_norm {
                 norm
             } else if let Some(px) = label.bbox_px {

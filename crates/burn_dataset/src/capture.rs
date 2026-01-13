@@ -17,31 +17,31 @@ fn validate_label_entry(meta: &LabelEntry, path: &Path) -> DatasetResult<()> {
             msg: "missing image filename".to_string(),
         });
     }
-    if meta.polyp_labels.is_empty() {
+    if meta.labels.is_empty() {
         return Err(BurnDatasetError::Validation {
             path: path.to_path_buf(),
-            msg: "no polyp_labels entries".to_string(),
+            msg: "no labels entries".to_string(),
         });
     }
-    for (i, lbl) in meta.polyp_labels.iter().enumerate() {
+    for (i, lbl) in meta.labels.iter().enumerate() {
         match (lbl.bbox_norm, lbl.bbox_px) {
             (None, None) => {
                 return Err(BurnDatasetError::Validation {
                     path: path.to_path_buf(),
-                    msg: format!("polyp_labels[{i}] has no bbox_norm or bbox_px"),
+                    msg: format!("labels[{i}] has no bbox_norm or bbox_px"),
                 });
             }
             (Some(b), _) => {
                 if b.iter().any(|v| !v.is_finite() || *v < 0.0 || *v > 1.0) {
                     return Err(BurnDatasetError::Validation {
                         path: path.to_path_buf(),
-                        msg: format!("polyp_labels[{i}] bbox_norm out of [0,1]"),
+                        msg: format!("labels[{i}] bbox_norm out of [0,1]"),
                     });
                 }
                 if b[0] >= b[2] || b[1] >= b[3] {
                     return Err(BurnDatasetError::Validation {
                         path: path.to_path_buf(),
-                        msg: format!("polyp_labels[{i}] bbox_norm min>=max ({b:?})"),
+                        msg: format!("labels[{i}] bbox_norm min>=max ({b:?})"),
                     });
                 }
             }
@@ -49,13 +49,13 @@ fn validate_label_entry(meta: &LabelEntry, path: &Path) -> DatasetResult<()> {
                 if b.iter().any(|v| !v.is_finite()) {
                     return Err(BurnDatasetError::Validation {
                         path: path.to_path_buf(),
-                        msg: format!("polyp_labels[{i}] bbox_px contains non-finite values"),
+                        msg: format!("labels[{i}] bbox_px contains non-finite values"),
                     });
                 }
                 if b[0] >= b[2] || b[1] >= b[3] {
                     return Err(BurnDatasetError::Validation {
                         path: path.to_path_buf(),
-                        msg: format!("polyp_labels[{i}] bbox_px min>=max ({b:?})"),
+                        msg: format!("labels[{i}] bbox_px min>=max ({b:?})"),
                     });
                 }
             }
@@ -65,7 +65,7 @@ fn validate_label_entry(meta: &LabelEntry, path: &Path) -> DatasetResult<()> {
 }
 
 fn label_has_box(meta: &LabelEntry) -> bool {
-    meta.polyp_labels.iter().any(|lbl| {
+    meta.labels.iter().any(|lbl| {
         lbl.bbox_norm
             .is_some_and(|b| b.iter().all(|v| v.is_finite()) && b[0] < b[2] && b[1] < b[3])
             || lbl

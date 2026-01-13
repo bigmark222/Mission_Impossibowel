@@ -1,7 +1,7 @@
 //! Image augmentation and transformation pipeline.
 
 use crate::types::{
-    CacheableTransformConfig, DatasetResult, DatasetSample, LabelEntry, PolypLabel, ResizeMode,
+    CacheableTransformConfig, DatasetResult, DatasetSample, DetectionLabel, LabelEntry, ResizeMode,
 };
 use image::imageops::FilterType;
 use rand::{Rng, SeedableRng};
@@ -162,7 +162,7 @@ impl TransformPipeline {
                     width = w;
                     height = h;
                     let mut resized = image::imageops::resize(&img, w, h, FilterType::Triangle);
-                    let mut boxes = normalize_boxes(&meta.polyp_labels, w, h);
+                    let mut boxes = normalize_boxes(&meta.labels, w, h);
                     maybe_hflip(&mut resized, &mut boxes, self.flip_horizontal_prob, rng);
                     return build_sample_from_image(
                         resized,
@@ -179,7 +179,7 @@ impl TransformPipeline {
                     let scale_y = resized_img.height() as f32 / img.height() as f32;
 
                     let (norm_boxes, px_boxes) =
-                        normalize_boxes_with_px(&meta.polyp_labels, img.width(), img.height());
+                        normalize_boxes_with_px(&meta.labels, img.width(), img.height());
 
                     let mut boxes = norm_boxes
                         .into_iter()
@@ -240,7 +240,7 @@ impl TransformPipeline {
             }
         }
 
-        let mut boxes = normalize_boxes(&meta.polyp_labels, width, height);
+        let mut boxes = normalize_boxes(&meta.labels, width, height);
         let mut img = img;
         maybe_hflip(&mut img, &mut boxes, self.flip_horizontal_prob, rng);
         maybe_jitter(
@@ -393,7 +393,7 @@ fn letterbox_resize(
     Ok((canvas, pad_w, pad_h))
 }
 
-fn normalize_boxes(labels: &[PolypLabel], w: u32, h: u32) -> Vec<[f32; 4]> {
+fn normalize_boxes(labels: &[DetectionLabel], w: u32, h: u32) -> Vec<[f32; 4]> {
     labels
         .iter()
         .filter_map(|l| {
@@ -420,7 +420,7 @@ fn normalize_boxes(labels: &[PolypLabel], w: u32, h: u32) -> Vec<[f32; 4]> {
 }
 
 fn normalize_boxes_with_px(
-    labels: &[PolypLabel],
+    labels: &[DetectionLabel],
     w: u32,
     h: u32,
 ) -> (Vec<[f32; 4]>, Vec<[f32; 4]>) {

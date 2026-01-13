@@ -34,8 +34,8 @@ path = "src/bin/eval.rs"
 [dependencies]
 anyhow = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
-data_contracts = { package = "cortenforge-data-contracts", version = "0.5.1" }
-burn_dataset = { package = "cortenforge-burn-dataset", version = "0.5.1", features = ["burn-runtime"] }
+data_contracts = { package = "cortenforge-data-contracts", path = "../data_contracts", version = "0.5.1" }
+burn_dataset = { package = "cortenforge-burn-dataset", path = "../burn_dataset", version = "0.5.1", features = ["burn-runtime"] }
 burn = { workspace = true, features = ["autodiff", "std"] }
 burn-ndarray = { workspace = true, optional = true }
 burn-wgpu = { workspace = true, optional = true}

@@ -67,11 +67,11 @@ pub(crate) struct LabelEntry {
     pub(crate) frame_id: u64,
     pub(crate) image: String,
     pub(crate) image_present: bool,
-    pub(crate) polyp_labels: Vec<PolypLabel>,
+    pub(crate) labels: Vec<DetectionLabel>,
 }
 
 #[derive(Deserialize)]
-pub(crate) struct PolypLabel {
+pub(crate) struct DetectionLabel {
     pub(crate) bbox_px: Option<[f32; 4]>,
     pub(crate) bbox_norm: Option<[f32; 4]>,
 }

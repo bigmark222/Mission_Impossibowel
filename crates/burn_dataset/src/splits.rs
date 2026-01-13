@@ -82,5 +82,5 @@ pub fn count_boxes(idx: &SampleIndex) -> DatasetResult<usize> {
         path: idx.label_path.clone(),
         source: e,
     })?;
-    Ok(meta.polyp_labels.len())
+    Ok(meta.labels.len())
 }

@@ -12,7 +12,7 @@ use burn_dataset::{
     load_sample_for_etl, CacheableTransformConfig, DatasetSummary, Endianness, ResizeMode,
     ShardDType, ShardMetadata, TransformPipelineBuilder, WarehouseManifest,
 };
-use data_contracts::capture::{CaptureMetadata, PolypLabel};
+use data_contracts::capture::{CaptureMetadata, DetectionLabel};
 use image::{Rgb, RgbImage};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -34,10 +34,10 @@ fn create_synthetic_run(root: &Path, run_name: &str, frame_count: usize, boxes_p
         let img_name = format!("frame_{:05}.png", frame_id);
 
         // Create synthetic labels
-        let mut polyp_labels = Vec::new();
+        let mut labels = Vec::new();
         for j in 0..boxes_per_frame.max(1) { // Ensure at least 1 for validation
             let offset = j as f32 * 0.1;
-            polyp_labels.push(PolypLabel {
+            labels.push(DetectionLabel {
                 center_world: [offset, offset, 0.0],
                 bbox_px: Some([10.0 + offset * 100.0, 10.0, 50.0, 50.0]),
                 bbox_norm: Some([0.1 + offset * 0.1, 0.1, 0.5, 0.5]),
@@ -53,8 +53,8 @@ fn create_synthetic_run(root: &Path, run_name: &str, frame_count: usize, boxes_p
             image: img_name.clone(),
             image_present: true,
             camera_active: true,
-            polyp_seed: 42,
-            polyp_labels,
+            label_seed: 42,
+            labels,
         };
 
         let json = serde_json::to_vec(&meta)?;

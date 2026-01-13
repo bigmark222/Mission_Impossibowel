@@ -2,7 +2,7 @@ use burn::backend::{ndarray::NdArray, Autodiff};
 use burn::module::Module;
 use burn::optim::{AdamConfig, GradientsParams, Optimizer};
 use burn::record::{BinFileRecorder, FullPrecisionSettings};
-use data_contracts::capture::{CaptureMetadata, PolypLabel};
+use data_contracts::capture::{CaptureMetadata, DetectionLabel};
 use std::fs;
 use std::path::PathBuf;
 use training::dataset::{collate, DatasetConfig};
@@ -20,8 +20,8 @@ fn synthetic_dataset(tmp: &tempfile::TempDir) -> anyhow::Result<Vec<training::Ru
         image: "frame_00001.png".into(),
         image_present: true,
         camera_active: true,
-        polyp_seed: 42,
-        polyp_labels: vec![PolypLabel {
+        label_seed: 42,
+        labels: vec![DetectionLabel {
             center_world: [0.0, 0.0, 0.0],
             bbox_px: Some([0.0, 0.0, 10.0, 10.0]),
             bbox_norm: Some([0.1, 0.1, 0.2, 0.2]),
