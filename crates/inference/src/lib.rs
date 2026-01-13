@@ -8,13 +8,13 @@ pub type InferenceBackend = burn_wgpu::Wgpu<f32>;
 pub type InferenceBackend = burn_ndarray::NdArray<f32>;
 
 #[cfg(feature = "convolutional_detector")]
-pub type InferenceModel<B> = models::ConvolutionalDetector<B>;
+pub type InferenceModel<B> = models::MultiboxModel<B>;
 #[cfg(feature = "convolutional_detector")]
-pub type InferenceModelConfig = models::ConvolutionalDetectorConfig;
+pub type InferenceModelConfig = models::MultiboxModelConfig;
 #[cfg(not(feature = "convolutional_detector"))]
-pub type InferenceModel<B> = models::LinearDetector<B>;
+pub type InferenceModel<B> = models::LinearClassifier<B>;
 #[cfg(not(feature = "convolutional_detector"))]
-pub type InferenceModelConfig = models::LinearDetectorConfig;
+pub type InferenceModelConfig = models::LinearClassifierConfig;
 
 pub use factory::{InferenceFactory, InferenceThresholds};
 

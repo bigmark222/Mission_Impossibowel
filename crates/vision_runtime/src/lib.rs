@@ -126,9 +126,9 @@ pub struct DetectorHandle {
     pub kind: DetectorKind,
 }
 
-struct HeuristicDetector;
+struct DefaultTestDetector;
 
-impl interfaces::Detector for HeuristicDetector {
+impl interfaces::Detector for DefaultTestDetector {
     fn detect(&mut self, frame: &Frame) -> interfaces::DetectionResult {
         interfaces::DetectionResult {
             frame_id: frame.id,
@@ -299,7 +299,7 @@ pub fn schedule_burn_inference(
         size: (target.size.x, target.size.y),
         path: None,
     };
-    let mut detector = std::mem::replace(&mut handle.detector, Box::new(HeuristicDetector));
+    let mut detector = std::mem::replace(&mut handle.detector, Box::new(DefaultTestDetector));
     let kind = handle.kind;
     let size = (target.size.x, target.size.y);
     let task = AsyncComputeTaskPool::get().spawn(async move {
@@ -346,7 +346,7 @@ pub fn threshold_hotkeys(
     }
 
     if keys.just_pressed(KeyCode::Digit0) {
-        handle.detector = Box::new(HeuristicDetector);
+        handle.detector = Box::new(DefaultTestDetector);
         handle.kind = DetectorKind::Heuristic;
         burn_loaded.model_loaded = false;
         changed = true;

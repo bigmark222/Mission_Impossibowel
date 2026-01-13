@@ -1,7 +1,7 @@
 use burn::backend::Autodiff;
 use burn::tensor::Tensor;
 use burn_ndarray::NdArray;
-use training::{ConvolutionalDetector, ConvolutionalDetectorConfig};
+use training::{MultiboxModel, MultiboxModelConfig};
 
 // Force a CPU backend for this shape check to avoid requiring a GPU even when backend-wgpu is enabled.
 type ADBackend = Autodiff<NdArray<f32>>;
@@ -12,8 +12,8 @@ fn forward_shapes_bigdet() {
     let max_boxes = 5;
     let input_dim = 4 + 8; // match collate features shape
 
-    let model = ConvolutionalDetector::<ADBackend>::new(
-        ConvolutionalDetectorConfig {
+    let model = MultiboxModel::<ADBackend>::new(
+        MultiboxModelConfig {
             max_boxes,
             input_dim: Some(input_dim),
             ..Default::default()

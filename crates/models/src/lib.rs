@@ -4,24 +4,24 @@ use burn::tensor::activation::{relu, sigmoid};
 use burn::tensor::Tensor;
 
 #[derive(Debug, Clone)]
-pub struct LinearDetectorConfig {
+pub struct LinearClassifierConfig {
     pub hidden: usize,
 }
 
-impl Default for LinearDetectorConfig {
+impl Default for LinearClassifierConfig {
     fn default() -> Self {
         Self { hidden: 64 }
     }
 }
 
 #[derive(Debug, Module)]
-pub struct LinearDetector<B: burn::tensor::backend::Backend> {
+pub struct LinearClassifier<B: burn::tensor::backend::Backend> {
     linear1: nn::Linear<B>,
     linear2: nn::Linear<B>,
 }
 
-impl<B: burn::tensor::backend::Backend> LinearDetector<B> {
-    pub fn new(cfg: LinearDetectorConfig, device: &B::Device) -> Self {
+impl<B: burn::tensor::backend::Backend> LinearClassifier<B> {
+    pub fn new(cfg: LinearClassifierConfig, device: &B::Device) -> Self {
         let linear1 = nn::LinearConfig::new(4, cfg.hidden).init(device);
         let linear2 = nn::LinearConfig::new(cfg.hidden, 1).init(device);
         Self { linear1, linear2 }
@@ -35,14 +35,14 @@ impl<B: burn::tensor::backend::Backend> LinearDetector<B> {
 }
 
 #[derive(Debug, Clone)]
-pub struct ConvolutionalDetectorConfig {
+pub struct MultiboxModelConfig {
     pub hidden: usize,
     pub depth: usize,
     pub max_boxes: usize,
     pub input_dim: Option<usize>,
 }
 
-impl Default for ConvolutionalDetectorConfig {
+impl Default for MultiboxModelConfig {
     fn default() -> Self {
         Self {
             hidden: 128,
@@ -54,7 +54,7 @@ impl Default for ConvolutionalDetectorConfig {
 }
 
 #[derive(Debug, Module)]
-pub struct ConvolutionalDetector<B: burn::tensor::backend::Backend> {
+pub struct MultiboxModel<B: burn::tensor::backend::Backend> {
     stem: nn::Linear<B>,
     blocks: Vec<nn::Linear<B>>,
     box_head: nn::Linear<B>,
@@ -63,8 +63,8 @@ pub struct ConvolutionalDetector<B: burn::tensor::backend::Backend> {
     input_dim: usize,
 }
 
-impl<B: burn::tensor::backend::Backend> ConvolutionalDetector<B> {
-    pub fn new(cfg: ConvolutionalDetectorConfig, device: &B::Device) -> Self {
+impl<B: burn::tensor::backend::Backend> MultiboxModel<B> {
+    pub fn new(cfg: MultiboxModelConfig, device: &B::Device) -> Self {
         let input_dim = cfg.input_dim.unwrap_or(4);
         let stem = nn::LinearConfig::new(input_dim, cfg.hidden).init(device);
         let mut blocks = Vec::new();
@@ -131,6 +131,6 @@ impl<B: burn::tensor::backend::Backend> ConvolutionalDetector<B> {
 
 pub mod prelude {
     pub use super::{
-        ConvolutionalDetector, ConvolutionalDetectorConfig, LinearDetector, LinearDetectorConfig,
+        LinearClassifier, LinearClassifierConfig, MultiboxModel, MultiboxModelConfig,
     };
 }

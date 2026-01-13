@@ -8,18 +8,18 @@ use burn_dataset::WarehouseLoaders;
 use std::path::Path;
 
 use crate::{
-    ConvolutionalDetector, ConvolutionalDetectorConfig, DatasetPathConfig, LinearDetector,
-    LinearDetectorConfig, TrainBackend,
+    DatasetPathConfig, LinearClassifier, LinearClassifierConfig, MultiboxModel,
+    MultiboxModelConfig, TrainBackend,
 };
 use clap::{Parser, ValueEnum};
 use std::fs;
 
-pub fn load_linear_detector_from_checkpoint<P: AsRef<Path>>(
+pub fn load_linear_classifier_from_checkpoint<P: AsRef<Path>>(
     path: P,
     device: &<TrainBackend as burn::tensor::backend::Backend>::Device,
-) -> Result<LinearDetector<TrainBackend>, RecorderError> {
+) -> Result<LinearClassifier<TrainBackend>, RecorderError> {
     let recorder = BinFileRecorder::<FullPrecisionSettings>::new();
-    LinearDetector::<TrainBackend>::new(LinearDetectorConfig::default(), device).load_file(
+    LinearClassifier::<TrainBackend>::new(LinearClassifierConfig::default(), device).load_file(
         path.as_ref(),
         &recorder,
         device,
@@ -47,7 +47,7 @@ pub enum TrainingInputSource {
 #[derive(Parser, Debug)]
 #[command(
     name = "train",
-    about = "Train LinearDetector/ConvolutionalDetector (warehouse-first)"
+    about = "Train LinearClassifier/MultiboxModel (warehouse-first)"
 )]
 pub struct TrainArgs {
     /// Model to train.
@@ -169,7 +169,7 @@ fn train_linear_detector(
     ckpt_path: &str,
 ) -> anyhow::Result<()> {
     let device = <ADBackend as burn::tensor::backend::Backend>::Device::default();
-    let mut model = LinearDetector::<ADBackend>::new(LinearDetectorConfig::default(), &device);
+    let mut model = LinearClassifier::<ADBackend>::new(LinearClassifierConfig::default(), &device);
     let mut optim = AdamConfig::new().init();
 
     let batch_size = args.batch_size.max(1);
@@ -228,7 +228,7 @@ fn train_linear_detector_warehouse(
     ckpt_path: &str,
 ) -> anyhow::Result<()> {
     let device = <ADBackend as burn::tensor::backend::Backend>::Device::default();
-    let mut model = LinearDetector::<ADBackend>::new(LinearDetectorConfig::default(), &device);
+    let mut model = LinearClassifier::<ADBackend>::new(LinearClassifierConfig::default(), &device);
     let mut optim = AdamConfig::new().init();
 
     let batch_size = args.batch_size.max(1);
@@ -292,8 +292,8 @@ fn train_convolutional_detector(
     ckpt_path: &str,
 ) -> anyhow::Result<()> {
     let device = <ADBackend as burn::tensor::backend::Backend>::Device::default();
-    let mut model = ConvolutionalDetector::<ADBackend>::new(
-        ConvolutionalDetectorConfig {
+    let mut model = MultiboxModel::<ADBackend>::new(
+        MultiboxModelConfig {
             input_dim: Some(4 + 8), // first box (4) + features (8)
             max_boxes: args.max_boxes,
             ..Default::default()
@@ -402,8 +402,8 @@ fn train_convolutional_detector_warehouse(
     ckpt_path: &str,
 ) -> anyhow::Result<()> {
     let device = <ADBackend as burn::tensor::backend::Backend>::Device::default();
-    let mut model = ConvolutionalDetector::<ADBackend>::new(
-        ConvolutionalDetectorConfig {
+    let mut model = MultiboxModel::<ADBackend>::new(
+        MultiboxModelConfig {
             input_dim: Some(4 + 8), // first box (4) + features (8)
             max_boxes: args.max_boxes,
             ..Default::default()
@@ -546,14 +546,14 @@ fn iou_xyxy(a: [f32; 4], b: [f32; 4]) -> f32 {
         inter_area / denom
     }
 }
-pub fn load_convolutional_detector_from_checkpoint<P: AsRef<Path>>(
+pub fn load_multibox_model_from_checkpoint<P: AsRef<Path>>(
     path: P,
     device: &<TrainBackend as burn::tensor::backend::Backend>::Device,
     max_boxes: usize,
-) -> Result<ConvolutionalDetector<TrainBackend>, RecorderError> {
+) -> Result<MultiboxModel<TrainBackend>, RecorderError> {
     let recorder = BinFileRecorder::<FullPrecisionSettings>::new();
-    ConvolutionalDetector::<TrainBackend>::new(
-        ConvolutionalDetectorConfig {
+    MultiboxModel::<TrainBackend>::new(
+        MultiboxModelConfig {
             max_boxes,
             input_dim: Some(4 + 8),
             ..Default::default()

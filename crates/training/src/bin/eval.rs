@@ -1,18 +1,17 @@
 use clap::Parser;
 use training::dataset::{collate, DatasetPathConfig};
 use training::util::{
-    load_convolutional_detector_from_checkpoint, load_linear_detector_from_checkpoint, BackendKind,
+    load_linear_classifier_from_checkpoint, load_multibox_model_from_checkpoint, BackendKind,
     ModelKind,
 };
 use training::{
-    ConvolutionalDetector, ConvolutionalDetectorConfig, LinearDetector, LinearDetectorConfig,
-    TrainBackend,
+    LinearClassifier, LinearClassifierConfig, MultiboxModel, MultiboxModelConfig, TrainBackend,
 };
 
 #[derive(Parser, Debug)]
 #[command(
     name = "eval",
-    about = "Evaluate LinearDetector/ConvolutionalDetector checkpoint on a dataset (precision/recall by IoU)"
+    about = "Evaluate LinearClassifier/MultiboxModel checkpoint on a dataset (precision/recall by IoU)"
 )]
 struct Args {
     /// Model to evaluate.
@@ -69,17 +68,17 @@ fn main() -> anyhow::Result<()> {
         ModelKind::Tiny => {
             let model = match ckpt {
                 Some(ref p) => {
-                    load_linear_detector_from_checkpoint(p, &device).unwrap_or_else(|e| {
+                    load_linear_classifier_from_checkpoint(p, &device).unwrap_or_else(|e| {
                         println!("Failed to load checkpoint {p}; using fresh model ({e})");
-                        LinearDetector::<TrainBackend>::new(
-                            LinearDetectorConfig::default(),
+                        LinearClassifier::<TrainBackend>::new(
+                            LinearClassifierConfig::default(),
                             &device,
                         )
                     })
                 }
                 None => {
-                    println!("No checkpoint provided; using fresh LinearDetector");
-                    LinearDetector::<TrainBackend>::new(LinearDetectorConfig::default(), &device)
+                    println!("No checkpoint provided; using fresh LinearClassifier");
+                    LinearClassifier::<TrainBackend>::new(LinearClassifierConfig::default(), &device)
                 }
             };
             for chunk in samples.chunks(batch_size) {
@@ -112,11 +111,11 @@ fn main() -> anyhow::Result<()> {
         ModelKind::Big => {
             let model = match ckpt {
                 Some(ref p) => {
-                    load_convolutional_detector_from_checkpoint(p, &device, args.max_boxes)
+                    load_multibox_model_from_checkpoint(p, &device, args.max_boxes)
                         .unwrap_or_else(|e| {
                             println!("Failed to load checkpoint {p}; using fresh model ({e})");
-                            ConvolutionalDetector::<TrainBackend>::new(
-                                ConvolutionalDetectorConfig {
+                            MultiboxModel::<TrainBackend>::new(
+                                MultiboxModelConfig {
                                     input_dim: Some(4 + 8),
                                     max_boxes: args.max_boxes,
                                     ..Default::default()
@@ -126,9 +125,9 @@ fn main() -> anyhow::Result<()> {
                         })
                 }
                 None => {
-                    println!("No checkpoint provided; using fresh ConvolutionalDetector");
-                    ConvolutionalDetector::<TrainBackend>::new(
-                        ConvolutionalDetectorConfig {
+                    println!("No checkpoint provided; using fresh MultiboxModel");
+                    MultiboxModel::<TrainBackend>::new(
+                        MultiboxModelConfig {
                             input_dim: Some(4 + 8),
                             max_boxes: args.max_boxes,
                             ..Default::default()

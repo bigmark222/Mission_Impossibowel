@@ -5,7 +5,7 @@ pub mod util;
 
 pub use dataset::{collate, collate_from_burn_batch, CollatedBatch, DatasetPathConfig, RunSample};
 pub use models::{
-    ConvolutionalDetector, ConvolutionalDetectorConfig, LinearDetector, LinearDetectorConfig,
+    LinearClassifier, LinearClassifierConfig, MultiboxModel, MultiboxModelConfig,
 };
 pub use util::{run_train, TrainArgs};
 /// Backend alias for training/eval (NdArray by default; WGPU if enabled).
