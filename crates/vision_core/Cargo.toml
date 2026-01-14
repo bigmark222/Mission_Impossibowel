@@ -1,6 +1,6 @@
 [package]
 name = "cortenforge-vision-core"
-version = "0.5.1"
+version = "0.6.0"
 edition = "2021"
 license = "Apache-2.0"
 publish = true
@@ -25,4 +25,4 @@ anyhow = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 image = { workspace = true, features = ["png"] }
 bevy = { workspace = true, default-features = false, features = ["bevy_core_pipeline", "bevy_render", "bevy_asset"] }
-data_contracts = { package = "cortenforge-data-contracts", path = "../data_contracts", version = "0.5.1" }
+data_contracts = { package = "cortenforge-data-contracts", path = "../data_contracts", version = "0.6.0" }

@@ -2349,31 +2349,31 @@ dependencies = [
 
 [[package]]
 name = "cortenforge"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "bincode",
  "burn",
  "burn-ndarray",
  "burn-wgpu",
- "cortenforge-burn-dataset 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cortenforge-capture-utils 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cortenforge-data-contracts 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cortenforge-inference 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cortenforge-models 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cortenforge-sim-core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cortenforge-training 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cortenforge-vision-core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cortenforge-vision-runtime 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cortenforge-burn-dataset",
+ "cortenforge-capture-utils",
+ "cortenforge-data-contracts",
+ "cortenforge-inference",
+ "cortenforge-models",
+ "cortenforge-sim-core",
+ "cortenforge-training",
+ "cortenforge-vision-core",
+ "cortenforge-vision-runtime",
 ]
 
 [[package]]
 name = "cortenforge-burn-dataset"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "burn",
  "burn-ndarray",
- "cortenforge-data-contracts 0.5.1",
+ "cortenforge-data-contracts",
  "crossbeam-channel",
  "image",
  "memmap2",
@@ -2387,33 +2387,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "cortenforge-burn-dataset"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ab77a7ebe99e9e723ac9d9a6110c6814c4945066dfbffc432e9fae94780f886"
-dependencies = [
- "anyhow",
- "burn",
- "burn-ndarray",
- "cortenforge-data-contracts 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "crossbeam-channel",
- "image",
- "memmap2",
- "rand",
- "rayon",
- "serde",
- "serde_json",
- "sha2",
- "thiserror 2.0.17",
-]
-
-[[package]]
 name = "cortenforge-capture-utils"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "anyhow",
- "cortenforge-data-contracts 0.5.1",
- "cortenforge-vision-core 0.5.1",
+ "cortenforge-data-contracts",
+ "cortenforge-vision-core",
  "image",
  "serde",
  "serde_json",
@@ -2421,50 +2400,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "cortenforge-capture-utils"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "301fa6d045ae86da13877747434738a6ee8b73d7dbe4336f797c173f49a49d7a"
-dependencies = [
- "anyhow",
- "cortenforge-data-contracts 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cortenforge-vision-core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "image",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "cortenforge-cli-support"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "bevy",
  "clap",
 ]
 
 [[package]]
-name = "cortenforge-cli-support"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ffc7b820ed9758d4b93c8558b73adfb912ceff7a947427e2b5636c1c732ef56f"
-dependencies = [
- "clap",
-]
-
-[[package]]
 name = "cortenforge-data-contracts"
-version = "0.5.1"
-dependencies = [
- "serde",
- "serde_json",
- "thiserror 2.0.17",
-]
-
-[[package]]
-name = "cortenforge-data-contracts"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "53f948f589506c23744dec069a0178e1f99a00c254070d4bb1a7979d95e85650"
+version = "0.6.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -2473,49 +2418,22 @@ dependencies = [
 
 [[package]]
 name = "cortenforge-inference"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "bincode",
  "burn",
  "burn-ndarray",
  "burn-wgpu",
- "cortenforge-data-contracts 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cortenforge-models 0.5.1",
- "cortenforge-sim-core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cortenforge-vision-core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "cortenforge-inference"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b09b752b71f4eff1cba23b84210671f0a200f5c1ecfa87a51e3560a90236b9e0"
-dependencies = [
- "anyhow",
- "bevy",
- "bincode",
- "burn",
- "burn-ndarray",
- "cortenforge-data-contracts 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cortenforge-models 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cortenforge-sim-core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cortenforge-vision-core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cortenforge-data-contracts",
+ "cortenforge-models",
+ "cortenforge-sim-core",
+ "cortenforge-vision-core",
 ]
 
 [[package]]
 name = "cortenforge-models"
-version = "0.5.1"
-dependencies = [
- "bincode",
- "burn",
-]
-
-[[package]]
-name = "cortenforge-models"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3819dfe6d604b5b1f82d72c5f4711d1a6bda5ef67657dee25bc12bc4f780fb12"
+version = "0.6.0"
 dependencies = [
  "bincode",
  "burn",
@@ -2523,39 +2441,28 @@ dependencies = [
 
 [[package]]
 name = "cortenforge-sim-core"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "bevy",
  "bevy_rapier3d",
- "cortenforge-vision-core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "cortenforge-sim-core"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "daedceb137bd2fdd94cf0b12005c2e40171042077b6435290f40426fa683bc59"
-dependencies = [
- "bevy",
- "bevy_rapier3d",
- "cortenforge-vision-core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cortenforge-vision-core",
 ]
 
 [[package]]
 name = "cortenforge-tools"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "arrow-array",
  "arrow-schema",
  "arrow-select",
  "clap",
- "cortenforge-burn-dataset 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cortenforge-capture-utils 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cortenforge-cli-support 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cortenforge-data-contracts 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cortenforge-inference 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cortenforge-vision-core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cortenforge-burn-dataset",
+ "cortenforge-capture-utils",
+ "cortenforge-cli-support",
+ "cortenforge-data-contracts",
+ "cortenforge-inference",
+ "cortenforge-vision-core",
  "crossterm",
  "image",
  "nvml-wrapper",
@@ -2573,7 +2480,7 @@ dependencies = [
 
 [[package]]
 name = "cortenforge-training"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "bincode",
@@ -2581,9 +2488,9 @@ dependencies = [
  "burn-ndarray",
  "burn-wgpu",
  "clap",
- "cortenforge-burn-dataset 0.5.1",
- "cortenforge-data-contracts 0.5.1",
- "cortenforge-models 0.5.1",
+ "cortenforge-burn-dataset",
+ "cortenforge-data-contracts",
+ "cortenforge-models",
  "image",
  "serde",
  "serde_json",
@@ -2591,72 +2498,26 @@ dependencies = [
 ]
 
 [[package]]
-name = "cortenforge-training"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6c5acfd24f479675361e98ef4b50b05ecf95780057686ffa1cddef2f2952017"
-dependencies = [
- "anyhow",
- "bincode",
- "burn",
- "burn-ndarray",
- "clap",
- "cortenforge-burn-dataset 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cortenforge-data-contracts 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cortenforge-models 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "image",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "cortenforge-vision-core"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "bevy",
- "cortenforge-data-contracts 0.5.1",
- "image",
- "serde",
-]
-
-[[package]]
-name = "cortenforge-vision-core"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff808d48b30efcf4c99ae217c331e2c7023567cbbe3efc0bb7009c43b2a58e65"
-dependencies = [
- "anyhow",
- "bevy",
+ "cortenforge-data-contracts",
  "image",
  "serde",
 ]
 
 [[package]]
 name = "cortenforge-vision-runtime"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "bevy",
  "bevy_camera",
- "cortenforge-inference 0.5.1",
- "cortenforge-sim-core 0.5.1",
- "cortenforge-vision-core 0.5.1",
- "futures-lite",
- "image",
-]
-
-[[package]]
-name = "cortenforge-vision-runtime"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cdb26a26351780fc73844b067405dbaaa7b03f27367b2bc9db862aaf3d727b71"
-dependencies = [
- "anyhow",
- "bevy",
- "bevy_camera",
- "cortenforge-sim-core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cortenforge-vision-core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cortenforge-inference",
+ "cortenforge-sim-core",
+ "cortenforge-vision-core",
  "futures-lite",
  "image",
 ]

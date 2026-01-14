@@ -9,7 +9,7 @@ use data_contracts::capture::CaptureMetadata;
 #[derive(Parser, Debug)]
 #[command(
     name = "prune_empty",
-    about = "Copy runs while dropping frames with empty polyp_labels"
+    about = "Copy runs while dropping frames with empty labels"
 )]
 struct Args {
     /// Input root containing run_* directories.
@@ -74,7 +74,7 @@ fn main() -> Result<()> {
                 fs::read(lbl.path()).with_context(|| format!("read {}", lbl.path().display()))?;
             let meta: CaptureMetadata = serde_json::from_slice(&raw)
                 .with_context(|| format!("parse {}", lbl.path().display()))?;
-            if !meta.image_present || meta.polyp_labels.is_empty() {
+            if !meta.image_present || meta.labels.is_empty() {
                 frames_skipped += 1;
                 continue;
             }

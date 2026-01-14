@@ -1,8 +1,8 @@
 # Release checklist (CortenForge crates)
 
-Target version: `0.5.1`
+Target version: `0.6.0`
 
-Note: Keep all workspace crates on a single shared version for simplicity (e.g., 0.5.1 across the board).
+Note: Keep all workspace crates on a single shared version for simplicity (e.g., 0.6.0 across the board).
 
 Follow these steps to publish the `cortenforge-*` crates and tag a release. Adjust the crate list if new crates are added.
 
@@ -35,11 +35,27 @@ This script:
 
 - Make sure working tree is clean and on the intended release branch.
 - Ensure `cargo` is logged into crates.io and has publish rights.
-- Confirm versions: currently `0.5.1` across all crates.
+- Confirm versions: currently `0.6.0` across all crates.
   - Run `./scripts/sync_versions.sh` to verify
 - Release notes: update the changelog entry in `docs/cortenforge_book/src/00_workspace/changelog.md`.
 
-## Release notes (v0.5.1)
+## Release notes (v0.6.0)
+
+- **BREAKING**: Extensive terminology standardization (PolypLabel→DetectionLabel, probe→articulated_instrument, FrontCamera→PrimaryCapture, TinyDet/BigDet→LinearDetector/ConvolutionalDetector, polyp_seed→label_seed)
+- **BREAKING**: Removed legacy feature aliases (tinydet/bigdet)
+- **BREAKING**: Removed Bevy dependency from inference crate
+- **BREAKING**: Consolidated Label type hierarchy
+- **BREAKING**: Renamed InferencePlugin→InferenceRuntimePlugin
+- **BREAKING**: Standardized naming conventions (Config suffix, abbreviations, State suffix, detector naming)
+- **BREAKING**: Consolidated recorder types into sim_core::recorder module
+- **BREAKING**: Removed backward-compatible prelude re-exports
+- Added comprehensive API stability markers (stable vs experimental)
+- Added versioning strategy documentation and SemVer policy
+- Complete crates.io publishing preparation (metadata, docs.rs config, READMEs)
+- Added extensive conventions documentation
+- See CHANGELOG.md and MIGRATION_0.6.0.md for detailed upgrade instructions
+
+## Previous release notes (v0.5.1)
 
 - Added automated version synchronization script (`scripts/sync_versions.sh`)
 - Added CI validation for version consistency

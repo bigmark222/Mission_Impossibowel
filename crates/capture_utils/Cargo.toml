@@ -1,6 +1,6 @@
 [package]
 name = "cortenforge-capture-utils"
-version = "0.5.1"
+version = "0.6.0"
 edition = "2021"
 license = "Apache-2.0"
 publish = true
@@ -21,8 +21,8 @@ rustdoc-args = ["--cfg", "docsrs"]
 name = "capture_utils"
 
 [dependencies]
-vision_core = { package = "cortenforge-vision-core", path = "../vision_core", version = "0.5.1" }
-data_contracts = { package = "cortenforge-data-contracts", path = "../data_contracts", version = "0.5.1" }
+vision_core = { package = "cortenforge-vision-core", path = "../vision_core", version = "0.6.0" }
+data_contracts = { package = "cortenforge-data-contracts", path = "../data_contracts", version = "0.6.0" }
 image = { workspace = true, features = ["png", "rayon"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }

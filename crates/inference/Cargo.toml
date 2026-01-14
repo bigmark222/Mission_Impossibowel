@@ -1,6 +1,6 @@
 [package]
 name = "cortenforge-inference"
-version = "0.5.1"
+version = "0.6.0"
 edition = "2021"
 license = "Apache-2.0"
 publish = true
@@ -30,11 +30,11 @@ path = "src/lib.rs"
 
 [dependencies]
 anyhow = { workspace = true }
-vision_core = { package = "cortenforge-vision-core", version = "0.5.1" }
-sim_core = { package = "cortenforge-sim-core", version = "0.5.1" }
+vision_core = { package = "cortenforge-vision-core", path = "../vision_core", version = "0.6.0" }
+sim_core = { package = "cortenforge-sim-core", path = "../sim_core", version = "0.6.0" }
 burn = { workspace = true, features = ["autodiff"] }
 burn-ndarray = { workspace = true, optional = true }
 burn-wgpu = { workspace = true, optional = true}
-models = { package = "cortenforge-models", path = "../models", version = "0.5.1" }
-data_contracts = { package = "cortenforge-data-contracts", version = "0.5.1" }
+models = { package = "cortenforge-models", path = "../models", version = "0.6.0" }
+data_contracts = { package = "cortenforge-data-contracts", path = "../data_contracts", version = "0.6.0" }
 bincode = { workspace = true }
