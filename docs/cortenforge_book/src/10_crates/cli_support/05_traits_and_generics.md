@@ -7,7 +7,7 @@ Quick read: Extension points and the constraints they impose.
 ## Generics and bounds
 - All structs are concrete; no generic parameters or custom traits.
 - Clap derives (`Args`) used where CLI parsing is needed (`CaptureOutputArgs`, `WarehouseOutputArgs`).
-- SeedState optionally derives `bevy::Resource` behind `bevy-resource` feature for reuse in Bevy apps.
+- RunSeed optionally derives `bevy::Resource` behind `bevy-resource` feature for reuse in Bevy apps.
 
 ## Design notes
 - Keeping everything concrete avoids trait-object noise in binaries; consumers convert `Args` → internal opts via `From`.

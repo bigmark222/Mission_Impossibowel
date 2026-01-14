@@ -18,15 +18,15 @@ struct Args {
     /// Input image path (any format supported by the `image` crate).
     #[arg(long)]
     image: PathBuf,
-    /// Output path for the boxed image (defaults to <stem>_boxed.png alongside the input).
+    /// Output path for the boxed image (defaults to `<stem>_boxed.png` alongside the input).
     #[arg(long)]
     out: Option<PathBuf>,
     /// Objectness threshold.
     #[arg(long, default_value_t = 0.3)]
-    infer_obj_thresh: f32,
+    infer_objectness_threshold: f32,
     /// IoU threshold for NMS.
     #[arg(long, default_value_t = 0.5)]
-    infer_iou_thresh: f32,
+    infer_iou_threshold: f32,
 }
 
 fn default_out_path(input: &Path) -> PathBuf {
@@ -50,10 +50,10 @@ fn main() -> anyhow::Result<()> {
     let (w, h) = img.dimensions();
     let rgba = img.as_raw().clone();
 
-    let thresh_opts = ThresholdOpts::new(args.infer_obj_thresh, args.infer_iou_thresh);
+    let thresh_opts = ThresholdOpts::new(args.infer_objectness_threshold, args.infer_iou_threshold);
     let thresh = InferenceThresholds {
-        obj_thresh: thresh_opts.obj_thresh,
-        iou_thresh: thresh_opts.iou_thresh,
+        objectness_threshold: thresh_opts.objectness_threshold,
+        iou_threshold: thresh_opts.iou_threshold,
     };
     let factory = InferenceFactory;
     let mut detector = factory.build(thresh, None);

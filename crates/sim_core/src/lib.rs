@@ -1,3 +1,15 @@
+//! Core simulation types, plugins, and systems for CortenForge Bevy apps.
+//!
+//! This crate provides:
+//! - Run mode management (`SimRunMode`: Sim, Datagen, Inference).
+//! - Camera systems (flycam, instrument POV, camera toggling).
+//! - Autopilot and controls abstractions.
+//! - Capture recording and metadata generation.
+//! - Articulated segment/spring types for entity rigging.
+//!
+//! Designed to be detector-agnostic: detector wiring happens in higher-level binaries or
+//! the `vision_runtime` crate.
+
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{NoUserData, RapierPhysicsPlugin};
 use std::path::PathBuf;
@@ -59,20 +71,18 @@ impl Plugin for SimPlugin {
 
 pub mod prelude {
     pub use super::{ModeSet, SimConfig, SimPlugin, SimRunMode};
+    pub use crate::articulated_types::{ArticulatedSegment, SegmentSpring};
     pub use crate::autopilot_types::{AutoDir, AutoDrive, AutoStage, DataRun, DatagenInit};
     pub use crate::camera::{
-        camera_controller, pov_toggle_system, setup_camera, Flycam, PovState, ProbePovCamera,
-        UiOverlayCamera,
+        camera_controller, pov_toggle_system, setup_camera, ActiveCameraMode, Flycam,
+        InstrumentPovCamera, UiOverlayCamera,
     };
-    pub use crate::controls::ControlParams;
+    pub use crate::controls::ControlConfig;
     pub use crate::hooks::{AutopilotHook, ControlsHook, SimHooks};
-    pub use crate::probe_types::{ProbeSegment, SegmentSpring};
-    pub use crate::recorder_meta::{
-        BasicRecorderMeta, RecorderMetaProvider, RecorderMetadataProvider, RecorderSink,
-        RecorderWorldState,
-    };
-    pub use crate::recorder_types::{
-        AutoRecordTimer, RecorderConfig, RecorderMotion, RecorderState,
+    pub use crate::recorder::{
+        AutoRecordTimer, BasicMeta, Config as RecorderConfig, MetaProvider, MetadataProvider,
+        Motion as RecorderMotion, RecorderWorldSnapshot, Sink as RecorderSink,
+        State as RecorderState,
     };
     pub use crate::runtime::{register_runtime_systems, SimRuntimePlugin};
 }
@@ -98,11 +108,10 @@ pub fn build_app(sim_config: SimConfig) -> App {
     app
 }
 
+pub mod articulated_types;
 pub mod autopilot_types;
 pub mod camera;
 pub mod controls;
 pub mod hooks;
-pub mod probe_types;
-pub mod recorder_meta;
-pub mod recorder_types;
+pub mod recorder;
 pub mod runtime;

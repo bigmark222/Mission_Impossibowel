@@ -1,17 +1,17 @@
 [features]
-default = ["backend-ndarray", "tinydet"]
+default = ["backend-ndarray", "linear_detector"]
 backend-ndarray = ["burn-ndarray", "burn/ndarray"]
 backend-wgpu = ["burn-wgpu", "burn/wgpu"]
-tinydet = ["models/tinydet"]
-bigdet = ["models/bigdet"]
+linear_detector = ["models/linear_detector"]
+convolutional_detector = ["models/convolutional_detector"]
 
 [package]
 name = "cortenforge-training"
-version = "0.5.1"
+version = "0.6.0"
 edition = "2021"
 license = "Apache-2.0"
 publish = true
-description = "Burn-based training and eval for TinyDet/BigDet models in the CortenForge stack."
+description = "Burn-based training and eval for LinearClassifier/MultiboxModel models in the CortenForge stack."
 repository = "https://github.com/via-balaena/CortenForge"
 homepage = "https://github.com/via-balaena/CortenForge"
 documentation = "https://docs.rs/cortenforge-training"
@@ -19,6 +19,10 @@ readme = "README.md"
 keywords = ["burn", "training", "computer-vision", "detection"]
 categories = ["science", "computer-vision"]
 rust-version = "1.75"
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [lib]
 name = "training"
@@ -34,15 +38,15 @@ path = "src/bin/eval.rs"
 [dependencies]
 anyhow = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
-data_contracts = { package = "cortenforge-data-contracts", version = "0.5.0" }
-burn_dataset = { package = "cortenforge-burn-dataset", version = "0.5.0", features = ["burn-runtime"] }
+data_contracts = { package = "cortenforge-data-contracts", path = "../data_contracts", version = "0.6.0" }
+burn_dataset = { package = "cortenforge-burn-dataset", path = "../burn_dataset", version = "0.6.0", features = ["burn-runtime"] }
 burn = { workspace = true, features = ["autodiff", "std"] }
 burn-ndarray = { workspace = true, optional = true }
 burn-wgpu = { workspace = true, optional = true}
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 image = { workspace = true, features = ["png"] }
-models = { package = "cortenforge-models", version = "0.5.0" }
+models = { package = "cortenforge-models", path = "../models", version = "0.6.0" }
 bincode = { workspace = true }
 
 [dev-dependencies]

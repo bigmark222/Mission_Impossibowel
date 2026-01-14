@@ -1,14 +1,17 @@
 use clap::Parser;
-use training::dataset::{collate, DatasetConfig};
+use training::dataset::{collate, DatasetPathConfig};
 use training::util::{
-    load_bigdet_from_checkpoint, load_tinydet_from_checkpoint, BackendKind, ModelKind,
+    load_linear_classifier_from_checkpoint, load_multibox_model_from_checkpoint, BackendKind,
+    ModelKind,
 };
-use training::{BigDet, BigDetConfig, TinyDet, TinyDetConfig, TrainBackend};
+use training::{
+    LinearClassifier, LinearClassifierConfig, MultiboxModel, MultiboxModelConfig, TrainBackend,
+};
 
 #[derive(Parser, Debug)]
 #[command(
     name = "eval",
-    about = "Evaluate TinyDet/BigDet checkpoint on a dataset (precision/recall by IoU)"
+    about = "Evaluate LinearClassifier/MultiboxModel checkpoint on a dataset (precision/recall by IoU)"
 )]
 struct Args {
     /// Model to evaluate.
@@ -34,14 +37,14 @@ struct Args {
     checkpoint: Option<String>,
     /// IoU threshold for true positive.
     #[arg(long, default_value_t = 0.5)]
-    iou_thresh: f32,
+    iou_threshold: f32,
 }
 
 fn main() -> anyhow::Result<()> {
     let args = Args::parse();
     training::util::validate_backend_choice(args.backend)?;
 
-    let cfg = DatasetConfig {
+    let cfg = DatasetPathConfig {
         root: args.dataset_root.into(),
         labels_subdir: args.labels_subdir,
         images_subdir: args.images_subdir,
@@ -64,13 +67,21 @@ fn main() -> anyhow::Result<()> {
     match args.model {
         ModelKind::Tiny => {
             let model = match ckpt {
-                Some(ref p) => load_tinydet_from_checkpoint(p, &device).unwrap_or_else(|e| {
-                    println!("Failed to load checkpoint {p}; using fresh model ({e})");
-                    TinyDet::<TrainBackend>::new(TinyDetConfig::default(), &device)
-                }),
+                Some(ref p) => {
+                    load_linear_classifier_from_checkpoint(p, &device).unwrap_or_else(|e| {
+                        println!("Failed to load checkpoint {p}; using fresh model ({e})");
+                        LinearClassifier::<TrainBackend>::new(
+                            LinearClassifierConfig::default(),
+                            &device,
+                        )
+                    })
+                }
                 None => {
-                    println!("No checkpoint provided; using fresh TinyDet");
-                    TinyDet::<TrainBackend>::new(TinyDetConfig::default(), &device)
+                    println!("No checkpoint provided; using fresh LinearClassifier");
+                    LinearClassifier::<TrainBackend>::new(
+                        LinearClassifierConfig::default(),
+                        &device,
+                    )
                 }
             };
             for chunk in samples.chunks(batch_size) {
@@ -102,11 +113,11 @@ fn main() -> anyhow::Result<()> {
         }
         ModelKind::Big => {
             let model = match ckpt {
-                Some(ref p) => load_bigdet_from_checkpoint(p, &device, args.max_boxes)
+                Some(ref p) => load_multibox_model_from_checkpoint(p, &device, args.max_boxes)
                     .unwrap_or_else(|e| {
                         println!("Failed to load checkpoint {p}; using fresh model ({e})");
-                        BigDet::<TrainBackend>::new(
-                            BigDetConfig {
+                        MultiboxModel::<TrainBackend>::new(
+                            MultiboxModelConfig {
                                 input_dim: Some(4 + 8),
                                 max_boxes: args.max_boxes,
                                 ..Default::default()
@@ -115,9 +126,9 @@ fn main() -> anyhow::Result<()> {
                         )
                     }),
                 None => {
-                    println!("No checkpoint provided; using fresh BigDet");
-                    BigDet::<TrainBackend>::new(
-                        BigDetConfig {
+                    println!("No checkpoint provided; using fresh MultiboxModel");
+                    MultiboxModel::<TrainBackend>::new(
+                        MultiboxModelConfig {
                             input_dim: Some(4 + 8),
                             max_boxes: args.max_boxes,
                             ..Default::default()
@@ -175,7 +186,7 @@ fn main() -> anyhow::Result<()> {
                         let mut matched = false;
                         for (i, gb_box) in gt_list.iter().enumerate() {
                             let iou = iou_xyxy(pb_box, *gb_box);
-                            if iou >= args.iou_thresh {
+                            if iou >= args.iou_threshold {
                                 matched = true;
                                 gt_matched[i] = true;
                                 break;
@@ -210,7 +221,7 @@ fn main() -> anyhow::Result<()> {
 
     println!(
         "Eval complete: precision={:.3}, recall={:.3} (tp={}, fp={}, fn={}, iou_thresh={})",
-        precision, recall, total_tp, total_fp, total_fn, args.iou_thresh
+        precision, recall, total_tp, total_fp, total_fn, args.iou_threshold
     );
 
     Ok(())

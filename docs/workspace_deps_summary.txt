@@ -1,0 +1,33 @@
+0cortenforge v0.5.1 (/Users/jonhillesheim/CortenForge)
+1cortenforge-sim-core v0.5.1
+1cortenforge-vision-core v0.5.1
+0cortenforge-burn-dataset v0.5.1 (/Users/jonhillesheim/CortenForge/crates/burn_dataset)
+1cortenforge-data-contracts v0.5.1
+0cortenforge-capture-utils v0.5.1 (/Users/jonhillesheim/CortenForge/crates/capture_utils)
+1cortenforge-data-contracts v0.5.1
+1cortenforge-vision-core v0.5.1
+0cortenforge-cli-support v0.5.1 (/Users/jonhillesheim/CortenForge/crates/cli_support)
+0cortenforge-data-contracts v0.5.1 (/Users/jonhillesheim/CortenForge/crates/data_contracts)
+0cortenforge-inference v0.5.1 (/Users/jonhillesheim/CortenForge/crates/inference)
+1cortenforge-data-contracts v0.5.1
+1cortenforge-models v0.5.1
+1cortenforge-sim-core v0.5.1
+1cortenforge-vision-core v0.5.1
+0cortenforge-models v0.5.1 (/Users/jonhillesheim/CortenForge/crates/models)
+0cortenforge-sim-core v0.5.1 (/Users/jonhillesheim/CortenForge/crates/sim_core)
+1cortenforge-vision-core v0.5.1
+0cortenforge-tools v0.5.1 (/Users/jonhillesheim/CortenForge/tools)
+1cortenforge-burn-dataset v0.5.1
+1cortenforge-capture-utils v0.5.1
+1cortenforge-cli-support v0.5.1
+1cortenforge-data-contracts v0.5.1
+1cortenforge-inference v0.5.1
+1cortenforge-vision-core v0.5.1
+0cortenforge-training v0.5.1 (/Users/jonhillesheim/CortenForge/crates/training)
+1cortenforge-burn-dataset v0.5.1
+1cortenforge-data-contracts v0.5.1
+1cortenforge-models v0.5.1
+0cortenforge-vision-core v0.5.1 (/Users/jonhillesheim/CortenForge/crates/vision_core)
+0cortenforge-vision-runtime v0.5.1 (/Users/jonhillesheim/CortenForge/crates/vision_runtime)
+1cortenforge-sim-core v0.5.1
+1cortenforge-vision-core v0.5.1

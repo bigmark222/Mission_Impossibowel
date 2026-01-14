@@ -1,6 +1,6 @@
 use burn::backend::{ndarray::NdArray, Autodiff};
 use burn::tensor::Tensor;
-use training::{BigDet, BigDetConfig};
+use training::{MultiboxModel, MultiboxModelConfig};
 
 type ADBackend = Autodiff<NdArray<f32>>;
 
@@ -10,8 +10,8 @@ fn forward_shapes_bigdet_quick() {
     let max_boxes = 3;
     let input_dim = 4 + 8; // box features + global features in collate
 
-    let model = BigDet::<ADBackend>::new(
-        BigDetConfig {
+    let model = MultiboxModel::<ADBackend>::new(
+        MultiboxModelConfig {
             max_boxes,
             input_dim: Some(input_dim),
             ..Default::default()

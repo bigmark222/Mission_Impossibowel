@@ -11,8 +11,8 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(CapturePlugin)
-        .add_systems(Update, |state: Res<vision_runtime::FrontCameraState>| {
-            info!("Front camera active: {}, frames: {}", state.active, state.frame_counter);
+        .add_systems(Update, |state: Res<vision_runtime::PrimaryCameraState>| {
+            info!("Primary camera active: {}, frames: {}", state.active, state.frame_counter);
         })
         .run();
 }
@@ -22,8 +22,9 @@ fn main() {
 ```rust,ignore
 use bevy::prelude::*;
 use sim_core::ModeSet;
-use vision_runtime::{CapturePlugin, DetectorHandle, DetectorKind, InferencePlugin, InferenceThresholds};
+use vision_runtime::{CapturePlugin, DetectorHandle, DetectorKind, InferenceRuntimePlugin, InferenceThresholdsResource};
 use vision_core::interfaces::{DetectionResult, Detector, Frame};
+use inference::InferenceThresholds;
 
 // Simple detector for demo purposes
 struct Heuristic;
@@ -37,9 +38,9 @@ fn main() {
     App::new()
         .insert_resource(sim_core::SimRunMode::Inference)
         .insert_resource(DetectorHandle { detector: Box::new(Heuristic), kind: DetectorKind::Heuristic })
-        .insert_resource(InferenceThresholds { obj_thresh: 0.5, iou_thresh: 0.5 })
+        .insert_resource(InferenceThresholdsResource(InferenceThresholds { obj_thresh: 0.5, iou_thresh: 0.5 }))
         .add_plugins(DefaultPlugins)
-        .add_plugins((CapturePlugin, InferencePlugin))
+        .add_plugins((CapturePlugin, InferenceRuntimePlugin))
         .run();
 }
 ```
@@ -48,7 +49,7 @@ fn main() {
 ```rust,ignore
 use bevy::prelude::*;
 use sim_core::ModeSet;
-use vision_runtime::{CapturePlugin, InferencePlugin, DetectionOverlayState};
+use vision_runtime::{CapturePlugin, InferenceRuntimePlugin, DetectionOverlayState};
 
 fn log_overlay(overlay: Res<DetectionOverlayState>) {
     if let Some(ms) = overlay.inference_ms {
@@ -60,7 +61,7 @@ fn main() {
     App::new()
         .insert_resource(sim_core::SimRunMode::Inference)
         .add_plugins(DefaultPlugins)
-        .add_plugins((CapturePlugin, InferencePlugin))
+        .add_plugins((CapturePlugin, InferenceRuntimePlugin))
         .add_systems(Update, log_overlay.in_set(ModeSet::Inference))
         .run();
 }

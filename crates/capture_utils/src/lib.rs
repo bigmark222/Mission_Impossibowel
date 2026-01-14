@@ -1,10 +1,19 @@
-use data_contracts::capture::{CaptureMetadata, LabelSource as CaptureLabelSource, PolypLabel};
+//! Filesystem-based recorder implementations and dataset management utilities.
+//!
+//! This crate provides:
+//! - `JsonRecorder`: Default recorder that writes frame metadata to JSON files.
+//! - Overlay generation from label JSON files (draws bounding boxes on images).
+//! - Dataset pruning utilities for filtering and copying runs.
+//!
+//! Integrates with `vision_core::interfaces::Recorder` trait and `data_contracts` schemas.
+
+use data_contracts::capture::CaptureMetadata;
 use image::Rgba;
 use std::fs;
 use std::io::{BufWriter, Write};
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
-use vision_core::prelude::{FrameRecord, Label, LabelSource as CoreLabelSource, Recorder};
+use vision_core::prelude::{FrameRecord, Label, Recorder};
 
 /// Default file-based recorder: writes frame metadata/labels to `run_dir/labels/frame_XXXXX.json`.
 pub struct JsonRecorder {
@@ -56,8 +65,8 @@ pub fn build_capture_metadata(
         image,
         image_present: record.frame.path.is_some(),
         camera_active: record.camera_active,
-        polyp_seed: record.polyp_seed,
-        polyp_labels: record.labels.iter().map(label_to_polyp).collect(),
+        label_seed: record.label_seed,
+        labels: record.labels.to_vec(),
     }
 }
 
@@ -66,7 +75,7 @@ pub fn build_inference_metadata(
     frame: vision_core::prelude::Frame,
     labels: &[Label],
     camera_active: bool,
-    polyp_seed: u64,
+    label_seed: u64,
     unix_time: f64,
 ) -> CaptureMetadata {
     let image = frame
@@ -78,28 +87,9 @@ pub fn build_inference_metadata(
         frame,
         labels,
         camera_active,
-        polyp_seed,
+        label_seed,
     };
     build_capture_metadata(&record, unix_time, image)
-}
-
-fn label_to_polyp(label: &Label) -> PolypLabel {
-    PolypLabel {
-        center_world: label.center_world,
-        bbox_px: label.bbox_px,
-        bbox_norm: label.bbox_norm,
-        source: map_label_source(label.source),
-        source_confidence: label.source_confidence,
-    }
-}
-
-fn map_label_source(source: Option<CoreLabelSource>) -> Option<CaptureLabelSource> {
-    match source {
-        Some(CoreLabelSource::SimAuto) => Some(CaptureLabelSource::SimAuto),
-        Some(CoreLabelSource::Human) => Some(CaptureLabelSource::Human),
-        Some(CoreLabelSource::Model) => Some(CaptureLabelSource::Model),
-        None => None,
-    }
 }
 
 /// Generate overlay PNGs from label JSONs in a run directory.
@@ -131,7 +121,7 @@ pub fn generate_overlays(run_dir: &Path) -> anyhow::Result<()> {
         let (w, h) = img.dimensions();
         let clamp =
             |v: f32, max: u32| -> u32 { v.max(0.0).min((max.saturating_sub(1)) as f32) as u32 };
-        for label in meta.polyp_labels.iter().filter_map(|l| l.bbox_px) {
+        for label in meta.labels.iter().filter_map(|l| l.bbox_px) {
             let bbox_px = [
                 clamp(label[0], w),
                 clamp(label[1], h),
@@ -260,7 +250,7 @@ mod tests {
             frame,
             labels: &[],
             camera_active: true,
-            polyp_seed: 42,
+            label_seed: 42,
         };
         recorder.record(&record).expect("write label");
         let label_path = run_dir.join("labels/frame_00001.json");

@@ -1,10 +1,11 @@
 use bevy::ecs::system::RunSystemOnce;
 use bevy::prelude::*;
 use bevy::tasks::AsyncComputeTaskPool;
+use inference::InferenceThresholds;
 use vision_core::interfaces::{self, DetectionResult, Detector, Frame};
 use vision_runtime::prelude::{
-    BurnInferenceState, CapturePlugin, DetectionOverlayState, DetectorHandle, DetectorKind,
-    InferencePlugin, InferenceThresholds,
+    AsyncInferenceState, CapturePlugin, DetectionOverlayState, DetectorHandle, DetectorKind,
+    InferenceRuntimePlugin, InferenceThresholdsResource,
 };
 
 struct DummyDetector;
@@ -30,12 +31,12 @@ fn inference_plugin_smoke_updates_overlay() {
             detector: Box::new(DummyDetector),
             kind: DetectorKind::Heuristic,
         })
-        .insert_resource(InferenceThresholds {
-            obj_thresh: 0.3,
-            iou_thresh: 0.5,
-        })
+        .insert_resource(InferenceThresholdsResource(InferenceThresholds {
+            objectness_threshold: 0.3,
+            iou_threshold: 0.5,
+        }))
         .add_plugins(CapturePlugin)
-        .add_plugins(InferencePlugin)
+        .add_plugins(InferenceRuntimePlugin)
         .insert_resource(Assets::<Image>::default())
         .insert_resource(sim_core::SimRunMode::Inference)
         .insert_resource(ButtonInput::<KeyCode>::default());
@@ -45,7 +46,7 @@ fn inference_plugin_smoke_updates_overlay() {
     {
         let mut jobs = app
             .world_mut()
-            .get_resource_mut::<BurnInferenceState>()
+            .get_resource_mut::<AsyncInferenceState>()
             .unwrap();
         let task = AsyncComputeTaskPool::get().spawn(async {
             (

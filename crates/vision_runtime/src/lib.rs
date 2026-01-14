@@ -1,3 +1,17 @@
+//! Bevy-integrated vision runtime: camera capture, async inference, and detection overlays.
+//!
+//! This crate provides Bevy plugins and systems for:
+//! - Off-screen camera capture with GPU readback (`CapturePlugin`).
+//! - Async inference scheduling and result polling (`InferenceRuntimePlugin`).
+//! - Detection overlay rendering and threshold hotkeys.
+//!
+//! It bridges the framework-agnostic `vision_core` interfaces with Bevy ECS resources and
+//! systems, enabling real-time detector integration in Bevy apps.
+//!
+//! ## Architecture Note
+//! This is the *runtime* layer. Core detector interfaces live in `vision_core`, while
+//! detector implementations are in `inference`. See the architecture docs for the full split.
+
 use bevy::asset::RenderAssetUsages;
 use bevy::prelude::*;
 use bevy::render::gpu_readback::{Readback, ReadbackComplete};
@@ -6,12 +20,32 @@ use bevy::tasks::{AsyncComputeTaskPool, Task};
 use bevy_camera::{ImageRenderTarget, RenderTarget};
 use futures_lite::future::{block_on, poll_once};
 use image::RgbaImage;
+use inference::InferenceThresholds;
 use sim_core::{ModeSet, SimRunMode};
-use vision_core::capture::{
-    FrontCamera, FrontCaptureCamera, FrontCaptureReadback, FrontCaptureTarget,
-};
+use vision_core::capture::{PrimaryCaptureCamera, PrimaryCaptureReadback, PrimaryCaptureTarget};
 use vision_core::interfaces::{self, Frame};
 use vision_core::overlay::draw_rect;
+
+/// Bevy resource wrapper for inference thresholds.
+///
+/// This bridges the framework-agnostic `inference` crate with Bevy ECS.
+/// The inner `InferenceThresholds` type can be used in non-Bevy contexts
+/// (CLI tools, web services, etc.) without pulling in Bevy dependencies.
+#[derive(Resource, Debug, Clone, Copy, Default)]
+pub struct InferenceThresholdsResource(pub InferenceThresholds);
+
+impl std::ops::Deref for InferenceThresholdsResource {
+    type Target = InferenceThresholds;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for InferenceThresholdsResource {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
 
 type InferenceJobResult = (
     Box<dyn interfaces::Detector + Send + Sync>,
@@ -22,26 +56,27 @@ type InferenceJobResult = (
 );
 
 #[derive(Clone)]
-pub struct FrontCameraFrame {
+pub struct PrimaryCameraFrame {
     pub id: u64,
     pub transform: GlobalTransform,
     pub captured_at: f64,
 }
 
 #[derive(Resource, Default)]
-pub struct FrontCameraState {
+pub struct PrimaryCameraState {
     pub active: bool,
     pub last_transform: Option<GlobalTransform>,
     pub frame_counter: u64,
 }
 
 #[derive(Resource, Default)]
-pub struct FrontCameraFrameBuffer {
-    pub latest: Option<FrontCameraFrame>,
+pub struct PrimaryCameraFrameBuffer {
+    pub latest: Option<PrimaryCameraFrame>,
 }
 
+/// Resource tracking whether a model detector is loaded (vs. heuristic fallback).
 #[derive(Resource, Default)]
-pub struct BurnDetector {
+pub struct ModelLoadedFlag {
     pub model_loaded: bool,
 }
 
@@ -60,14 +95,12 @@ pub enum DetectorKind {
     Heuristic,
 }
 
-#[derive(Resource, Debug, Clone, Copy)]
-pub struct InferenceThresholds {
-    pub obj_thresh: f32,
-    pub iou_thresh: f32,
-}
-
+/// Detection result from vision_runtime async inference.
+///
+/// This is a runtime-specific result type that aggregates detection output.
+/// Not to be confused with `vision_core::interfaces::DetectionResult`.
 #[derive(Clone)]
-pub struct BurnDetectionResult {
+pub struct RuntimeDetectionResult {
     pub frame_id: u64,
     pub positive: bool,
     pub confidence: f32,
@@ -75,14 +108,17 @@ pub struct BurnDetectionResult {
     pub scores: Vec<f32>,
 }
 
+/// Resource managing async inference task state.
+///
+/// Tracks pending async inference jobs, debouncing, and the most recent result.
 #[derive(Resource)]
-pub struct BurnInferenceState {
+pub struct AsyncInferenceState {
     pub pending: Option<Task<InferenceJobResult>>,
-    pub last_result: Option<BurnDetectionResult>,
+    pub last_result: Option<RuntimeDetectionResult>,
     pub debounce: Timer,
 }
 
-impl Default for BurnInferenceState {
+impl Default for AsyncInferenceState {
     fn default() -> Self {
         Self {
             pending: None,
@@ -98,9 +134,9 @@ pub struct DetectorHandle {
     pub kind: DetectorKind,
 }
 
-struct HeuristicDetector;
+struct DefaultTestDetector;
 
-impl interfaces::Detector for HeuristicDetector {
+impl interfaces::Detector for DefaultTestDetector {
     fn detect(&mut self, frame: &Frame) -> interfaces::DetectionResult {
         interfaces::DetectionResult {
             frame_id: frame.id,
@@ -114,11 +150,11 @@ impl interfaces::Detector for HeuristicDetector {
 
 // Capture setup/readback -----------------------------------------------------
 
-pub fn setup_front_capture(
+pub fn setup_primary_capture(
     mut commands: Commands,
     mut images: ResMut<Assets<Image>>,
-    mut state: ResMut<FrontCameraState>,
-    mut target: ResMut<FrontCaptureTarget>,
+    mut state: ResMut<PrimaryCameraState>,
+    mut target: ResMut<PrimaryCaptureTarget>,
 ) {
     // Only set up once.
     if target.size != UVec2::ZERO {
@@ -159,9 +195,8 @@ pub fn setup_front_capture(
             Visibility::default(),
             InheritedVisibility::default(),
             ViewVisibility::default(),
-            FrontCamera,
-            FrontCaptureCamera,
-            Name::new("FrontCaptureCamera"),
+            PrimaryCaptureCamera,
+            Name::new("PrimaryCaptureCamera"),
         ))
         .id();
 
@@ -171,11 +206,11 @@ pub fn setup_front_capture(
     state.active = true;
 }
 
-pub fn track_front_camera_state(
-    target: Res<FrontCaptureTarget>,
-    mut state: ResMut<FrontCameraState>,
-    mut buffer: ResMut<FrontCameraFrameBuffer>,
-    cameras: Query<&GlobalTransform, With<FrontCaptureCamera>>,
+pub fn track_primary_camera_state(
+    target: Res<PrimaryCaptureTarget>,
+    mut state: ResMut<PrimaryCameraState>,
+    mut buffer: ResMut<PrimaryCameraFrameBuffer>,
+    cameras: Query<&GlobalTransform, With<PrimaryCaptureCamera>>,
     time: Res<Time>,
 ) {
     let Ok(transform) = cameras.get(target.entity) else {
@@ -183,17 +218,17 @@ pub fn track_front_camera_state(
     };
     state.last_transform = Some(*transform);
     state.frame_counter = state.frame_counter.wrapping_add(1);
-    buffer.latest = Some(FrontCameraFrame {
+    buffer.latest = Some(PrimaryCameraFrame {
         id: state.frame_counter,
         transform: *transform,
         captured_at: time.elapsed_secs_f64(),
     });
 }
 
-pub fn capture_front_camera_frame(
+pub fn capture_primary_camera_frame(
     mode: Res<SimRunMode>,
     mut commands: Commands,
-    target: Res<FrontCaptureTarget>,
+    target: Res<PrimaryCaptureTarget>,
 ) {
     if !matches!(*mode, SimRunMode::Datagen | SimRunMode::Inference) {
         return;
@@ -203,10 +238,10 @@ pub fn capture_front_camera_frame(
         .insert(Readback::texture(target.handle.clone()));
 }
 
-pub fn on_front_capture_readback(
+pub fn on_primary_capture_readback(
     ev: On<ReadbackComplete>,
-    target: Res<FrontCaptureTarget>,
-    mut readback: ResMut<FrontCaptureReadback>,
+    target: Res<PrimaryCaptureTarget>,
+    mut readback: ResMut<PrimaryCaptureReadback>,
 ) {
     let expected_len = (target.size.x * target.size.y * 4) as usize;
     let ev = ev.event();
@@ -222,18 +257,18 @@ pub struct CapturePlugin;
 
 impl Plugin for CapturePlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(FrontCaptureTarget {
+        app.insert_resource(PrimaryCaptureTarget {
             handle: Handle::default(),
             size: UVec2::ZERO,
             entity: Entity::PLACEHOLDER,
         })
-        .init_resource::<FrontCaptureReadback>()
-        .init_resource::<FrontCameraState>()
-        .init_resource::<FrontCameraFrameBuffer>()
-        .add_systems(Startup, setup_front_capture)
-        .add_systems(Update, track_front_camera_state.in_set(ModeSet::Common))
-        .add_systems(Update, capture_front_camera_frame.in_set(ModeSet::Common))
-        .add_observer(on_front_capture_readback);
+        .init_resource::<PrimaryCaptureReadback>()
+        .init_resource::<PrimaryCameraState>()
+        .init_resource::<PrimaryCameraFrameBuffer>()
+        .add_systems(Startup, setup_primary_capture)
+        .add_systems(Update, track_primary_camera_state.in_set(ModeSet::Common))
+        .add_systems(Update, capture_primary_camera_frame.in_set(ModeSet::Common))
+        .add_observer(on_primary_capture_readback);
     }
 }
 
@@ -242,11 +277,11 @@ impl Plugin for CapturePlugin {
 pub fn schedule_burn_inference(
     mode: Res<SimRunMode>,
     time: Res<Time>,
-    mut jobs: ResMut<BurnInferenceState>,
-    mut buffer: ResMut<FrontCameraFrameBuffer>,
+    mut jobs: ResMut<AsyncInferenceState>,
+    mut buffer: ResMut<PrimaryCameraFrameBuffer>,
     handle: Option<ResMut<DetectorHandle>>,
-    target: Res<FrontCaptureTarget>,
-    mut readback: ResMut<FrontCaptureReadback>,
+    target: Res<PrimaryCaptureTarget>,
+    mut readback: ResMut<PrimaryCaptureReadback>,
 ) {
     if !matches!(*mode, SimRunMode::Inference) {
         return;
@@ -272,7 +307,7 @@ pub fn schedule_burn_inference(
         size: (target.size.x, target.size.y),
         path: None,
     };
-    let mut detector = std::mem::replace(&mut handle.detector, Box::new(HeuristicDetector));
+    let mut detector = std::mem::replace(&mut handle.detector, Box::new(DefaultTestDetector));
     let kind = handle.kind;
     let size = (target.size.x, target.size.y);
     let task = AsyncComputeTaskPool::get().spawn(async move {
@@ -286,9 +321,9 @@ pub fn schedule_burn_inference(
 pub fn threshold_hotkeys(
     mode: Res<SimRunMode>,
     keys: Res<ButtonInput<KeyCode>>,
-    thresh: Option<ResMut<InferenceThresholds>>,
+    thresh: Option<ResMut<InferenceThresholdsResource>>,
     handle: Option<ResMut<DetectorHandle>>,
-    burn_loaded: Option<ResMut<BurnDetector>>,
+    burn_loaded: Option<ResMut<ModelLoadedFlag>>,
 ) {
     if !matches!(*mode, SimRunMode::Inference) {
         return;
@@ -302,24 +337,24 @@ pub fn threshold_hotkeys(
 
     let mut changed = false;
     if keys.just_pressed(KeyCode::Minus) {
-        thresh.obj_thresh = (thresh.obj_thresh - 0.05).clamp(0.0, 1.0);
+        thresh.objectness_threshold = (thresh.objectness_threshold - 0.05).clamp(0.0, 1.0);
         changed = true;
     }
     if keys.just_pressed(KeyCode::Equal) {
-        thresh.obj_thresh = (thresh.obj_thresh + 0.05).clamp(0.0, 1.0);
+        thresh.objectness_threshold = (thresh.objectness_threshold + 0.05).clamp(0.0, 1.0);
         changed = true;
     }
     if keys.just_pressed(KeyCode::BracketLeft) {
-        thresh.iou_thresh = (thresh.iou_thresh - 0.05).clamp(0.1, 0.95);
+        thresh.iou_threshold = (thresh.iou_threshold - 0.05).clamp(0.1, 0.95);
         changed = true;
     }
     if keys.just_pressed(KeyCode::BracketRight) {
-        thresh.iou_thresh = (thresh.iou_thresh + 0.05).clamp(0.1, 0.95);
+        thresh.iou_threshold = (thresh.iou_threshold + 0.05).clamp(0.1, 0.95);
         changed = true;
     }
 
     if keys.just_pressed(KeyCode::Digit0) {
-        handle.detector = Box::new(HeuristicDetector);
+        handle.detector = Box::new(DefaultTestDetector);
         handle.kind = DetectorKind::Heuristic;
         burn_loaded.model_loaded = false;
         changed = true;
@@ -328,17 +363,22 @@ pub fn threshold_hotkeys(
     if changed {
         info!(
             "Updated inference thresholds: obj {:.2}, iou {:.2}",
-            thresh.obj_thresh, thresh.iou_thresh
+            thresh.objectness_threshold, thresh.iou_threshold
         );
     }
 }
 
-pub struct InferencePlugin;
+/// Bevy plugin managing runtime inference coordination.
+///
+/// Handles async inference scheduling, model state tracking, detection overlays,
+/// and threshold adjustment hotkeys. This is the runtime/visualization layer;
+/// for core inference logic, see the `inference` crate.
+pub struct InferenceRuntimePlugin;
 
-impl Plugin for InferencePlugin {
+impl Plugin for InferenceRuntimePlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<BurnInferenceState>()
-            .init_resource::<BurnDetector>()
+        app.init_resource::<AsyncInferenceState>()
+            .init_resource::<ModelLoadedFlag>()
             .init_resource::<DetectionOverlayState>()
             .add_systems(
                 Update,
@@ -365,16 +405,16 @@ pub fn recorder_draw_rect(
 
 pub mod prelude {
     pub use super::{
-        BurnDetectionResult, BurnDetector, BurnInferenceState, CapturePlugin,
-        DetectionOverlayState, DetectorHandle, DetectorKind, FrontCameraFrame,
-        FrontCameraFrameBuffer, FrontCameraState, InferencePlugin, InferenceThresholds,
+        AsyncInferenceState, CapturePlugin, DetectionOverlayState, DetectorHandle, DetectorKind,
+        InferenceRuntimePlugin, InferenceThresholdsResource, ModelLoadedFlag, PrimaryCameraFrame,
+        PrimaryCameraFrameBuffer, PrimaryCameraState, RuntimeDetectionResult,
     };
 }
 pub fn poll_inference_task(
-    mut jobs: ResMut<BurnInferenceState>,
+    mut jobs: ResMut<AsyncInferenceState>,
     mut overlay: ResMut<DetectionOverlayState>,
     handle: Option<ResMut<DetectorHandle>>,
-    mut burn_detector: ResMut<BurnDetector>,
+    mut burn_detector: ResMut<ModelLoadedFlag>,
 ) {
     let Some(mut task) = jobs.pending.take() else {
         return;
@@ -394,7 +434,7 @@ pub fn poll_inference_task(
         overlay.boxes = result.boxes.clone();
         overlay.scores = result.scores.clone();
         overlay.size = size;
-        jobs.last_result = Some(BurnDetectionResult {
+        jobs.last_result = Some(RuntimeDetectionResult {
             frame_id: result.frame_id,
             positive: result.positive,
             confidence: result.confidence,

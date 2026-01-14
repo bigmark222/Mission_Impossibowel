@@ -1,6 +1,6 @@
 [package]
 name = "cortenforge-vision-core"
-version = "0.5.1"
+version = "0.6.0"
 edition = "2021"
 license = "Apache-2.0"
 publish = true
@@ -13,6 +13,10 @@ keywords = ["vision", "graphics", "capture", "overlay", "serde"]
 categories = ["graphics", "computer-vision", "game-engines"]
 rust-version = "1.75"
 
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
 [lib]
 name = "vision_core"
 
@@ -21,3 +25,4 @@ anyhow = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 image = { workspace = true, features = ["png"] }
 bevy = { workspace = true, default-features = false, features = ["bevy_core_pipeline", "bevy_render", "bevy_asset"] }
+data_contracts = { package = "cortenforge-data-contracts", path = "../data_contracts", version = "0.6.0" }

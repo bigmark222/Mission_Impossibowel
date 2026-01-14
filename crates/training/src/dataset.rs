@@ -8,7 +8,7 @@ use std::fs;
 use std::path::PathBuf;
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct DatasetConfig {
+pub struct DatasetPathConfig {
     pub root: PathBuf,
     pub labels_subdir: String,
     pub images_subdir: String,
@@ -31,7 +31,7 @@ pub struct CollatedBatch<B: Backend> {
     pub features: Tensor<B, 2>,
 }
 
-impl DatasetConfig {
+impl DatasetPathConfig {
     pub fn load(&self) -> anyhow::Result<Vec<RunSample>> {
         let mut samples = Vec::new();
         let labels_dir = self.root.join(&self.labels_subdir);
@@ -113,7 +113,7 @@ pub fn collate<B: Backend>(
         }
 
         let mut boxes = Vec::new();
-        for label in &sample.metadata.polyp_labels {
+        for label in &sample.metadata.labels {
             let bbox = if let Some(norm) = label.bbox_norm {
                 norm
             } else if let Some(px) = label.bbox_px {

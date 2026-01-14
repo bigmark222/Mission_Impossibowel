@@ -1,17 +1,21 @@
 [package]
 name = "cortenforge-models"
-version = "0.5.1"
+version = "0.6.0"
 edition = "2021"
 license = "Apache-2.0"
 publish = true
-description = "Burn-based model definitions (TinyDet/BigDet) for the CortenForge stack."
+description = "Burn-based model definitions (LinearDetector/ConvolutionalDetector) for the CortenForge stack."
 repository = "https://github.com/via-balaena/CortenForge"
 homepage = "https://github.com/via-balaena/CortenForge"
-documentation = "https://docs.rs/models"
+documentation = "https://docs.rs/cortenforge-models"
 readme = "README.md"
 keywords = ["burn", "models", "detector", "ml"]
 categories = ["science", "computer-vision", "data-structures"]
 rust-version = "1.75"
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [lib]
 name = "models"
@@ -21,6 +25,6 @@ burn = { workspace = true, features = ["autodiff", "std"] }
 bincode = { workspace = true }
 
 [features]
-default = ["tinydet"]
-tinydet = []
-bigdet = []
+default = ["linear_detector"]
+linear_detector = []
+convolutional_detector = []

@@ -4,10 +4,10 @@
 Implements Bevy systems/plugins for capture and inference built on vision_core. Manages capture render targets/readback, detector scheduling, thresholds, overlay state, and integrates with sim_core run modes.
 
 ## Key structs/resources
-- Capture state: `FrontCameraFrame`, `FrontCameraState`, `FrontCameraFrameBuffer`, `FrontCaptureTarget`, `FrontCaptureReadback`.
-- Inference state: `DetectorHandle` (boxed Detector + kind), `InferenceThresholds`, `BurnDetector` (flag), `BurnInferenceState` (pending task, last result, debounce timer), `DetectionOverlayState` (boxes/scores/size/fallback/inference_ms).
-- Detector types: `DetectorKind` (Burn/Heuristic), `BurnDetectionResult`.
-- Plugins: `CapturePlugin`, `InferencePlugin`.
+- Capture state: `PrimaryCameraFrame`, `PrimaryCameraState`, `PrimaryCameraFrameBuffer`, `PrimaryCaptureTarget`, `PrimaryCaptureReadback`.
+- Inference state: `DetectorHandle` (boxed Detector + kind), `InferenceThresholdsResource`, `ModelLoadState` (flag), `AsyncInferenceState` (pending task, last result, debounce timer), `DetectionOverlayState` (boxes/scores/size/fallback/inference_ms).
+- Detector types: `DetectorKind` (Burn/Heuristic), `RuntimeDetectionResult`.
+- Plugins: `CapturePlugin`, `InferenceRuntimePlugin`.
 
 ## Important systems/functions
 - Capture setup/readback:
@@ -34,4 +34,4 @@ Implements Bevy systems/plugins for capture and inference built on vision_core. 
 - Depends on vision_core (capture interfaces/overlay helpers), sim_core (SimRunMode/ModeSet), inference crate for detectors (provided via DetectorHandle), and Bevy render/task APIs.
 
 ## Suggested usage
-- Apps insert DetectorHandle/InferenceThresholds, add CapturePlugin + InferencePlugin, and run under sim_core-built App. Ensure ModeSet sets are configured.
+- Apps insert DetectorHandle/InferenceThresholds, add CapturePlugin + InferenceRuntimePlugin, and run under sim_core-built App. Ensure ModeSet sets are configured.

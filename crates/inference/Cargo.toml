@@ -1,6 +1,6 @@
 [package]
 name = "cortenforge-inference"
-version = "0.5.1"
+version = "0.6.0"
 edition = "2021"
 license = "Apache-2.0"
 publish = true
@@ -9,16 +9,20 @@ repository = "https://github.com/via-balaena/CortenForge"
 homepage = "https://github.com/via-balaena/CortenForge"
 documentation = "https://docs.rs/cortenforge-inference"
 readme = "README.md"
-keywords = ["inference", "burn", "detector", "bevy"]
-categories = ["science", "computer-vision", "game-engines"]
+keywords = ["inference", "burn", "detector", "computer-vision"]
+categories = ["science", "computer-vision"]
 rust-version = "1.75"
 
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
 [features]
-default = ["backend-ndarray", "tinydet"]
+default = ["backend-ndarray", "linear_detector"]
 backend-ndarray = ["burn-ndarray", "burn/ndarray"]
 backend-wgpu = ["burn-wgpu", "burn/wgpu"]
-tinydet = ["models/tinydet"]
-bigdet = ["models/bigdet"]
+linear_detector = ["models/linear_detector"]
+convolutional_detector = ["models/convolutional_detector"]
 
 [lib]
 name = "inference"
@@ -26,12 +30,11 @@ path = "src/lib.rs"
 
 [dependencies]
 anyhow = { workspace = true }
-vision_core = { package = "cortenforge-vision-core", version = "0.5.1" }
-sim_core = { package = "cortenforge-sim-core", version = "0.5.1" }
-bevy = { workspace = true }
+vision_core = { package = "cortenforge-vision-core", path = "../vision_core", version = "0.6.0" }
+sim_core = { package = "cortenforge-sim-core", path = "../sim_core", version = "0.6.0" }
 burn = { workspace = true, features = ["autodiff"] }
 burn-ndarray = { workspace = true, optional = true }
 burn-wgpu = { workspace = true, optional = true}
-models = { package = "cortenforge-models", version = "0.5.1" }
-data_contracts = { package = "cortenforge-data-contracts", version = "0.5.1" }
+models = { package = "cortenforge-models", path = "../models", version = "0.6.0" }
+data_contracts = { package = "cortenforge-data-contracts", path = "../data_contracts", version = "0.6.0" }
 bincode = { workspace = true }

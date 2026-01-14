@@ -1,6 +1,6 @@
 [package]
 name = "cortenforge-sim-core"
-version = "0.5.1"
+version = "0.6.0"
 edition = "2021"
 license = "Apache-2.0"
 publish = true
@@ -13,10 +13,14 @@ keywords = ["bevy", "simulation", "runtime"]
 categories = ["game-engines", "simulation", "graphics"]
 rust-version = "1.75"
 
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
 [lib]
 name = "sim_core"
 
 [dependencies]
 bevy = { workspace = true, features = ["bevy_core_pipeline", "bevy_render", "bevy_asset", "bevy_pbr", "bevy_winit", "x11"] } # x11 required for winit on Linux CI
 bevy_rapier3d = { workspace = true, features = ["simd-stable", "debug-render-3d"] }
-vision_core = { package = "cortenforge-vision-core", version = "0.5.0" }
+vision_core = { package = "cortenforge-vision-core", path = "../vision_core", version = "0.6.0" }

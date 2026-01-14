@@ -25,8 +25,8 @@ Shared Rust crates for the CortenForge simulation substrate (capture, ETL, train
 - Tools config: create `cortenforge-tools.toml` at repo root (or set `CORTENFORGE_TOOLS_CONFIG`) to customize paths/commands.
 
 ## Using the crates from crates.io
-- Add deps with `version = "0.4.0"` (examples: `cortenforge-sim-core`, `cortenforge-vision-core`, `cortenforge-vision-runtime`, `cortenforge-data-contracts`, `cortenforge-capture-utils`, `cortenforge-models`, `cortenforge-training`, `cortenforge-inference`, `cortenforge-cli-support`, `cortenforge-burn-dataset`, `cortenforge-tools`).
-- Umbrella crate: `cortenforge` is at `0.4.0` (core stacks only; add `cortenforge-cli-support` and `cortenforge-tools` directly if needed).
+- Add deps with `version = "0.6.0"` (examples: `cortenforge-sim-core`, `cortenforge-vision-core`, `cortenforge-vision-runtime`, `cortenforge-data-contracts`, `cortenforge-capture-utils`, `cortenforge-models`, `cortenforge-training`, `cortenforge-inference`, `cortenforge-cli-support`, `cortenforge-burn-dataset`, `cortenforge-tools`).
+- Umbrella crate: `cortenforge` is at `0.6.0` (core stacks only; add `cortenforge-cli-support` and `cortenforge-tools` directly if needed).
 - Feature flags:
   - `cortenforge-training`: `backend-wgpu` (optional GPU); defaults to NdArray.
   - `cortenforge-inference`: `backend-wgpu` (optional GPU); defaults to NdArray; `tinydet`/`bigdet` feature gates.
@@ -35,6 +35,21 @@ Shared Rust crates for the CortenForge simulation substrate (capture, ETL, train
 - Feature policy: keep defaults light, gate heavy backends/tools behind explicit flags, and document any new feature in the book’s feature matrix.
 - MSRV: Rust 1.85+ across crates (CI uses 1.89.0 for toolchain compatibility).
 - Note: `burn-core` is now on the fixed 0.19.1 release; no vendored patch is required.
+
+## Versioning
+
+CortenForge follows [Semantic Versioning](https://semver.org/) with coordinated releases across all workspace crates:
+
+- **Major version** (X.0.0): Breaking API changes to stable interfaces (`Detector`, `Recorder`, core model types).
+- **Minor version** (0.X.0): New features, non-breaking API additions, experimental API changes.
+- **Patch version** (0.0.X): Bug fixes, documentation updates, internal refactoring.
+
+All crates in the workspace are released together with synchronized version numbers. When upgrading between minor versions, check the CHANGELOG.md for any experimental API changes that may affect your code.
+
+**Stability guarantees:**
+
+- Stable APIs (marked in docs): Follow strict SemVer. Breaking changes require major version bump.
+- Experimental APIs (marked as "experimental" in docs): May change in minor versions. Use with caution in production.
 
 ## Contributing
 See `docs/cortenforge_book` for architecture, guided app building, and crate deep dives.

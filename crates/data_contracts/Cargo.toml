@@ -1,6 +1,6 @@
 [package]
 name = "cortenforge-data-contracts"
-version = "0.5.1"
+version = "0.6.0"
 edition = "2021"
 license = "Apache-2.0"
 publish = true
@@ -12,6 +12,10 @@ readme = "README.md"
 keywords = ["data", "contracts", "serde", "manifest"]
 categories = ["data-structures"]
 rust-version = "1.75"
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [lib]
 name = "data_contracts"

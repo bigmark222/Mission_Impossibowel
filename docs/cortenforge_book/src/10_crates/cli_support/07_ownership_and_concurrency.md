@@ -3,7 +3,7 @@ Quick read: Ownership, threading, and async expectations.
 
 ## Ownership model
 - Pure data structs (opts/args/seeds); no shared mutable state.
-- `SeedState` holds a `u64` by value; ownership is straightforward.
+- `RunSeed` holds a `u64` by value; ownership is straightforward.
 
 ## Concurrency
 - No threading/async; types are `Send + Sync` by default due to primitive fields. Safe to share if callers choose.

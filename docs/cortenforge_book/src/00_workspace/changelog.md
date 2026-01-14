@@ -34,6 +34,17 @@ Copy/paste scaffold for new release notes.
 - Actions taken: <pages updated, diagrams refreshed>
 ```
 
+### 2026-01-13 (v0.6.0)
+
+- Changed: extensive terminology standardization across workspace (PolypLabel→DetectionLabel, probe→articulated_instrument, FrontCamera→PrimaryCapture, TinyDet/BigDet→LinearDetector/ConvolutionalDetector, polyp_seed→label_seed)
+- Changed: removed legacy feature aliases (tinydet/bigdet), removed Bevy dependency from inference crate, consolidated Label type hierarchy, renamed InferencePlugin→InferenceRuntimePlugin
+- Changed: standardized naming conventions (Config suffix, abbreviations, State suffix semantics, detector naming patterns)
+- Changed: consolidated recorder types into sim_core::recorder module, removed backward-compatible prelude re-exports
+- Added: comprehensive API stability markers (stable vs experimental), versioning strategy documentation, complete crates.io publishing preparation
+- Added: extensive conventions documentation (crate naming, function verbs, feature flags, modules, traits, type aliases)
+- Impact: **breaking**; see root CHANGELOG.md and MIGRATION_0.6.0.md for detailed upgrade instructions
+- Actions taken: added root CHANGELOG.md, updated all crate docs with stability markers, added SemVer policy to README, complete docs.rs configuration
+
 ### 2026-01-12 (v0.5.0)
 - Changed: removed `gpu_amd_windows` alias and legacy warehouse command fallback/tests in tools.
 - Changed: removed legacy crate-name deprecation notices from crate README/Cargo descriptions.

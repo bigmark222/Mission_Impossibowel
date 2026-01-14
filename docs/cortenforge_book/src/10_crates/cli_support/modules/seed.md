@@ -4,7 +4,7 @@
 - Provide a deterministic seed resolver for tooling and (optionally) Bevy resources.
 
 ## Key items
-- `SeedState`: simple wrapper for a `u64` seed; can derive `Resource` under the `bevy-resource` feature.
+- `RunSeed`: simple wrapper for a `u64` seed; can derive `Resource` under the `bevy-resource` feature.
 - `resolve_seed(cli_seed)`: precedence-based resolver — CLI arg > `POLYP_SEED` env var > system time (nanos).
 
 ## Invariants / Gotchas

@@ -38,7 +38,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             continue;
         }
         let mut img = image::open(&img_path)?.into_rgba8();
-        for label in meta.polyp_labels.iter().filter_map(|l| l.bbox_px) {
+        for label in meta.labels.iter().filter_map(|l| l.bbox_px) {
             let color = Rgba([255, 64, 192, 255]);
             let dims = img.dimensions();
             if let Some(px_box) = normalize_box(

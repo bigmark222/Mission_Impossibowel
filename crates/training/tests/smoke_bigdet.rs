@@ -2,11 +2,11 @@ use burn::backend::{ndarray::NdArray, Autodiff};
 use burn::module::Module;
 use burn::optim::{AdamConfig, GradientsParams, Optimizer};
 use burn::record::{BinFileRecorder, FullPrecisionSettings};
-use data_contracts::capture::{CaptureMetadata, PolypLabel};
+use data_contracts::capture::{CaptureMetadata, DetectionLabel};
 use std::fs;
 use std::path::PathBuf;
-use training::dataset::{collate, DatasetConfig};
-use training::{BigDet, BigDetConfig};
+use training::dataset::{collate, DatasetPathConfig};
+use training::{MultiboxModel, MultiboxModelConfig};
 
 type ADBackend = Autodiff<NdArray<f32>>;
 
@@ -20,8 +20,8 @@ fn synthetic_dataset(tmp: &tempfile::TempDir) -> anyhow::Result<Vec<training::Ru
         image: "frame_00001.png".into(),
         image_present: true,
         camera_active: true,
-        polyp_seed: 42,
-        polyp_labels: vec![PolypLabel {
+        label_seed: 42,
+        labels: vec![DetectionLabel {
             center_world: [0.0, 0.0, 0.0],
             bbox_px: Some([0.0, 0.0, 10.0, 10.0]),
             bbox_norm: Some([0.1, 0.1, 0.2, 0.2]),
@@ -37,7 +37,7 @@ fn synthetic_dataset(tmp: &tempfile::TempDir) -> anyhow::Result<Vec<training::Ru
     let img_path = tmp.path().join("frame_00001.png");
     img.save(&img_path)?;
 
-    let cfg = DatasetConfig {
+    let cfg = DatasetPathConfig {
         root: PathBuf::from(tmp.path()),
         labels_subdir: "labels".into(),
         images_subdir: ".".into(),
@@ -54,8 +54,8 @@ fn smoke_train_step_bigdet() {
     let batch = collate::<ADBackend>(&samples, 4).unwrap();
     let device = <ADBackend as burn::tensor::backend::Backend>::Device::default();
 
-    let mut model = BigDet::<ADBackend>::new(
-        BigDetConfig {
+    let mut model = MultiboxModel::<ADBackend>::new(
+        MultiboxModelConfig {
             max_boxes: 4,
             input_dim: Some(4 + 8),
             ..Default::default()
@@ -135,8 +135,8 @@ fn smoke_train_step_bigdet() {
         .clone()
         .save_file(&ckpt, &recorder)
         .expect("save checkpoint");
-    let _loaded = BigDet::<ADBackend>::new(
-        BigDetConfig {
+    let _loaded = MultiboxModel::<ADBackend>::new(
+        MultiboxModelConfig {
             max_boxes: 4,
             input_dim: Some(4 + 8),
             ..Default::default()

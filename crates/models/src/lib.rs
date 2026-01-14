@@ -1,27 +1,46 @@
+//! Burn ML models for object detection in the CortenForge stack.
+//!
+//! This crate defines the neural network architectures used for detection:
+//! - `LinearClassifier`: Simple feedforward network for binary classification.
+//! - `MultiboxModel`: Multi-box detection model with spatial output heads.
+//!
+//! These are pure Burn Modules with no awareness of the Detector trait. The `inference`
+//! crate wraps them into Detector implementations for runtime use.
+//!
+//! ## Design Note
+//! Model types use descriptive names (Classifier, Model) rather than "Detector" suffix,
+//! as they are architectural components, not full detector implementations.
+//!
+//! ## Stability
+//!
+//! Model architectures (`LinearClassifier`, `MultiboxModel`) and their config types are **stable**.
+//! The forward pass signatures and checkpoint format will not change in a backwards-incompatible
+//! way without a major version bump.
+
 use burn::module::Module;
 use burn::nn;
 use burn::tensor::activation::{relu, sigmoid};
 use burn::tensor::Tensor;
 
 #[derive(Debug, Clone)]
-pub struct TinyDetConfig {
+pub struct LinearClassifierConfig {
     pub hidden: usize,
 }
 
-impl Default for TinyDetConfig {
+impl Default for LinearClassifierConfig {
     fn default() -> Self {
         Self { hidden: 64 }
     }
 }
 
 #[derive(Debug, Module)]
-pub struct TinyDet<B: burn::tensor::backend::Backend> {
+pub struct LinearClassifier<B: burn::tensor::backend::Backend> {
     linear1: nn::Linear<B>,
     linear2: nn::Linear<B>,
 }
 
-impl<B: burn::tensor::backend::Backend> TinyDet<B> {
-    pub fn new(cfg: TinyDetConfig, device: &B::Device) -> Self {
+impl<B: burn::tensor::backend::Backend> LinearClassifier<B> {
+    pub fn new(cfg: LinearClassifierConfig, device: &B::Device) -> Self {
         let linear1 = nn::LinearConfig::new(4, cfg.hidden).init(device);
         let linear2 = nn::LinearConfig::new(cfg.hidden, 1).init(device);
         Self { linear1, linear2 }
@@ -35,14 +54,14 @@ impl<B: burn::tensor::backend::Backend> TinyDet<B> {
 }
 
 #[derive(Debug, Clone)]
-pub struct BigDetConfig {
+pub struct MultiboxModelConfig {
     pub hidden: usize,
     pub depth: usize,
     pub max_boxes: usize,
     pub input_dim: Option<usize>,
 }
 
-impl Default for BigDetConfig {
+impl Default for MultiboxModelConfig {
     fn default() -> Self {
         Self {
             hidden: 128,
@@ -54,7 +73,7 @@ impl Default for BigDetConfig {
 }
 
 #[derive(Debug, Module)]
-pub struct BigDet<B: burn::tensor::backend::Backend> {
+pub struct MultiboxModel<B: burn::tensor::backend::Backend> {
     stem: nn::Linear<B>,
     blocks: Vec<nn::Linear<B>>,
     box_head: nn::Linear<B>,
@@ -63,8 +82,8 @@ pub struct BigDet<B: burn::tensor::backend::Backend> {
     input_dim: usize,
 }
 
-impl<B: burn::tensor::backend::Backend> BigDet<B> {
-    pub fn new(cfg: BigDetConfig, device: &B::Device) -> Self {
+impl<B: burn::tensor::backend::Backend> MultiboxModel<B> {
+    pub fn new(cfg: MultiboxModelConfig, device: &B::Device) -> Self {
         let input_dim = cfg.input_dim.unwrap_or(4);
         let stem = nn::LinearConfig::new(input_dim, cfg.hidden).init(device);
         let mut blocks = Vec::new();
@@ -130,5 +149,5 @@ impl<B: burn::tensor::backend::Backend> BigDet<B> {
 }
 
 pub mod prelude {
-    pub use super::{BigDet, BigDetConfig, TinyDet, TinyDetConfig};
+    pub use super::{LinearClassifier, LinearClassifierConfig, MultiboxModel, MultiboxModelConfig};
 }
