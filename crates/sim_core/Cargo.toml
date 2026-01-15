@@ -21,6 +21,6 @@ rustdoc-args = ["--cfg", "docsrs"]
 name = "sim_core"
 
 [dependencies]
-bevy = { workspace = true, features = ["bevy_core_pipeline", "bevy_render", "bevy_asset", "bevy_pbr", "bevy_winit", "x11"] } # x11 required for winit on Linux CI
+bevy = { workspace = true, features = ["bevy_core_pipeline", "bevy_render", "bevy_asset", "bevy_pbr", "bevy_winit", "bevy_ui", "bevy_ui_render", "bevy_text", "default_font", "x11"] } # x11 required for winit on Linux CI; bevy_ui_render required for UI to actually render
 bevy_rapier3d = { workspace = true, features = ["simd-stable", "debug-render-3d"] }
 vision_core = { package = "cortenforge-vision-core", path = "../vision_core", version = "0.6.0" }

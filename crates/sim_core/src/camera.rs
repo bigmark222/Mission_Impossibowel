@@ -1,5 +1,6 @@
 use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
+use bevy::ui::IsDefaultUiCamera;
 
 #[derive(Component)]
 pub struct Flycam {
@@ -24,26 +25,18 @@ pub fn setup_camera(mut commands: Commands) {
     let transform = Transform::from_xyz(-6.0, 4.0, 10.0).looking_at(Vec3::ZERO, Vec3::Y);
     let (yaw, pitch, _) = transform.rotation.to_euler(EulerRot::YXZ);
 
+    // 3D camera with flycam controls
+    // IsDefaultUiCamera ensures UI renders here, not on the endoscope POV camera
     commands.spawn((
         Camera3d::default(),
         Camera::default(),
+        IsDefaultUiCamera,
         transform,
         Flycam {
             yaw,
             pitch,
             speed: 5.0,
             mouse_sensitivity: 0.0025,
-        },
-    ));
-
-    // Dedicated UI camera so HUD remains visible regardless of active 3D camera.
-    commands.spawn((
-        UiOverlayCamera,
-        Camera2d,
-        Camera {
-            is_active: true,
-            order: 10,
-            ..default()
         },
     ));
 }
